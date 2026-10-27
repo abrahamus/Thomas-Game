@@ -52,7 +52,7 @@ Running rails now use a solid swept steel profile, from a foot resting on the sl
 
 ## Rewards
 
-A complete job or fully cleared restricted terrain section adds six seconds of 25% extra speed. The model preserves that time while stopped, braking, or restricted. The renderer brightens exhaust only during an active burst. The dashboard shows a queued speed boost with a clock and an active speed boost without the clock. No frame-based reward logic lives in the renderer.
+A complete job or fully cleared restricted terrain section adds six seconds of 25% extra speed. The model preserves that time while stopped, braking, or restricted. The renderer brightens exhaust only during an active burst. To the right of the enlarged parallel progress tracks, the dashboard’s lightning-bolt badge shows a clock for queued boost time and blue forward chevrons during an active burst. The left card previews only required jobs, followed by the finish flag; terrain guidance remains spoken. Eight completion pictures appear in the finish festival, not the racing dashboard. No frame-based reward logic lives in the renderer.
 
 ## Verification and current previews
 

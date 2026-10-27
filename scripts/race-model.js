@@ -446,7 +446,8 @@
             nextService?.type.startsWith('passenger-')||nextService?.type.startsWith('cargo-')?`race.${getCharacter(race,v).vehicleType==='air'?'flight.':''}delivery.${race.deliveryTheme}`:nextService?taskKey(nextService,race,v):'race.cruise';
         const opponent=character(race.opponentId),player=character(race.playerId);
         return {course,player,opponent,winnerId:race.winner==='player'?race.playerId:race.winner==='rival'?race.opponentId:null,opponentName:opponent.name,deliveryTheme:race.deliveryTheme,phase:race.phase,
-            services:race.services,serviceStates:v.serviceStates,currentService:service,nextTask,
+            services:race.services,serviceStates:v.serviceStates,currentService:service,nextTask,nextService,
+            nextServiceKey:nextService?taskKey(nextService,race,v):null,
             helpEnabled:Boolean(service&&service.phase==='ready'&&!['animals','drawbridge'].includes(service.type)),
             carried:v.carried,mudPatches:v.mudPatches,dirt:v.dirt,terrain,inactivityHintKey:service?.hinted?taskKey(service,race,v):null,
             taskKey:key,instructionKey:key,taskText:NARRATION[key],completed:v.serviceStates.filter(s=>s.completed).length,total:race.services.length,

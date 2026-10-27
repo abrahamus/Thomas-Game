@@ -79,9 +79,9 @@ Eight stops lie on suitable flat stretches at 12,000, 26,000, 52,000, 66,600, 94
 | Coal | Three one-second scoops fill the steam engine’s bunker or tender; Diesel and buses fill a depot bin |
 | Road crossing | Traffic clears for three seconds, barriers lower for two, then the railway signal turns green |
 
-Every complete job and fully cleared restricted terrain section earns **six seconds of 25% extra speed**. Eight jobs and five terrain sections yield thirteen rewards, each awarded once. Boost duration accumulates without multiplying speed. Braking, stops, and restrictions preserve unused time. A clock on the boost badge shows a queued boost; brighter exhaust shows an active boost. Both racers use the same physics, restrictions, work durations, and rewards.
+Every complete job and fully cleared restricted terrain section earns **six seconds of 25% extra speed**. Eight jobs and five terrain sections yield thirteen rewards, each awarded once. Boost duration accumulates without multiplying speed. Braking, stops, and restrictions preserve unused time. The lightning-bolt badge shows a small clock for a queued boost and blue forward chevrons for an active boost; exhaust also brightens during the burst. Both racers use the same physics, restrictions, work durations, and rewards.
 
-The dashboard has one task reminder, eight completion pictures, distance progress for both racers, carried-load pictures, and boost status. There are no mail pickups.
+The cream-and-navy dashboard shows one large job picture on the left: the current or next unfinished job, then a finish flag after all eight jobs. Terrain, weather and tunnels do not replace this reminder; their spoken guidance continues. The small status picture indicates travelling, helping, waiting or sounding the vehicle’s signal. Enlarged parallel tracks show both racers’ distance progress in the centre, with the lightning-bolt boost badge to their right. The racing dashboard has no completion grid or carried-load picture; the finish festival retains its eight completed job pictures. There are no mail pickups.
 
 ## Competitive rivals
 

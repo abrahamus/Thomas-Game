@@ -560,51 +560,71 @@ body{height:100dvh;overflow:hidden}
 }
 
 
-/* Race progress and extra steam stay inside the stationary picture dashboard. */
-.race-course-progress{display:flex;align-items:center;gap:4px;min-width:0;width:100%}
-.race-course-progress #raceCourseProgress{display:block;width:100%;height:40px;min-width:0}
-.race-boost-indicator{width:32px;height:32px;flex:none;border:2px solid #cdbd8f;border-radius:50%;background:#fff8df}
-.race-boost-indicator.boost-active{background:#ffe6a0;border-color:#dca333}
-.is-race .challenge-progress{display:block;width:100%}
-.is-race #challengeTicks{display:none}
-.is-race .scene-hud .challenge-panel{max-height:196px}
-.actions .action.race-guide{outline:5px solid #fff1a5;outline-offset:2px;box-shadow:0 0 0 8px #c58f28,0 5px 0 var(--shadow)}
-@media(max-width:850px){.is-race .scene-hud .challenge-panel{max-height:170px}.race-course-progress #raceCourseProgress{height:36px}}
-@media(max-width:650px){.is-race .scene-hud .challenge-panel{max-height:154px}}
-@media(max-width:450px){.is-race .scene-hud .challenge-panel{max-height:136px}.race-course-progress #raceCourseProgress{height:32px}.race-boost-indicator{width:26px;height:26px}}
-@media(max-height:700px) and (min-width:851px){.is-race .scene-hud .challenge-panel{max-height:160px}.race-course-progress #raceCourseProgress{height:36px}}
-
-
-
-/* Race stays in motion with permanent track controls and one upcoming group. */
+/* The job card, enlarged parallel race progress and boost share one row. */
 .is-race .scene-hud{grid-template-columns:minmax(0,1fr);gap:0}
-.is-race .scene-hud .challenge-panel{display:block;width:min(100%,540px);max-height:130px;padding:6px 12px;background:#fff7dfe8}
+.is-race .scene-hud .challenge-panel{display:block;width:min(100%,720px);max-height:none;padding:10px 14px;border-radius:26px;background:#fff8e1}
 .is-race .scene-hud .challenge-now,.is-race .scene-hud .challenge-progress{display:none}
-.race-dashboard{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-width:0}
-.task-preview-well{fill:#f5ebd4;stroke:#cbbd9c;stroke-width:3}
-.catch-ready .task-preview-well{fill:#fff3d0;stroke:#39788e;stroke-width:5}
-.race-dashboard-progress{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;flex:1 1 240px;min-width:0}
-.is-race .race-course-progress #raceCourseProgress{height:44px}
-.job-completion-row{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;min-width:0;height:35px}
-#raceJobsCompleted{display:block;flex:1 1 240px;max-width:270px;min-width:0;height:32px}
-.race-steam-badge{height:30px;width:34px;flex:none}
-.race-dashboard.boosting{filter:drop-shadow(0 0 2px #e3b94d)}
-#raceFinishPreview{width:120px;height:94px}
-.is-race .actions{flex-wrap:nowrap;gap:12px;max-width:620px}
-.race-path-left{order:0}.race-path-right{order:2}
+.race-dashboard{display:grid;grid-template-columns:37% minmax(0,1fr) 56px;align-items:center;gap:16px;width:100%;min-width:0}
+.race-task-preview{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:center;gap:8px;height:138px;min-width:0;padding:10px 12px;border:3px solid #cbbd9c;border-radius:23px;background:#f5ecd6}
+.race-task-illustration{display:block;width:100%;height:108px;min-width:0}
+.race-job-status{width:48px;height:48px}
+#raceJobProgress{position:absolute;left:12px;bottom:7px;width:calc(100% - 24px);height:6px}
+.race-course-progress{height:126px;min-width:0;width:100%}
+#raceCourseProgress{position:relative;display:block;width:100%;height:100%;--racer-size:50px;--finish-size:32px;--rail-top:32px;--rail-bottom:92px}
+.race-course-rails{position:absolute;inset:0 calc(var(--finish-size) + var(--racer-size)/2 + 3px) 0 calc(var(--racer-size)/2)}
+.race-course-rail{position:absolute;left:0;right:0;height:6px;border-radius:4px;background:#c7b78d}
+.race-course-rail.player{top:var(--rail-top)}
+.race-course-rail.rival{top:var(--rail-bottom)}
+.race-course-sleepers{position:absolute;left:0;right:0;top:calc(var(--rail-top) + 6px);height:calc(var(--rail-bottom) - var(--rail-top) - 6px);background:repeating-linear-gradient(to right,transparent 0,transparent calc(12.5% - 2px),#d5c7a3 calc(12.5% - 2px),#d5c7a3 12.5%)}
+.race-racer-position{position:absolute;width:var(--racer-size);height:var(--racer-size);transform:translate(-50%,-50%);filter:drop-shadow(0 2px 0 #fff8e1)}
+#racePlayerOrder{top:var(--rail-top)}
+#raceRivalOrder{top:var(--rail-bottom)}
+.race-course-finish{position:absolute;right:-5px;top:calc((var(--rail-top) + var(--rail-bottom))/2 - 20px);width:var(--finish-size);height:40px}
+.race-boost-slot{width:56px;height:78px;display:flex;align-items:center;justify-content:center}
+.race-boost-badge{display:block;width:100%;height:100%;overflow:visible}
+.race-boost-well{fill:#fff0ad;stroke:#d5a442;stroke-width:3}
+.race-boost-bolt{fill:#f5c334;stroke:#9d6d22;stroke-width:3;stroke-linejoin:round}
+.race-boost-badge[data-state="active"]{filter:drop-shadow(0 0 4px #edc65965)}
+.race-boost-badge[data-state="queued"] .race-boost-well{fill:#f5ecd6;stroke:#c7b78d}
+.race-boost-badge[data-state="queued"] .race-boost-bolt{opacity:.65}
+.actions .action.race-guide{outline:5px solid #fff1a5;outline-offset:2px;box-shadow:0 0 0 8px #c58f28,0 5px 0 var(--shadow)}
+.is-race .actions{flex-wrap:nowrap;gap:12px;max-width:620px;min-height:112px}
 .is-race .actions .whistle{order:1;flex:0 0 90px;min-width:80px;max-width:90px;padding:6px;flex-direction:column}
 .is-race .actions .whistle .control-picture{width:60px}
-@media(max-width:450px){.is-race .scene-hud .challenge-panel{max-height:108px;padding:4px 6px}.race-dashboard{gap:6px}.race-dashboard-progress{flex-basis:160px;gap:3px}.is-race .race-course-progress #raceCourseProgress{height:34px}.job-completion-row{height:26px}#raceJobsCompleted{height:25px}.race-steam-badge{height:24px;width:25px}.is-race .actions{gap:8px}.is-race .actions .whistle{flex-basis:80px;padding:4px}.is-race .actions .whistle .control-picture{width:48px}}
-@media(max-height:700px) and (min-width:451px){.is-race .scene-hud .challenge-panel{max-height:100px}}
-.is-race .actions{min-height:112px}
-.race-task-preview{display:block;width:210px;height:112px;flex:0 1 210px;min-width:0}
 .is-race .actions .action-race-help{order:0;flex:1 1 230px;max-width:300px;min-width:100px;min-height:112px;display:flex;align-items:center;justify-content:center;gap:18px;padding:8px 18px}
 .is-race .actions .action-race-help .control-picture{height:82px;width:102px;flex:none}
-.is-race .job-completion-row{height:56px}.is-race #raceJobsCompleted{height:54px;max-width:230px}
-#raceCarriedLoad{width:52px;height:48px;flex:none}
 #raceCanvas{touch-action:none}
-@media(max-width:450px){.is-race .actions{min-height:100px}.race-task-preview{flex-basis:155px;height:90px}.is-race .job-completion-row{height:45px}.is-race #raceJobsCompleted{height:43px}#raceCarriedLoad{width:34px;height:36px}.is-race .actions .action-race-help{min-height:100px;padding:4px 10px;gap:6px}.is-race .actions .action-race-help .control-picture{height:72px;width:88px}}
-@media(max-height:700px) and (min-width:451px){.is-race .actions{min-height:100px}.race-task-preview{height:80px}.is-race .race-course-progress #raceCourseProgress{height:32px}.race-dashboard-progress{gap:3px}.is-race .job-completion-row{height:44px}.is-race #raceJobsCompleted{height:42px}.is-race .actions .action-race-help{min-height:100px}.is-race .actions .action-race-help .control-picture{height:70px}}
+@media(max-width:650px){
+ .is-race .scene-hud .challenge-panel{padding:8px 10px;border-radius:22px}
+ .race-dashboard{grid-template-columns:37% minmax(0,1fr) 44px;gap:12px}
+ .race-task-preview{height:120px;grid-template-columns:minmax(0,1fr) 34px;padding:7px;gap:3px;border-radius:20px}
+ .race-task-illustration{height:92px}.race-job-status{width:34px;height:34px}
+ .race-course-progress{height:110px}
+ #raceCourseProgress{--racer-size:42px;--finish-size:27px;--rail-top:27px;--rail-bottom:80px}
+ .race-boost-slot{width:44px;height:65px}
+}
+@media(max-width:450px){
+ .is-race .scene-hud .challenge-panel{padding:6px 8px}
+ .race-dashboard{grid-template-columns:36% minmax(0,1fr) 32px;gap:8px}
+ .race-task-preview{height:106px;grid-template-columns:minmax(0,1fr) 24px;padding:5px;gap:1px;border-radius:17px}
+ .race-task-illustration{height:78px}.race-job-status{width:24px;height:27px}
+ #raceJobProgress{left:7px;width:calc(100% - 14px);bottom:6px;height:5px}
+ #raceCourseProgress{--racer-size:32px;--finish-size:21px;--rail-top:26px;--rail-bottom:80px}
+ .race-boost-slot{width:32px;height:51px}
+ .is-race .actions{min-height:100px;gap:8px}
+ .is-race .actions .whistle{flex-basis:80px;padding:4px}
+ .is-race .actions .whistle .control-picture{width:48px}
+ .is-race .actions .action-race-help{min-height:100px;padding:4px 10px;gap:6px}
+ .is-race .actions .action-race-help .control-picture{height:72px;width:88px}
+}
+@media(max-height:700px) and (min-width:451px){
+ .race-task-preview{height:108px}.race-task-illustration{height:82px}
+ .race-course-progress{height:104px}
+ #raceCourseProgress{--racer-size:42px;--rail-top:25px;--rail-bottom:77px}
+ .is-race .actions{min-height:100px}
+ .is-race .actions .action-race-help{min-height:100px}
+ .is-race .actions .action-race-help .control-picture{height:70px}
+}
 #raceStartOverlay{padding:12px}
 #raceStartOverlay .modal{width:min(820px,100%);display:flex;flex-direction:column;overflow:hidden;padding:18px;max-height:100%;gap:12px}
 #raceStartOverlay h2{font-size:28px}
@@ -681,12 +701,35 @@ body{height:100dvh;overflow:hidden}
         <div class="scene-surface">
 <canvas id="raceCanvas" aria-label="Racing through Sodor" hidden></canvas><div id="raceMatchup" hidden><svg viewBox="0 0 100 100" aria-hidden="true"><use id="matchupPlayerPortrait" width="100" height="100"/></svg><span id="matchupPlayerName"></span><span>vs</span><svg viewBox="0 0 100 100" aria-hidden="true"><use id="matchupRivalPortrait" width="100" height="100"/></svg><span id="matchupRivalName"></span></div><div id="raceStartLights" class="race-start-lights" role="status" aria-label="Race starting lights" hidden><span id="raceRedLight"></span><span id="raceAmberLight"></span><span id="raceGreenLight"></span></div>
 <div id="festivalHud" class="festival-hud" hidden><div class="festival-caption"><strong id="festivalTitle">Sodor Finish-Line Festival</strong><p id="festivalMessage" role="status" aria-live="polite">Welcome to the finish!</p><div id="festivalJobs" class="festival-job-row" role="img" aria-label="Eight completed delivery jobs" hidden></div></div></div><div id="sceneHud" class="scene-hud" aria-label="Driving dashboard">
-<section id="challengePanel" class="challenge-panel" aria-label="Current railway job" hidden><div id="raceDashboard" class="race-dashboard" data-task-type="journey" hidden>
-
-<svg id="raceTaskPreview" class="race-task-preview" viewBox="0 0 220 122" role="img" aria-label="Help along the way" hidden><rect class="task-preview-well" x="3" y="3" width="214" height="116" rx="20"/><use id="raceTaskPicture" href="#race-passengers" x="15" y="9" width="130" height="91"/><use id="raceJobStatusPicture" href="#rule-go" x="153" y="26" width="55" height="55"/><g id="raceJobProgress" hidden><rect x="22" y="102" width="176" height="8" rx="4" fill="#d6ccb0"/><rect id="raceJobFill" x="22" y="102" width="0" height="8" rx="4" fill="#548f7f"/></g></svg>
-<svg id="raceFinishPreview" viewBox="0 0 120 100" aria-label="Finish ahead" hidden><use href="#race-flag" width="120" height="100"/></svg>
-<div class="race-dashboard-progress"><div id="raceOrder" class="race-course-progress" role="img" aria-label="Both racers on the way to the finish" hidden><svg id="raceCourseProgress" viewBox="0 0 300 48" aria-hidden="true"><path d="M25 14H269M25 34H269" stroke="#cbbd95" stroke-width="5" stroke-linecap="round"/><g id="raceCourseTicks"><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/><line y1="18" y2="32" stroke="#c3b994" stroke-width="1"/></g><use href="#race-flag" x="274" y="1" width="25" height="44"/><g id="raceRivalOrder" transform="translate(12 20)"><use id="raceRivalPortrait" href="#portrait-percy" width="28" height="28"/></g><g id="racePlayerOrder" transform="translate(12 0)"><use id="racePlayerPortrait" href="#portrait-thomas" width="28" height="28"/></g></svg></div>
-<div class="job-completion-row"><svg id="raceJobsCompleted" viewBox="0 0 240 100" role="img" aria-label="Railway jobs completed"><use id="raceCompletedJob0" href="#race-passengers" x="0" y="0" width="52" height="45" opacity=".3"/><path id="raceJobCheck0" d="M39 38l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/><use id="raceCompletedJob1" href="#race-passengers" x="60" y="0" width="52" height="45" opacity=".3"/><path id="raceJobCheck1" d="M99 38l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/><use id="raceCompletedJob2" href="#race-passengers" x="120" y="0" width="52" height="45" opacity=".3"/><path id="raceJobCheck2" d="M159 38l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/><use id="raceCompletedJob3" href="#race-passengers" x="180" y="0" width="52" height="45" opacity=".3"/><path id="raceJobCheck3" d="M219 38l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/><use id="raceCompletedJob4" href="#race-passengers" x="0" y="50" width="52" height="45" opacity=".3"/><path id="raceJobCheck4" d="M39 88l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/><use id="raceCompletedJob5" href="#race-passengers" x="60" y="50" width="52" height="45" opacity=".3"/><path id="raceJobCheck5" d="M99 88l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/><use id="raceCompletedJob6" href="#race-passengers" x="120" y="50" width="52" height="45" opacity=".3"/><path id="raceJobCheck6" d="M159 88l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/><use id="raceCompletedJob7" href="#race-passengers" x="180" y="50" width="52" height="45" opacity=".3"/><path id="raceJobCheck7" d="M219 88l5 5 10-12" fill="none" stroke="#3c8456" stroke-width="4" hidden/></svg><svg id="raceCarriedLoad" viewBox="0 0 60 52" role="img" aria-label="Aboard" hidden><use id="raceCarriedPicture" href="#race-passengers" x="0" y="0" width="60" height="41"/><circle id="racePassengerAboard0" cx="12" cy="45" r="4" fill="#519e8c" hidden/><circle id="racePassengerAboard1" cx="24" cy="45" r="4" fill="#519e8c" hidden/><circle id="racePassengerAboard2" cx="36" cy="45" r="4" fill="#519e8c" hidden/></svg><svg id="raceSteamBadge" class="race-steam-badge" viewBox="0 0 100 100" role="img" aria-label="Speed boost" hidden><path d="M17 78C1 64 15 40 33 45C28 17 70 10 75 39C97 28 109 65 83 77Z" fill="#fffdf0" stroke="#c5a34e" stroke-width="5"/><use id="raceBoostQueue" href="#rule-wait" x="55" y="55" width="40" height="40" hidden/></svg></div><div id="raceJourneyProgress" class="sr-only" role="progressbar" aria-label="Race progress" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"></div></div></div><span id="challengeTitle" class="sr-only"></span><span id="challengeRule" class="sr-only"></span></section>
+<section id="challengePanel" class="challenge-panel" aria-label="Next job and race progress" hidden>
+ <div id="raceDashboard" class="race-dashboard" data-task-type="journey" hidden>
+  <div id="raceTaskPreview" class="race-task-preview" role="img" aria-label="Next job" hidden>
+   <svg class="race-task-illustration" viewBox="0 0 120 100" aria-hidden="true"><use id="raceTaskPicture" href="#race-passengers" width="120" height="100"/></svg>
+   <svg class="race-job-status" viewBox="0 0 120 100" aria-hidden="true"><use id="raceJobStatusPicture" href="#rule-go" width="120" height="100"/></svg>
+   <svg id="raceJobProgress" viewBox="0 0 176 8" aria-hidden="true" hidden><rect width="176" height="8" rx="4" fill="#d6ccb0"/><rect id="raceJobFill" width="0" height="8" rx="4" fill="#548f7f"/></svg>
+  </div>
+  <div id="raceOrder" class="race-course-progress" role="img" aria-label="Both racers on the way to the finish" hidden>
+   <div id="raceCourseProgress" aria-hidden="true">
+    <div class="race-course-rails">
+     <div class="race-course-sleepers"></div><div class="race-course-rail player"></div><div class="race-course-rail rival"></div>
+     <svg id="raceRivalOrder" class="race-racer-position" viewBox="0 0 100 100"><use id="raceRivalPortrait" href="#portrait-percy" width="100" height="100"/></svg>
+     <svg id="racePlayerOrder" class="race-racer-position" viewBox="0 0 100 100"><use id="racePlayerPortrait" href="#portrait-thomas" width="100" height="100"/></svg>
+    </div>
+    <svg class="race-course-finish" viewBox="0 0 100 100"><use href="#race-flag" width="100" height="100"/></svg>
+   </div>
+  </div>
+  <div class="race-boost-slot">
+   <svg id="raceBoostBadge" class="race-boost-badge" viewBox="0 0 100 120" role="img" aria-label="Speed boost" hidden>
+    <rect class="race-boost-well" x="8" y="8" width="80" height="104" rx="26"/>
+    <path class="race-boost-bolt" d="M59 22L26 65H49L40 99L74 53H51Z"/>
+    <g id="raceBoostArrows" hidden><rect x="65" y="88" width="36" height="28" rx="8" fill="#fff8e1"/><path d="M70 94L79 102L70 110M83 94L92 102L83 110" fill="none" stroke="#287ca6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <use id="raceBoostQueue" href="#rule-wait" x="64" y="85" width="39" height="36" hidden/>
+   </svg>
+  </div>
+ </div>
+ <div id="raceJourneyProgress" class="sr-only" role="progressbar" aria-label="Your race progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+ <span id="challengeTitle" class="sr-only"></span><span id="challengeRule" class="sr-only"></span>
+</section>
 
 </div>
 
@@ -1697,7 +1740,8 @@ body{height:100dvh;overflow:hidden}
             nextService?.type.startsWith('passenger-')||nextService?.type.startsWith('cargo-')?`race.${getCharacter(race,v).vehicleType==='air'?'flight.':''}delivery.${race.deliveryTheme}`:nextService?taskKey(nextService,race,v):'race.cruise';
         const opponent=character(race.opponentId),player=character(race.playerId);
         return {course,player,opponent,winnerId:race.winner==='player'?race.playerId:race.winner==='rival'?race.opponentId:null,opponentName:opponent.name,deliveryTheme:race.deliveryTheme,phase:race.phase,
-            services:race.services,serviceStates:v.serviceStates,currentService:service,nextTask,
+            services:race.services,serviceStates:v.serviceStates,currentService:service,nextTask,nextService,
+            nextServiceKey:nextService?taskKey(nextService,race,v):null,
             helpEnabled:Boolean(service&&service.phase==='ready'&&!['animals','drawbridge'].includes(service.type)),
             carried:v.carried,mudPatches:v.mudPatches,dirt:v.dirt,terrain,inactivityHintKey:service?.hinted?taskKey(service,race,v):null,
             taskKey:key,instructionKey:key,taskText:NARRATION[key],completed:v.serviceStates.filter(s=>s.completed).length,total:race.services.length,
@@ -59136,19 +59180,20 @@ function advanceFestival(seconds){
 function renderRacePresentation() {
     const race=state.race;if(!race)return;
     const view=ThomasRaceCore.getView(race),service=view.currentService;
-    const next=view.nextTask,taskType=next?.type || 'finish';
+    // The picture previews a required job even while terrain guidance is spoken.
+    const next=service || view.nextService,taskType=next?.type || 'finish';
+    const reminder=next?words(service?view.taskKey:view.nextServiceKey):'Finish line ahead';
     show('raceDashboard',true);
     $('challengePanel').setAttribute('data-race-phase',race.phase);
     $('raceDashboard').setAttribute('data-task-type',taskType);
     $('raceDashboard').setAttribute('data-service-phase',service?.phase || '');
     $('challengeTitle').textContent='Help, complete, and deliver';
-    $('challengeRule').textContent=words(view.taskKey);
-    show('raceTaskPreview',!!next);show('raceFinishPreview',!next);
+    $('challengeRule').textContent=reminder;
+    show('raceTaskPreview',true);
     $('raceTaskPicture').setAttribute('href',`#${raceTaskPicture(taskType)}`);
-    $('raceTaskPreview').setAttribute('aria-label',words(view.taskKey));
+    $('raceTaskPreview').setAttribute('aria-label',reminder);
     $('raceTaskPreview').setAttribute('data-task-type',taskType);
     const working=service?.phase==='working',handling=service?.phase==='cargo-lowering'||service?.phase==='cargo-lifting';
-    if(handling)$('raceTaskPicture').setAttribute('href',view.player.vehicleType==='air'?'#race-flight-cargo':'#race-cargo');
     $('raceJobStatusPicture').setAttribute('href',service?.type==='animals' && !working?(view.player.power==='rotor'?'#rule-radio':view.player.power==='steam'?'#rule-whistle':'#rule-horn'):working||handling?'#rule-wait':service?'#race-help-hand':'#rule-go');
     let fraction=0;
     if(service){fraction=['repairs','coal'].includes(service.type)||service.type.startsWith('passenger-')?(service.unitsDone+(working?service.progress:0))/3:
@@ -59159,30 +59204,16 @@ function renderRacePresentation() {
     $('raceJobFill').setAttribute('width',Math.max(0,Math.min(1,fraction))*176);
     show('raceJobProgress',!!service);
     const boosting=view.boostActive;
-    show('raceSteamBadge',view.boostRemaining>0);$('raceDashboard').classList.toggle('boosting',boosting);
-    $('raceSteamBadge').setAttribute('data-state',boosting?'active':'queued');
-    $('raceSteamBadge').setAttribute('aria-label',boosting?'Speed boost!':'Speed boost saved for a clear route');
-    $('raceSteamBadge').style.opacity=boosting?'1':'.65';show('raceBoostQueue',view.boostQueued);
+    show('raceBoostBadge',view.boostRemaining>0);
+    $('raceBoostBadge').setAttribute('data-state',boosting?'active':'queued');
+    $('raceBoostBadge').setAttribute('aria-label',boosting?'Speed boost!':'Speed boost saved for a clear route');
+    show('raceBoostQueue',view.boostQueued);show('raceBoostArrows',boosting);
     $('racePlayerPortrait').setAttribute('href',`#portrait-${race.playerId}`);
     $('raceRivalPortrait').setAttribute('href',`#portrait-${race.opponentId}`);
-    $('racePlayerOrder').setAttribute('transform',`translate(${12+244*view.progress} 0)`);
-    $('raceRivalOrder').setAttribute('transform',`translate(${12+244*view.rivalProgress} 20)`);
-    [...$('raceCourseTicks').children].forEach((tick,i)=>{
-        const item=race.services[i];if(!item)return;
-        const x=25+244*item.at/view.course.length,done=race.player.serviceStates[i].completed;
-        tick.setAttribute('x1',x);tick.setAttribute('x2',x);tick.setAttribute('stroke',done?'#548747':'#c3b994');
-        const picture=$(`raceCompletedJob${i}`);picture.setAttribute('href',`#${raceTaskPicture(item.type)}`);
-        picture.setAttribute('opacity',done?'1':'.3');show(`raceJobCheck${i}`,done);
-    });
-    $('raceJobsCompleted').setAttribute('aria-label',`${view.completed} of ${view.total} jobs completed`);
-    $('raceJourneyProgress').setAttribute('aria-valuenow',view.completed);
-    $('raceJourneyProgress').setAttribute('aria-valuemax',view.total);
-    $('raceJourneyProgress').setAttribute('aria-valuetext',`${view.completed} of ${view.total} jobs completed`);
-    const loaded=view.carried.passengers>0 || !!view.carried.container;
-    show('raceCarriedLoad',loaded);
-    $('raceCarriedPicture').setAttribute('href',`#${raceTaskPicture(view.deliveryTheme==='passengers'?'passenger-load':'cargo-load')}`);
-    $('raceCarriedLoad').setAttribute('aria-label',view.carried.container?'Container aboard':`${view.carried.passengers} passenger groups aboard`);
-    for(let i=0;i<3;i++)show(`racePassengerAboard${i}`,view.deliveryTheme==='passengers' && i<view.carried.passengers);
+    $('racePlayerOrder').style.left=`${view.progress*100}%`;
+    $('raceRivalOrder').style.left=`${view.rivalProgress*100}%`;
+    $('raceJourneyProgress').setAttribute('aria-valuenow',Math.round(view.progress*100));
+    $('raceJourneyProgress').setAttribute('aria-valuetext',`${Math.round(view.progress*100)} percent of the route; ${view.completed} of ${view.total} jobs completed`);
     const help=$('action-race-help'),hasHelp=!!service && !['animals','drawbridge'].includes(service.type);
     show('action-race-help',hasHelp);
     help.disabled=state.paused || ui.albumOpen || !view.helpEnabled;

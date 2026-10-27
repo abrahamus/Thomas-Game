@@ -231,19 +231,20 @@ function advanceFestival(seconds){
 function renderRacePresentation() {
     const race=state.race;if(!race)return;
     const view=ThomasRaceCore.getView(race),service=view.currentService;
-    const next=view.nextTask,taskType=next?.type || 'finish';
+    // The picture previews a required job even while terrain guidance is spoken.
+    const next=service || view.nextService,taskType=next?.type || 'finish';
+    const reminder=next?words(service?view.taskKey:view.nextServiceKey):'Finish line ahead';
     show('raceDashboard',true);
     $('challengePanel').setAttribute('data-race-phase',race.phase);
     $('raceDashboard').setAttribute('data-task-type',taskType);
     $('raceDashboard').setAttribute('data-service-phase',service?.phase || '');
     $('challengeTitle').textContent='Help, complete, and deliver';
-    $('challengeRule').textContent=words(view.taskKey);
-    show('raceTaskPreview',!!next);show('raceFinishPreview',!next);
+    $('challengeRule').textContent=reminder;
+    show('raceTaskPreview',true);
     $('raceTaskPicture').setAttribute('href',`#${raceTaskPicture(taskType)}`);
-    $('raceTaskPreview').setAttribute('aria-label',words(view.taskKey));
+    $('raceTaskPreview').setAttribute('aria-label',reminder);
     $('raceTaskPreview').setAttribute('data-task-type',taskType);
     const working=service?.phase==='working',handling=service?.phase==='cargo-lowering'||service?.phase==='cargo-lifting';
-    if(handling)$('raceTaskPicture').setAttribute('href',view.player.vehicleType==='air'?'#race-flight-cargo':'#race-cargo');
     $('raceJobStatusPicture').setAttribute('href',service?.type==='animals' && !working?(view.player.power==='rotor'?'#rule-radio':view.player.power==='steam'?'#rule-whistle':'#rule-horn'):working||handling?'#rule-wait':service?'#race-help-hand':'#rule-go');
     let fraction=0;
     if(service){fraction=['repairs','coal'].includes(service.type)||service.type.startsWith('passenger-')?(service.unitsDone+(working?service.progress:0))/3:
@@ -254,30 +255,16 @@ function renderRacePresentation() {
     $('raceJobFill').setAttribute('width',Math.max(0,Math.min(1,fraction))*176);
     show('raceJobProgress',!!service);
     const boosting=view.boostActive;
-    show('raceSteamBadge',view.boostRemaining>0);$('raceDashboard').classList.toggle('boosting',boosting);
-    $('raceSteamBadge').setAttribute('data-state',boosting?'active':'queued');
-    $('raceSteamBadge').setAttribute('aria-label',boosting?'Speed boost!':'Speed boost saved for a clear route');
-    $('raceSteamBadge').style.opacity=boosting?'1':'.65';show('raceBoostQueue',view.boostQueued);
+    show('raceBoostBadge',view.boostRemaining>0);
+    $('raceBoostBadge').setAttribute('data-state',boosting?'active':'queued');
+    $('raceBoostBadge').setAttribute('aria-label',boosting?'Speed boost!':'Speed boost saved for a clear route');
+    show('raceBoostQueue',view.boostQueued);show('raceBoostArrows',boosting);
     $('racePlayerPortrait').setAttribute('href',`#portrait-${race.playerId}`);
     $('raceRivalPortrait').setAttribute('href',`#portrait-${race.opponentId}`);
-    $('racePlayerOrder').setAttribute('transform',`translate(${12+244*view.progress} 0)`);
-    $('raceRivalOrder').setAttribute('transform',`translate(${12+244*view.rivalProgress} 20)`);
-    [...$('raceCourseTicks').children].forEach((tick,i)=>{
-        const item=race.services[i];if(!item)return;
-        const x=25+244*item.at/view.course.length,done=race.player.serviceStates[i].completed;
-        tick.setAttribute('x1',x);tick.setAttribute('x2',x);tick.setAttribute('stroke',done?'#548747':'#c3b994');
-        const picture=$(`raceCompletedJob${i}`);picture.setAttribute('href',`#${raceTaskPicture(item.type)}`);
-        picture.setAttribute('opacity',done?'1':'.3');show(`raceJobCheck${i}`,done);
-    });
-    $('raceJobsCompleted').setAttribute('aria-label',`${view.completed} of ${view.total} jobs completed`);
-    $('raceJourneyProgress').setAttribute('aria-valuenow',view.completed);
-    $('raceJourneyProgress').setAttribute('aria-valuemax',view.total);
-    $('raceJourneyProgress').setAttribute('aria-valuetext',`${view.completed} of ${view.total} jobs completed`);
-    const loaded=view.carried.passengers>0 || !!view.carried.container;
-    show('raceCarriedLoad',loaded);
-    $('raceCarriedPicture').setAttribute('href',`#${raceTaskPicture(view.deliveryTheme==='passengers'?'passenger-load':'cargo-load')}`);
-    $('raceCarriedLoad').setAttribute('aria-label',view.carried.container?'Container aboard':`${view.carried.passengers} passenger groups aboard`);
-    for(let i=0;i<3;i++)show(`racePassengerAboard${i}`,view.deliveryTheme==='passengers' && i<view.carried.passengers);
+    $('racePlayerOrder').style.left=`${view.progress*100}%`;
+    $('raceRivalOrder').style.left=`${view.rivalProgress*100}%`;
+    $('raceJourneyProgress').setAttribute('aria-valuenow',Math.round(view.progress*100));
+    $('raceJourneyProgress').setAttribute('aria-valuetext',`${Math.round(view.progress*100)} percent of the route; ${view.completed} of ${view.total} jobs completed`);
     const help=$('action-race-help'),hasHelp=!!service && !['animals','drawbridge'].includes(service.type);
     show('action-race-help',hasHelp);
     help.disabled=state.paused || ui.albumOpen || !view.helpEnabled;
