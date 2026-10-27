@@ -44,6 +44,12 @@ The original train models, wheel/rod motion, independent coach sampling, couplin
 
 Running rails now use a solid swept steel profile, from a foot resting on the sleepers to a raised web and bright head at 0.30 world units. The same profile is used on the drawbridge and crossing. Vehicle wheel contact follows that height, and Each tender samples the route independently. Sheep gates open only after the sheep have cleared: a smooth quarter-turn away from the waiting vehicle puts the leaf parallel to the verge before driving resumes. The open gate stays clear for the entire train and for either road racer.
 
+## Finish festival
+
+`makeFestival` adds a station party, harbour boats or a snowy gathering beside the routes. `updateFestival` animates people, chequered flags, ribbons, gold trophies, silver rosettes and a finite character-colour confetti burst using the race/presentation clock. Props cast no large shadows across vehicles. Trophy stands are fixed beside the final stopping positions; crowds remain outside the corridors. The harbour quay connects to the continuous course water. Routes and supporting ground continue beyond the ceremony, and Harold’s finish helipad is beyond the banner.
+
+`tests/festival-renderer.test.cjs` checks the actual visible meshes, faces, awards, coach clearance and pause behaviour for all ten characters in both roles at 320, 375, laptop and wide viewport sizes. `tests/finish-festival.test.cjs` covers independent presentation, unchanged results, crossing speed, braking, landing, stage timing and continued seeded AI. `tests/festival-ui.test.cjs` covers result delay, Skip, both final actions, saved Random preferences, focus/pause/mute, signals and once-only rewards.
+
 ## Rewards
 
 A complete job or fully cleared restricted terrain section adds six seconds of 25% extra speed. The model preserves that time while stopped, braking, or restricted. The renderer brightens exhaust only during an active burst. The dashboard shows a queued speed boost with a clock and an active speed boost without the clock. No frame-based reward logic lives in the renderer.
@@ -60,6 +66,7 @@ A complete job or fully cleared restricted terrain section adds six seconds of 2
 
 The PNGs below are **isolated CPU geometry previews** produced from the actual Three.js meshes. They do not execute the HTML or WebGL and do not verify real browser shadows, lighting, motion, input, or frame rate. Browser policy blocked the local HTML preview; a live visual pass remains required.
 
+- `festival-country.png`, `festival-harbour-phone.png`, `festival-mountain-second.png`, `festival-tie-narrow.png`: country trophy, harbour/Harold arrival, mountain second place and shared first place. These are geometry previews, not live WebGL acceptance.
 - `shared-river-bridges.png`, `shared-river-phone.png`, `shared-river-hillside.png`: continuous channel, both moving bridges, harbour sea level, and the cut through elevated terrain.
 - `lakeside-flood.png`, `lakeside-ice.png`, `harold-light-branch.png`, `harold-ground-rocks.png`, `harold-repair-crew.png`: shared lake, surface flooding/ice, flight weather, and physically supported obstacle handling.
 - `harold-intermediate-winch.png`, `bertie-fuel-pump.png`: vertical cargo winching and road refuelling. The winch preview now shows stationary, model-timed unloading.
@@ -79,9 +86,10 @@ Other PNGs in this folder are historical previews from earlier versions; they ar
 node scripts/render-race-preview.cjs mountain james 35700 /private/tmp/tunnel.png 1400 800 '' '' cargo
 node scripts/render-race-preview.cjs country james 94700 /private/tmp/crossing.png 1200 700 '' service-working passengers 1 .85
 node scripts/render-race-preview.cjs country james 143000 /private/tmp/coal.png 1200 700 '' service-complete passengers 1
-node --test tests/race-renderer.test.cjs
+node scripts/render-race-preview.cjs country percy 175500 /private/tmp/festival.png 1366 768 '' festival-win passengers 24 6 thomas
+node --test tests/race-renderer.test.cjs tests/festival-renderer.test.cjs
 ```
 
-Preview arguments are course, rival, distance, output, width, height, an unused legacy slot, effect, delivery theme, seed, optional working progress (0–1), and optional player character ID (defaults to Thomas). Effects include `boost`, `service-ready`, `service-working`, and `service-complete`. Preview setup deliberately creates a diagnostic pose; it is not a gameplay driver.
+Preview arguments are course, rival, distance, output, width, height, an unused legacy slot, effect, delivery theme, seed, optional working progress (0–1), and optional player character ID (defaults to Thomas). Effects include `boost`, `service-ready`, `service-working`, and `service-complete`. For `festival-win`, `festival-lose` or `festival-tie`, the working-progress argument instead specifies elapsed celebration seconds (for example `6`). Preview setup deliberately creates a diagnostic pose; it is not a gameplay driver.
 
 `tests/cloud-crossing.test.cjs` checks the two cloud/tunnel pairs for both buses in both roles on all courses, actual cloud occlusion at four viewport sizes, continuous crossing surfaces, and mode/instruction agreement across all 90 ordered pairings. Crossing collision tests include Harold in either role.

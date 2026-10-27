@@ -23,5 +23,5 @@ for(const seed of [1,24,40])for(const theme of ['passengers','cargo'])test(`Haro
  }
  const v=ui.state().race.player;assert.equal(v.serviceStates.filter(s=>s.completed).length,8);assert.equal(v.carried.container,null);assert.equal(v.carried.passengers,0);assert.equal(ui.state().race.winner,'player');
  if(v.serviceStates.some(s=>s.type==='coal')){assert.equal(v.fuel,1);assert.equal(v.coal,0);}
- assert.equal(ui.document.getElementById('raceResultPortrait').getAttribute('href'),'#portrait-harold');ui.click('#rewardReplay');assert.equal(ui.state().selections.playerId,'harold');
+ assert.equal(ui.document.getElementById('raceResultPortrait').getAttribute('href'),'#portrait-harold');ui.click('#skipCelebration');ui.click('#rewardAlternative');assert.equal(ui.state().selections.playerId,'harold');
 });

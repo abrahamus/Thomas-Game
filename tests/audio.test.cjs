@@ -363,7 +363,7 @@ for (const [label, commands] of [
     test(`restored ${label} exactly matches the original Web Audio scheduling`, () => {
         const { audio } = setup(); audio.unlock(); const original = legacyAudio();
         for (const [name, payload] of commands) { audio.effect(name, payload); original.effect(name, payload); }
-        assert.deepEqual(effectTrace(audio.context, 4), effectTrace(original.context));
+        assert.deepEqual(effectTrace(audio.context, 5), effectTrace(original.context));
         assert.equal(audio.context.buffers[0].duration, 1.5, 'original steam-noise buffer length');
         assert.deepEqual(audio.context.buffers.map(item => [item.channels, item.frames, item.rate]),
             original.context.buffers.map(item => [item.channels, item.frames, item.rate]));
@@ -432,4 +432,15 @@ test('all embedded narration is valid mono PCM and covers adventure, gears, wash
     for (const id of ['driver', 'apple-delivery', 'race-finisher', 'race-winner', 'meet-friends', 'wash-visit', 'fallen-tree', 'closed-bridge', 'find-james', 'find-toby']) assert.ok(assets[`ui.sticker.${id}`], id);
     assert.doesNotMatch(audioSource, /fetch\(|new Audio\(|https?:/);
     assert.ok(!Object.keys(assets).some(key => /^(explore|mission|clue|hint|junction|route)\./.test(key)), 'unused exploration narration is removed');
+});
+
+test('original festival melody and handclaps are finite, duck under speech and cancel on pause/mute/exit',async()=>{
+ for(const reason of ['pause','mute','exit']){
+  const {audio,state}=setup();audio.unlock();audio.effect('festival');audio.effect('applause');
+  const context=audio.context,bus=context.gains[4],sources=context.nodes.filter(n=>['buffer','oscillator'].includes(n.kind)&&n.started);
+  assert.equal(sources.length,36);assert.ok(sources.every(n=>n.stopTimes.length===1&&n.stopTimes[0]<context.currentTime+2));
+  const speech=audio.speak('first');context.resolve();await speech;assert.equal(bus.gain.value,.16);assert.equal(context.gains[2].gain.value,1,'signals remain audible');
+  if(reason==='pause'){state.paused=true;audio.update(0,{});}else if(reason==='mute')audio.setMuted(true);else audio.stop();
+  assert.ok(sources.every(n=>n.disconnected&&n.stopped>0),reason);
+ }
 });

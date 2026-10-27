@@ -8,7 +8,7 @@ const $ = id => document.getElementById(id);
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const ui = {
     audioUnlocked:false,windowActive:true,task:'',taskKey:'',emoji:'🚂',lastGeneration:-1,
-    menuIndex:0,openPicker:null,albumOpen:false,speaking:false,time:0,whistle:0,lastTimestamp:null,
+    festival:null,finishWelcomed:false,menuIndex:0,openPicker:null,albumOpen:false,speaking:false,time:0,whistle:0,lastTimestamp:null,
     pendingSpeech:null,hoverNode:null,hoverDeadline:null,suppressFocus:false,lastAnnouncement:'',
     raceView:null,raceUnavailable:false,raceLayoutKey:'',racePosition:null,raceVoiceKey:null,racePraiseAt:-Infinity
 };
@@ -52,7 +52,7 @@ if(!globalThis.ThomasUiNarration){
 function words(key,fallback='') { return globalThis.ThomasRaceCore?.NARRATION[key] || globalThis.ThomasUiNarration[key] || ThomasGameCore.NARRATION[key] || (globalThis.ThomasNarration[key] || {}).text || fallback; }
 function serviceVoice(key){return /^race\.(?:service\.|flight\.(?!(?:delivery|terrain)\.))/.test(key||'');}
 function raceVoicePriority(key) {
-    if(/^race\.complete\./.test(key))return 100;
+    if(/^race\.(?:complete|festival)\./.test(key))return 100;
     if(/^race\.(?:ready|steady|go)$/.test(key))return 80;
     if(serviceVoice(key))return 50;
     if(/^race\.(?:flight\.)?delivery\./.test(key))return 40;
@@ -62,7 +62,8 @@ function raceVoicePriority(key) {
 function raceSpeechRelevant(key) {
     if(state.mode!=='race' || !state.race || state.screen!=='play')return true;
     const view=ThomasRaceCore.getView(state.race);
-    if(/^race\.complete\./.test(key))return state.phase==='complete';
+    if(/^race\.complete\./.test(key))return false;
+    if(/^race\.festival\./.test(key))return !!ui.festival && key===festivalKey();
     if(serviceVoice(key))return key==='race.service.done'?!view.currentService:key===view.taskKey;
     if(/^race\.(?:flight\.)?delivery\./.test(key))return state.phase==='racing' && !view.currentService;
     if(key==='race.boost')return raceVoicePriority(ui.raceVoiceKey || '')<40 && state.phase==='racing' && !view.currentService;
@@ -81,7 +82,7 @@ function say(text,key,{allowPaused=false,queue=false}={}) {
             return;
         }
         // Starting lights and the result take priority over encouragement.
-        if(priority>=75)queue=false;
+        if(priority>=75&&!/^race\.festival\./.test(key))queue=false;
         if(queue && !raceSpeechRelevant(key))return;
     }
     if(queue && audio.busy){ui.pendingSpeech={text,key,allowPaused,generation:state.generation};return;}
@@ -103,10 +104,10 @@ function task(text,emoji,key='') {
 }
 function clearTransientPictures() {
     audio.stop();if(music)music.stop({reset:true});
-    Object.assign(ui,{raceVoiceKey:null,raceLayoutKey:'',racePraiseAt:-Infinity,whistle:0,pendingSpeech:null,hoverNode:null,hoverDeadline:null,lastAnnouncement:'',lastTimestamp:null});
+    Object.assign(ui,{festival:null,finishWelcomed:false,raceVoiceKey:null,raceLayoutKey:'',racePraiseAt:-Infinity,whistle:0,pendingSpeech:null,hoverNode:null,hoverDeadline:null,lastAnnouncement:'',lastTimestamp:null});
 }
 function menuButtons() {
-    const id=ui.albumOpen?'albumOverlay':state.paused?'pauseOverlay':state.screen==='race-start'?'raceStartOverlay':state.phase==='complete'?'rewardOverlay':null;
+    const id=ui.albumOpen?'albumOverlay':state.paused?'pauseOverlay':state.screen==='race-start'?'raceStartOverlay':ui.festival?.results?'rewardOverlay':null;
     return id?[...$(id).querySelectorAll('button[data-action]')].filter(button=>!button.closest('[hidden],[inert]')&&!button.disabled):[];
 }
 function selectMenu(index,focus=true,read=true) {
@@ -165,8 +166,8 @@ function picture(parent,id,kind='landmark') {
     svgNode('use',{href:`#${kind}-${id}`,width:kind==='portrait'?100:120,height:100},svg);
     return svg;
 }
-function resizeScene(){if(ui.raceView && state.race){ui.raceView.resize();ui.raceView.render(state.race,{paused:state.paused,time:ui.time,whistle:ui.whistle});}}
-function drivingWheelTurns(){return state.race?.player.wheelTurns || 0;}
+function resizeScene(){if(ui.raceView && state.race){ui.raceView.resize();ui.raceView.render(presentationRace(),{paused:state.paused,time:ui.time,whistle:ui.whistle,festival:ui.festival});}}
+function drivingWheelTurns(){return ui.festival?.race.player.wheelTurns || state.race?.player.wheelTurns || 0;}
 function ensureRaceView() {
     if(ui.raceView && ui.raceView.available!==false)return true;
     let failed=false;
@@ -194,6 +195,39 @@ function raceTaskPicture(type) {
         downhill:'challenge-downhill',tunnel:'race-tunnel',snow:'race-snow',wet:'race-water',
         repairs:'challenge-repairs',rocks:'race-rocks',coal:'race-coal','level-crossing':'race-level-crossing'})[type] || 'race-flag';
 }
+function presentationRace(){return ui.festival?.race || (state.race&&ThomasRaceCore.getPresentationRace(state.race));}
+function festivalKey(){
+    if(!ui.festival)return '';
+    if(ui.festival.results||ui.festival.stage==='thanks')return 'race.festival.'+state.race.deliveryTheme;
+    return 'race.festival.'+(ui.festival.stage==='arrival'?'arrival':state.race.winner==='player'?'win':state.race.winner==='rival'?'lose':'tie');
+}
+function updateFestivalHud(){
+    const f=ui.festival;if(!f)return;
+    $('festivalTitle').textContent=f.stage==='arrival'&&!f.results?'Welcome to the finish festival!':state.race.winner==='tie'?'A shared first place!':state.race.winner==='player'?`${ThomasRaceCore.character(state.race.playerId).name} wins!`:`${ThomasRaceCore.character(state.race.opponentId).name} wins! ${ThomasRaceCore.character(state.race.playerId).name} finishes second.`;
+    $('festivalMessage').textContent=f.stage==='arrival'&&!f.results?'The whole island is cheering you home.':f.stage==='award'&&!f.results?words(festivalKey()):words('race.festival.'+state.race.deliveryTheme);
+    $('festivalResultAwardPicture').setAttribute('href',state.race.winner==='rival'?'#festival-rosette':'#festival-trophy');
+    const thanks=f.results||f.elapsed>=7;show('festivalJobs',thanks);
+    for(let i=0;i<$('festivalJobs').children.length;i++)$('festivalJobs').children[i].classList.toggle('lit',f.results||f.elapsed>=7+i*.18);
+    ui.taskKey=festivalKey();ui.task=words(ui.taskKey);$('promptText').textContent=ui.task;
+}
+function ensureFestival(){
+    if(state.phase!=='complete'||ui.festival)return;
+    ui.festival=ThomasRaceCore.createFinishPresentation(state.race);
+    audio.stop();ui.pendingSpeech=null;ui.raceVoiceKey=null;
+    $('festivalJobs').replaceChildren();
+    for(const job of state.race.services){const svg=svgNode('svg',{viewBox:'0 0 120 100','aria-hidden':'true'},$('festivalJobs'));svgNode('use',{href:'#'+raceTaskPicture(job.type),width:120,height:100},svg);}
+    audio.effect('festival');say(words('race.festival.arrival'),'race.festival.arrival');
+}
+function advanceFestival(seconds){
+    const f=ui.festival,stage=f.stage,results=f.results;
+    ThomasRaceCore.stepFinishPresentation(f,seconds);
+    if(f.stage!==stage&&!results){
+        if(f.stage==='award')audio.effect('applause');
+        say(words(festivalKey()),festivalKey(),{queue:f.stage==='thanks'});
+    }
+    if(!results&&f.results){render();ui.menuIndex=0;selectMenu(0,true,false);}else renderRacePresentation();
+}
+
 function renderRacePresentation() {
     const race=state.race;if(!race)return;
     const view=ThomasRaceCore.getView(race),service=view.currentService;
@@ -267,10 +301,10 @@ function renderRacePresentation() {
     if(serviceVoice(ui.raceVoiceKey) && !raceSpeechRelevant(ui.raceVoiceKey)){
         audio.stop();ui.raceVoiceKey=null;ui.pendingSpeech=null;
     }
-    const events=race.events.splice(0),lastReward=events.findLast(event=>event.type==='boost-earned');
+    const events=race.phase==='complete'?[]:race.events.splice(0),lastReward=events.findLast(event=>event.type==='boost-earned');
     for(const event of events){
         if(event.type.startsWith('rival-') || event.vehicle==='rival' || event.who==='rival')continue;
-        if(race.phase==='complete' && event.type!=='complete')continue;
+        if(event.type==='complete')continue;
         if(event===lastReward)playStarChime();
         if(!event.key)continue;
         if(event.type==='service-action')continue;
@@ -281,38 +315,43 @@ function renderRacePresentation() {
         }
         say(words(event.key),event.key,{queue:event.type==='delivery-goal'});
     }
+    if(race.rival.finishEvent&&!ui.finishWelcomed){ui.finishWelcomed=true;if(!ui.festival)audio.effect('applause');}
+    if(ui.festival)updateFestivalHud();
     if(ui.raceView){
-        const layoutKey=`${race.phase}:${state.paused}:${ui.albumOpen}:${!!service}`;
+        const layoutKey=`${race.phase}:${state.paused}:${ui.albumOpen}:${!!service}:${!!ui.festival?.results}`;
         if(ui.raceLayoutKey!==layoutKey){ui.raceLayoutKey=layoutKey;ui.raceView.resize();}
-        ui.raceView.render(race,{paused:state.paused || ui.albumOpen,time:ui.time,whistle:ui.whistle});
+        ui.raceView.render(presentationRace(),{paused:state.paused || ui.albumOpen,time:ui.time,whistle:ui.whistle,festival:ui.festival});
     }
 }
 
 function render() {
     if(ui.lastGeneration!==state.generation){clearTransientPictures();ui.lastGeneration=state.generation;ui.task='';ui.taskKey='';}
-    const playing=state.screen==='play',completed=playing && state.phase==='complete';
-    const overlay=!playing || state.paused || completed || ui.albumOpen;
+    ensureFestival();
+    const playing=state.screen==='play',completed=playing && state.phase==='complete',results=completed&&ui.festival.results;
+    const overlay=!playing || state.paused || results || ui.albumOpen;
     show('raceStartOverlay',!playing && !ui.albumOpen);show('raceUnavailable',!playing && ui.raceUnavailable);
-    show('pauseOverlay',playing && state.paused && !ui.albumOpen);show('rewardOverlay',completed && !state.paused && !ui.albumOpen);show('albumOverlay',ui.albumOpen);
+    show('pauseOverlay',playing && state.paused && !ui.albumOpen);show('rewardOverlay',results && !state.paused && !ui.albumOpen);show('albumOverlay',ui.albumOpen);
     for(const id of ['challengePanel','raceOrder','raceDashboard','raceCanvas'])show(id,playing);
     if(!playing){renderCharacterChoices();show('raceMatchup',false);show('raceStartLights',false);show('action-race-help',false);$('action-whistle').classList.remove('hint');}
     $('playWorld').classList.add('is-race');$('footerDashboard').classList.add('is-race');
     if(playing && !ensureRaceView())return;
     if(!playing && ui.raceView){ui.raceView.dispose();ui.raceView=null;}
     $('playSurface').inert=overlay;$('footerDashboard').inert=overlay;
-    show('footerDashboard',playing && !completed);show('action-whistle',playing && !completed);
-    document.querySelector('[data-action="pause"]').hidden=!playing || completed;
+    show('festivalHud',completed&&!state.paused&&!ui.albumOpen);show('skipCelebration',completed&&!results);
+    $('footerDashboard').classList.toggle('festival-footer',completed);
+    show('challengePanel',playing&&!completed);
+    show('footerDashboard',playing&&!results);show('action-whistle',playing&&!results);
+    document.querySelector('[data-action="pause"]').hidden=!playing;
     $('modeLabel').textContent=playing?'Sodor Delivery Race':'Ready to race';
     $('statusText').textContent=playing?'Help with jobs and earn speed boosts.':'';
     if(playing){
-        $('rewardReplay').setAttribute('aria-label','Choose racers for the next race');
         const character=ThomasRaceCore.getCharacter(state.race),signal=character.power==='rotor'?'radio':character.power==='diesel'?'horn':'whistle';
         $('pausePortrait').setAttribute('href',`#${character.portrait}`);$('pauseTitle').textContent=`${character.name} is having a rest`;
         $('raceCanvas').setAttribute('aria-label',`${character.name} racing against ${ThomasRaceCore.character(state.race.opponentId).name}`);
         $('action-whistle').setAttribute('data-narration','ui.'+signal);
         $('action-whistle').setAttribute('aria-label',words('ui.'+signal));
         $('action-whistle').querySelector('use').setAttribute('href','#rule-'+signal);
-        $('raceResultPortrait').setAttribute('href',`#portrait-${state.race.winner==='player' || state.race.winner==='tie'?state.race.playerId:state.race.opponentId}`);
+        $('raceResultPortrait').setAttribute('href',`#portrait-${state.race.playerId}`);
         const resultKey=`race.complete.${state.race.winner==='player'?'win':state.race.winner==='tie'?'tie':'lose'}`;
         $('rewardTitle').textContent=words(resultKey);$('resultText').textContent=words(resultKey);
         renderRacePresentation();
@@ -369,11 +408,16 @@ function dispatchAction(action,payload) {
         if(state.screen!=='race-start'||ui.albumOpen)return false;
         const role=action==='toggle-player-picker'?'player':'opponent';setPicker(ui.openPicker===role?null:role,true);return true;
     }
+    if(action==='skip-celebration'){
+        if(!active()||!ui.festival||!ThomasRaceCore.skipFinishPresentation(ui.festival))return false;
+        audio.stop();ui.pendingSpeech=null;ui.raceVoiceKey=null;render();ui.menuIndex=0;selectMenu(0,true,false);return true;
+    }
+    if(action==='whistle'&&ui.festival&&active()){playPeepPeepWhistle();ui.whistle=.8;return true;}
     if(!game.dispatch(action,payload))return false;
     if(['select-player','select-opponent'].includes(action)){
         const role=action==='select-player'?'player':'opponent';ui.openPicker=null;renderCharacterChoices();selectMenu(menuButtons().indexOf($(role+'PickerButton')),true,false);announce(`race.character.${payload}`,{force:true});return true;
     }
-    if(['home','next-race','start-race'].includes(action)){
+    if(['home','next-race','start-race','rematch'].includes(action)){
         ui.albumOpen=false;ui.openPicker=null;ui.menuIndex=0;ui.racePosition=null;ui.raceUnavailable=false;
     }
     if(action==='resume'){ui.lastTimestamp=null;audio.unlock();say(ui.task,ui.taskKey);}
@@ -381,7 +425,7 @@ function dispatchAction(action,payload) {
     if(['race-help','race-clean-spot'].includes(action))playPopSound(700);
     render();
     if(menuButtons().length){focusMenuDefault();if(action==='home'||action==='next-race')announce('race.menu',{force:true});}
-    else if(['resume','start-race','race-help','race-clean-spot'].includes(action))focusStage();
+    else if(['resume','start-race','rematch','race-help','race-clean-spot'].includes(action))focusStage();
     return true;
 }
 
@@ -425,6 +469,10 @@ document.addEventListener('keydown',event=>{
         }
         return;
     }
+    if(active()&&ui.festival&&!ui.festival.results){
+        if(event.key===' '&&!event.target.closest('button')){event.preventDefault();dispatchAction('whistle');return;}
+        if(event.key==='Enter'&&!event.target.closest('button')){event.preventDefault();dispatchAction('skip-celebration');return;}
+    }
     const driving=active() && state.phase!=='complete';
     if(driving && event.key==='Enter' && !event.target.closest('button,[role="button"]')){
         event.preventDefault();if(ThomasRaceCore.getView(state.race).helpEnabled)dispatchAction('race-help');return;
@@ -462,14 +510,18 @@ document.addEventListener('visibilitychange',()=>{ui.windowActive=!document.hidd
 function frame(timestamp) {
     const elapsed=ui.lastTimestamp===null?0:Math.max(0,(timestamp-ui.lastTimestamp)/1000);
     const dt=Math.min(.1,elapsed); ui.lastTimestamp=timestamp;
-    if(active() && state.mode==='race'){
-        const before=state.phase;game.step(elapsed);ui.time+=elapsed;ui.whistle=Math.max(0,ui.whistle-elapsed);
-        if(before!==state.phase)render();else renderRacePresentation();
-        if(before!=='complete' && state.phase==='complete'){
-            playPeepPeepWhistle();playStarChime(true);render();ui.menuIndex=0;selectMenu(0,true,false);
+    if(active() && ui.windowActive && !document.hidden && state.mode==='race'){
+        ui.time+=elapsed;ui.whistle=Math.max(0,ui.whistle-elapsed);
+        if(ui.festival)advanceFestival(elapsed);
+        else {
+            const before=state.phase;game.step(elapsed);
+            if(before!==state.phase){render();if(state.phase==='complete')focusStage();}
+            else renderRacePresentation();
         }
     }
-    audio.update(dt,{distance:state.distance,velocity:state.velocity,targetVelocity:state.targetVelocity,wheelTurns:drivingWheelTurns(),vehiclePower:state.race?ThomasRaceCore.getCharacter(state.race).power:'steam',vehicleType:state.race?ThomasRaceCore.getCharacter(state.race).vehicleType:'rail',rotorActive:!!state.race&&(ThomasRaceCore.getCharacter(state.race).power==='rotor'||ThomasRaceCore.getCharacter(state.race,'rival').power==='rotor'&&Math.abs(state.race.player.distance-state.race.rival.distance)<6000),rotorLevel:state.race&&ThomasRaceCore.getCharacter(state.race).power==='rotor'?.12:.045,isActive:active() && ui.windowActive && !document.hidden && state.phase==='racing'});if(music)music.update();
+    const motionRace=presentationRace(),motion=motionRace?.player;
+    const rotorNearby=!!motionRace&&(ThomasRaceCore.getCharacter(motionRace).power==='rotor'||ThomasRaceCore.getCharacter(motionRace,'rival').power==='rotor'&&Math.abs(motionRace.player.distance-motionRace.rival.distance)<6000);
+    audio.update(dt,{distance:motion?.distance||state.distance,velocity:motion?.velocity||0,targetVelocity:motion?.targetVelocity||0,wheelTurns:drivingWheelTurns(),vehiclePower:state.race?ThomasRaceCore.getCharacter(state.race).power:'steam',vehicleType:state.race?ThomasRaceCore.getCharacter(state.race).vehicleType:'rail',rotorActive:rotorNearby,rotorLevel:state.race&&ThomasRaceCore.getCharacter(state.race).power==='rotor'?.12:.045,isActive:active() && ui.windowActive && !document.hidden && (state.phase==='racing'||!!ui.festival&&(motion?.velocity>1||rotorNearby))});if(music)music.update();
     if(ui.hoverNode && ui.hoverDeadline!==null && timestamp>=ui.hoverDeadline){
         const node=ui.hoverNode;ui.hoverDeadline=null;
         if(!node.closest('[hidden],[inert]') && ui.audioUnlocked)announce(node.dataset.narration);

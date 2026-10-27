@@ -488,7 +488,7 @@
   function flightWorld(core,course,world,race){
     if(!race)return;
     for(const who of ['player','rival'])if(core.getCharacter(race,who).vehicleType==='air'){
-      for(const distance of [0,core.COURSES[course].length]){const p=core.sampleVehicleRoute(race,who,distance),pad=new T.Group();transformRoute(pad,p);world.add(pad);helipad(pad);}
+      for(const distance of [0]){const p=core.sampleVehicleRoute(race,who,distance),pad=new T.Group();transformRoute(pad,p);world.add(pad);helipad(pad);}
       for(const section of core.getTravelSections(race,who).filter(s=>s.cap<1&&!s.id.startsWith('service-'))){
         if(section.type==='tunnel'){
           const cloud=new T.Group();cloud.name='flight-cloud-section';cloud.userData={corridor:who,sectionId:section.id};world.add(cloud);
@@ -805,7 +805,7 @@
     }
   }
   function terrainAndTrack(core,courseId,opponent,world,services=[],playerId='thomas') {
-    const course=core.COURSES[courseId],length=course.length,railStart=-6000,railEnd=length+6000;
+    const course=core.COURSES[courseId],length=course.length,railStart=-6000,railEnd=length+30000;
     const channels=services.filter(s=>s.type==='drawbridge').map(s=>{const p=route(core,courseId,s.at,0);return{p,level:courseId==='harbour'?-1.25:-2.3};});
     const terrainOffset=(d,lane=0)=>{
       const p=route(core,courseId,d,lane),original=core.sampleTerrainHeight(courseId,d,lane);let height=lakeGround(core,courseId,d,lane,playerId,opponent);
@@ -820,7 +820,7 @@
     };
     const riverRows=[...new Set([...Array.from({length:101},(_,i)=>i*5-250),-34,-29,-23,-22,-18,-12,-8,-6,6,7,8,14,19])].sort((a,b)=>a-b);
     chunkRange(railStart,railEnd,10000,(start,end)=>{const nearRiver=services.some(s=>s.type==='drawbridge'&&s.at>start-6000&&s.at<end+6000);const ground=mesh(groundGeometry(core,courseId,start,end,terrainOffset,nearRiver?riverRows:null),C.grass,'continuous-ground');world.add(ground);ground.receiveShadow=true;});
-    if(courseId==='harbour')chunkRange(6000,length-4000,10000,(start,end)=>world.add(mesh(stripGeometry(core,courseId,-77,start,end,104,d=>-1.25-route(core,courseId,d,-77).y),0x79bed1,'continuous-harbour-water')));
+    if(courseId==='harbour')chunkRange(6000,railEnd,10000,(start,end)=>world.add(mesh(stripGeometry(core,courseId,-77,start,end,104,d=>-1.25-route(core,courseId,d,-77).y),0x79bed1,'continuous-harbour-water')));
     for(const offset of [0,-15].filter(lane=>core.character(lane===0?playerId:opponent).vehicleType!=='air'))chunkRange(railStart,railEnd,6000,(start,end)=>world.add(mesh(stripGeometry(core,courseId,offset,start,end,4.1,d=>{const bridge=course.sections.find(s=>s.type==='bridge'&&d>=s.start&&d<=s.end);return bridge?(core.sampleTerrainHeight?core.sampleTerrainHeight(courseId,d,offset)-route(core,courseId,d,offset).y+.02:-3.5):-.09+terrainOffset(d,offset);},125),C.grassLight,'railway-verge')));
     if(core.sampleTerrainHeight)for(const rows of [[8,10,14,19],[-23,-25,-29,-34]])world.add(mesh(groundGeometry(core,courseId,77000,113000,(d,lane)=>terrainOffset(d,lane)+.025,rows),0xa99875,'exposed-hillside-earth'));
     // One player railway and one independent neighbouring route: no branchwork.
@@ -1038,6 +1038,126 @@
     else for(const x of [-2,0,2]) {const lamp=sphere(g,.32,0xb95043,x,5.7,.25,1,1,.35,'start-light');lamp.userData.startLight=true;}
     return g;
   }
+  // Festival props live outside the running corridors. All motion uses race /
+  // presentation time, so pause and tab visibility freeze every animated mesh.
+  function makeFestival(core,race,world) {
+    const g=new T.Group();g.name='finish-festival-'+race.courseId;
+    transformRoute(g,route(core,race.courseId,core.COURSES[race.courseId].length,0));world.add(g);
+    const people=[],flags=[],awards={},ribbons={},confetti=[];
+    const colors=[0xef6554,0xf4c654,0x4eabd2,0x8e6bb0,0x60ad81];
+    function pennants(parent,x,z,length=12){
+      for(const dz of [0,length])cyl(parent,.075,4.6,C.wood,x,2.3,z+dz,'y','festival-bunting-post');
+      beam(parent,[x,4.4,z],[x,4.4,z+length],.025,C.cream,'bunting-string');
+      for(let i=0;i<9;i++){
+        const flag=plainBox(parent,.04,.6,.65,colors[i%colors.length],x,4.05,z+.6+i*length/9,'festival-pennant');
+        flag.userData.phase=i;flags.push(flag);
+      }
+    }
+    for(const x of [7,-23]){
+      box(g,4,.8,33,race.courseId==='mountain'?0xe3edf1:0xd8c19d,x,-.35,12,'festival-platform');
+      pennants(g,x+(x>0?2:-2),-2,27);
+      for(let i=0;i<10;i++){
+        const person=makePerson(colors[i%colors.length],1.1);person.name=race.deliveryTheme==='cargo'?'festival-dockworker':'festival-passenger';
+        add(g,person,x+(i%2)*.6,.07,-1+i*3.1);person.rotation.y=x>0?-.8:.8;
+        if(race.deliveryTheme==='cargo')cyl(person,.27,.16,0xf2c342,0,1.72,0,'y','worker-hard-hat');
+        if(race.courseId==='mountain'){sphere(person,.26,colors[(i+2)%5],0,1.76,0,1,.7,1,'winter-hat');sphere(person,.09,C.white,0,1.98,0);}
+        people.push(person);
+      }
+    }
+    const marshal=makePerson(C.blueDark,1.3);marshal.name='finish-flag-marshal';add(g,marshal,5.9,.1,-1.3);people.push(marshal);
+    const arm=marshal.userData.waveArm;
+    beam(arm,[0,-.35,0],[0,-1.8,0],.035,C.wood,'chequered-flag-pole');
+    for(let i=0;i<4;i++)for(let j=0;j<3;j++)plainBox(arm,.22,.21,.025,(i+j)%2?C.outline:C.white,.1+i*.22,-1.1-j*.21,0,'marshal-chequered-flag');
+    // The course settings share the same readable ceremony footprint.
+    if(race.courseId==='country'){
+      box(g,10,1.8,10,0xb9aa91,-31,-.9,13,'station-foundation');
+      box(g,9,4.5,9,0xe7c996,-31,2.1,13,'festival-station');box(g,10,.5,10,0xb55646,-31,4.6,13,'station-roof');
+      for(const z of [10,13,16])box(g,.1,1.6,1.3,0x79b4c7,-26.4,2.4,z,'station-window');
+      cyl(g,.85,.15,0xffedbd,-26.3,3.7,13,'x','station-clock');
+      for(const z of [3,22]){box(g,3,.2,1.1,C.wood,-28,.9,z,'party-table');for(const dz of [-.3,.3])sphere(g,.18,colors[1],-28,1.2,z+dz);}
+    }else if(race.courseId==='harbour'){
+      // This quay meets the course's continuous harbour water.
+      box(g,2,.7,110,0xae9e87,-26,-.8,14,'festival-quay-wall');
+      box(g,2,.7,47,0xae9e87,-26,-.2,14,'festival-quayside');
+      for(let i=0;i<3;i++){
+        const boat=new T.Group();boat.name='decorated-festival-boat';add(g,boat,-34-i%2*5,-1.05,-5+i*17);
+        sphere(boat,1,colors[i],0,.2,0,2,.7,4.5,'festival-boat-hull');box(boat,2,1.6,3,C.cream,0,1,0,'boat-cabin');
+        cyl(boat,.07,6,C.wood,0,3,0,'y','boat-mast');for(let j=0;j<5;j++)plainBox(boat,.04,.5,.65,colors[j],0,5-j*.5,-2+j,'boat-bunting');
+        flags.push(boat);boat.userData.boat=true;boat.userData.phase=i;
+      }
+    }else{
+      box(g,14,1.8,40,0xafb4ae,-32,-.9,12,'winter-festival-platform');
+      box(g,14,.10,40,0xf0f5ef,-32,.01,12,'snow-festival-ground');
+      for(const z of [1,23]){
+        sphere(g,1,0xf8f8ef,-29,.95,z);sphere(g,.7,0xf8f8ef,-29,2.4,z);sphere(g,.48,0xf8f8ef,-29,3.45,z);
+        cyl(g,.6,.13,C.outline,-29,3.8,z);cyl(g,.37,.6,C.outline,-29,4.08,z);
+        sphere(g,.12,0xea8d40,-28.5,3.45,z,1.8,1,1,'snowman-nose');
+      }
+      box(g,8,3,7,0x916857,-36,1.5,12,'festival-hot-chocolate-stall');box(g,9,.4,8,0xf5efe0,-36,3.2,12,'snowy-stall-roof');
+    }
+    for(const who of ['player','rival']){
+      const c=core.getCharacter(race,who),lane=who==='player'?0:core.RIVAL_LANE,air=c.vehicleType==='air';
+      if(air){
+        const z=core.finishRunout(race,who)*core.WORLD_SCALE;
+        cyl(g,4,.36,0x6e948a,lane,-.14,z,'y','festival-helipad');torus(g,3.4,.025,C.cream,lane,.05,z,'y','helipad-ring');
+        for(const x of [-.9,.9])box(g,.18,.015,2.9,C.white,lane+x,.05,z,'helipad-H');box(g,1.8,.015,.18,C.white,lane,.05,z,'helipad-H');
+      }
+      const ribbon=new T.Group();ribbon.name=who+'-finish-ribbon';add(g,ribbon,lane,air?9.2:1.5,0);
+      for(const side of [-1,1]){const half=plainBox(ribbon,2.7,.28,.035,0xe95554,side*1.35,0,0,'ribbon-half');half.userData.side=side;}
+      ribbons[who]=ribbon;
+      const award=new T.Group();award.name=who+'-festival-award';g.add(award);awards[who]=award;
+      box(award,2.6,.34,1.8,C.stone,0,-.15,0,'award-foundation');
+      const trophy=new T.Group();trophy.name='gold-trophy';award.add(trophy);
+      box(trophy,1.5,.18,1.1,0x466577,0,.12,0,'trophy-base');cyl(trophy,.18,.65,0xe5ae38,0,.5,0);
+      cyl(trophy,.42,.95,0xffd75e,0,1.25,0,'y','gold-cup',.73);
+      for(const side of [-1,1])torus(trophy,.43,.09,0xffcf4e,side*.62,1.38,0,'z','trophy-handle');
+      const rosette=new T.Group();rosette.name='silver-rosette';award.add(rosette);
+      cyl(rosette,.06,1.5,C.wood,0,.75,0);for(const side of [-1,1]){const tail=box(rosette,.25,.8,.04,0x769ab9,side*.18,.9,0,'rosette-tail');tail.rotation.z=side*.22;}
+      for(let i=0;i<12;i++)sphere(rosette,.19,0xd1dfe8,Math.sin(i*TAU/12)*.48,1.6+Math.cos(i*TAU/12)*.48,0,1,1,.3,'silver-rosette-petal');
+      cyl(rosette,.36,.12,0xf1f5f7,0,1.6,.06,'z','rosette-centre');
+      const first=new T.Group();first.name='first-place-flag';add(award,first,1.1,0,0);
+      cyl(first,.045,3.2,C.wood,0,1.6,0);box(first,1,.65,.035,0xffd75e,.5,2.85,0,'winner-flag');box(first,.11,.42,.05,C.outline,.5,2.85,.03,'first-place-one');
+      award.userData={trophy,rosette,first};award.visible=false;
+      for(let i=0;i<42;i++){
+        const piece=plainBox(g,.12,.2,.035,i%3===0?0xffd75e:i%3===1?c.color:C.white,0,0,0,'festival-confetti');
+        piece.castShadow=false;piece.userData={who,index:i};piece.visible=false;confetti.push(piece);
+      }
+    }
+    g.traverse(o=>{if(o.isMesh)o.castShadow=false;});
+    return {group:g,people,flags,marshal,awards,ribbons,confetti};
+  }
+  function updateFestival(b,race,options){
+    const f=b.festival,t=race.elapsed,festival=options.festival;
+    const near=race.player.distance>b.core.COURSES[race.courseId].length-7000;
+    f.group.visible=near;if(!near)return;
+    for(let i=0;i<f.people.length;i++){
+      const p=f.people[i],enthusiasm=festival?.stage==='thanks'?1:.7;
+      p.userData.waveArm.rotation.z=2.5+Math.sin(t*3+i)*.28*enthusiasm;
+      p.rotation.z=Math.sin(t*2+i)*.025;
+    }
+    for(const flag of f.flags){if(flag.userData.boat){flag.rotation.z=Math.sin(t+flag.userData.phase)*.025;}else flag.rotation.y=Math.sin(t*2+flag.userData.phase)*.22;}
+    for(const who of ['player','rival']){
+      const arrival=b.core.finishArrival(race,who),award=f.awards[who],ribbon=f.ribbons[who];
+      const other=who==='player'?'rival':'player';
+      const first=!!arrival&&(!race[other].finishEvent||race[who].finishTime<=race[other].finishTime+.05);
+      ribbon.visible=!arrival||arrival.age<1.5;
+      for(const half of ribbon.children){const age=arrival?Math.min(1.5,arrival.age):0;half.position.x=half.userData.side*(1.35+age*3);half.position.y=-age*.7;half.rotation.z=half.userData.side*age*.8;}
+      // The computer's first-place flag appears at its crossing, even while the
+      // human is still driving. The human award follows the festival's beats.
+      award.visible=!!arrival&&(who==='rival'||!!festival&&(festival.elapsed>=4.5||festival.results));
+      const win=race.winner==='tie'||(race.winner?race.winner===who:first);
+      award.userData.trophy.visible=win;award.userData.first.visible=win;award.userData.rosette.visible=!win;
+      const lane=who==='player'?0:b.core.RIVAL_LANE;
+      const z=arrival?(arrival.distance-b.core.COURSES[race.courseId].length)*b.core.WORLD_SCALE:0;
+      award.position.set(lane+4,0,b.core.finishRunout(race,who)*b.core.WORLD_SCALE+1);award.rotation.y=.45;
+      // A single finite, deterministic burst; no new particles on Skip/resume.
+      const burst=arrival?arrival.age-(who==='player'?4.5:0):-1;
+      for(const piece of f.confetti.filter(p=>p.userData.who===who)){
+        const i=piece.userData.index,a=i*2.39996;piece.visible=!festival?.skipped&&win&&burst>=0&&burst<2.5;
+        if(piece.visible){piece.position.set(lane+Math.sin(a)*(1+burst*1.5),2.8+burst*3.2-burst*burst*1.5+(i%7)*.16,z-1+Math.cos(a)*(1+burst*1.3));piece.rotation.set(burst*3+i,burst*2+i,burst*4);}
+      }
+    }
+  }
   function buildWorld(core,courseId,opponent,race=null) {
     const world=new T.Group();world.name='race-world-'+courseId;
     const lakeside=terrainAndTrack(core,courseId,opponent,world,race?.services||[],race?.playerId||'thomas');
@@ -1046,6 +1166,7 @@
     for(let i=0;i<Math.ceil(course.length/3200);i++){if(!clearCrossing(-5000+i*3200,38))continue;const p=route(core,courseId,-5000+i*3200,(i%2?-1:1)*(65+i%3*14)-6);sphere(world,12+i%4,courseId==='harbour'?0x88b8a2:0x8db97e,p.x,p.y-7,p.z,2.2,.8,2.3,'distant-rolling-hill');}
     let k=0;
     for(let d=-3500;d<course.length+5000;d+=1500) {
+      if(d>course.length-6000)continue;
       const seed=(Math.sin(d*1.923+5)*.5+.5),lane=(k%2?1:-1)*(20+seed*10)-6;
       const p=route(core,courseId,d,lane);if(core.sampleTerrainHeight)p.y=core.sampleTerrainHeight(courseId,d,lane);if(clearCrossing(d,2)&&!(courseId==='harbour'&&lane<-22&&d>6000&&d<course.length-4000)&&!course.sections.some(s=>s.type==='bridge'&&d>s.start-1200&&d<s.end+1200))tree(world,p,.8+seed*.8,k);
       if(k%5===0&&clearCrossing(d+400,4)){const lane=courseId==='harbour'?18:(k%2?22:-30),p=route(core,courseId,d+400,lane);if(core.sampleTerrainHeight)p.y=core.sampleTerrainHeight(courseId,d+400,lane);house(world,p,k);}
@@ -1065,7 +1186,8 @@
     }
     if(core.sampleTerrainHeight)for(let d=79000;d<114000;d+=2800){if(!clearCrossing(d,2))continue;const lane=22+(Math.floor(d/2800)%3)*3,p=route(core,courseId,d,lane);p.y=core.sampleTerrainHeight(courseId,d,lane);sphere(world,.55,0x9a9b87,p.x,p.y+.25,p.z,1.5,.8,1.2,'hillside-rock');}
     const start=startFinish(core,courseId,world,-900,false);startFinish(core,courseId,world,course.length,true);
-    return {world,start,objects,lakeside};
+    const festival=makeFestival(core,race||core.createRace({courseId,playerId:opponent==='thomas'?'percy':'thomas',opponentId:opponent}),world);
+    return {world,start,objects,lakeside,festival};
   }
   function makeSteam(kind='thomas') {
     const group=new T.Group();group.name='soft-independent-steam-'+kind;
@@ -1113,6 +1235,7 @@
     const built=buildWorld(core,courseId,opponent,race);scene.add(built.world);built.world.updateMatrixWorld(true);
     // Static world matrices are frozen; service fixtures and vehicles stay dynamic.
     built.world.traverse(o=>{o.updateMatrix();o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;});
+    built.festival.group.traverse(o=>{o.matrixAutoUpdate=o.matrixWorldAutoUpdate=true;});
     built.lakeside.weather.traverse(o=>{o.matrixAutoUpdate=o.matrixWorldAutoUpdate=true;});
     for(const r of built.lakeside.ripples)r.matrixAutoUpdate=r.matrixWorldAutoUpdate=true;
     const playerId=race?.playerId||'thomas',player=makeVehicle(playerId),rival=makeVehicle(opponent),playerCoach=core.character(playerId).vehicleType==='air'?makeFlightPayload(theme):makeDeliveryCoach(theme,core.character(playerId).vehicleType==='road'),rivalCoach=core.character(opponent).vehicleType==='air'?makeFlightPayload(theme):makeDeliveryCoach(theme,core.character(opponent).vehicleType==='road');makeMud(player);makeMud(rival);makeCoalBunker(player);makeCoalBunker(rival);scene.add(player,rival,playerCoach,rivalCoach);
@@ -1123,7 +1246,7 @@
     const playerSplashes=new T.Group(),rivalSplashes=new T.Group();
     for(const g of [playerSplashes,rivalSplashes]){g.name='wheel-flood-splashes';g.visible=false;scene.add(g);for(let i=0;i<12;i++){const drop=sphere(g,.065,0xc0e3e5,0,0,0,1,1.5,1,'wheel-splash');drop.castShadow=false;}}
     const camera=new T.PerspectiveCamera(50,16/9,.2,360);camera.name='stable-three-quarter-camera';
-    return {scene,camera,lakeside:built.lakeside,playerSplashes,rivalSplashes,player,rival,playerShadow,rivalShadow,playerCoach,rivalCoach,playerCoupler,rivalCoupler,world:built.world,start:built.start,objects:built.objects,sun,steam,rivalSteam,core,courseId,playerId,opponent,theme};
+    return {scene,camera,festival:built.festival,lakeside:built.lakeside,playerSplashes,rivalSplashes,player,rival,playerShadow,rivalShadow,playerCoach,rivalCoach,playerCoupler,rivalCoupler,world:built.world,start:built.start,objects:built.objects,sun,steam,rivalSteam,core,courseId,playerId,opponent,theme};
   }
   function poseVehicle(v,state,core,race,who) {
     const flight=core.getFlightPose(race,who);
@@ -1163,10 +1286,13 @@
     // Preserve the stable three-quarter camera and responsive framing.
     const narrow=b.camera.aspect<1.2;
     const hasAir=[race.playerId,race.opponentId].some(id=>b.core.character(id).vehicleType==='air');
-    const side=narrow?55:60,forward=80,height=hasAir?30:25,focusForward=narrow?5:30,focusLane=narrow?(hasAir?-3:-.9):-5;
+    const approach=Math.max(0,Math.min(1,(race.player.distance-b.core.COURSES[race.courseId].length+4500)/4500));
+    const widen=options.festival?.5+.5*Math.min(1,options.festival.elapsed/4.5):.5*approach*approach*(3-2*approach);
+    const awardAhead=Math.max(0,Math.min(12,12-(race.player.distance-b.core.COURSES[race.courseId].length)*b.core.WORLD_SCALE));
+    const side=narrow?55:60,forward=80,height=(hasAir?30:25)+widen*2,focusForward=(narrow?5:30)*(1-widen)+awardAhead*widen,focusLane=(narrow?(hasAir?-3:-.9):-5)*(1-widen)-7.5*widen;
     // A modest telephoto view keeps the familiar large face and proportions while
     // moving the fixed camera ahead enough for screen-left/right to stay truthful.
-    b.camera.fov=narrow?2*Math.atan(Math.tan(17*PI/360)*Math.max(1,(375/420)/b.camera.aspect))*180/PI:2*Math.atan(Math.tan(25*PI/360)*Math.max(1,1.75/b.camera.aspect))*180/PI;if(hasAir)b.camera.fov*=narrow?1.38:1.15;b.camera.updateProjectionMatrix();
+    b.camera.fov=narrow?2*Math.atan(Math.tan(17*PI/360)*Math.max(1,(375/420)/b.camera.aspect))*180/PI:2*Math.atan(Math.tan(25*PI/360)*Math.max(1,1.75/b.camera.aspect))*180/PI;if(hasAir)b.camera.fov*=narrow?1.38:1.15;b.camera.fov*=1+widen*(narrow?(hasAir?.04:.22):.06);if(narrow&&!hasAir)b.camera.fov*=1+.17*approach;b.camera.updateProjectionMatrix();
     b.camera.position.set(frame.x+side*cs+forward*sn,frame.y+height,frame.z-side*sn+forward*cs);
     b.camera.lookAt(frame.x+focusLane*cs+focusForward*sn,frame.y+(hasAir?5.5:narrow?2.5:1.6),frame.z-focusLane*sn+focusForward*cs);
     b.camera.updateMatrixWorld();b.scene.updateMatrixWorld(true);
@@ -1176,6 +1302,7 @@
     updateVehicleSteam(b.steam,b.player,race.player,race,b.core);
     updateVehicleSteam(b.rivalSteam,b.rival,race.rival,race,b.core);
     b.start.traverse(o=>{if(o.userData.startLight){o.material=material(race.phase==='countdown'?((race.countdown||0)<=b.core.START_COUNTDOWN/2?0xefbe50:0xca5347):0x58b85e);}});
+    updateFestival(b,race,options);
     updateLakeside(b,race);updateRaceObjects(b,race);updateServices(b,race);for(const who of ['player','rival']){const v=race[who];b[who].userData.mudPatches.forEach((patch,i)=>patch.visible=!!v.mudPatches?.[i]);
       const fill=b[who].userData.coalFill;if(fill){const partial=v.service?.type==='coal'&&v.service.phase==='working'?v.service.progress/3:0;fill.scale.y=.2+.8*Math.min(1,v.coal+partial);}
       }b.scene.updateMatrixWorld(true);return b;

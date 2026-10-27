@@ -57,15 +57,15 @@ for(const keyboard of [true,false])test(`complete muted ${keyboard?'keyboard-onl
  assert.equal(result.stars,3);assert.ok(result.stickers.includes('race-finisher'));
  for(let i=0;i<8;i++)assert.equal(opacity(node(ui,`raceCompletedJob${i}`)),1);
  ui.frames(5);ui.evaluate('game.step(20);render()');assert.equal(ui.state().stars,3);
- assert.equal(node(ui,'rewardReplay').dataset.action,'next-race');assert.equal(node(ui,'rewardAlternative').dataset.action,'home');
+ assert.equal(node(ui,'rewardReplay').dataset.action,'rematch');assert.equal(node(ui,'rewardAlternative').dataset.action,'next-race');
 });
 test('Next race draws a fresh friend, course, jobs and delivery; Home shows the racer panels',()=>{
  const ui=setup();start(ui);const original=ui.state().race;complete(ui);
- ui.click('#rewardReplay');assert.equal(ui.state().screen,'race-start');start(ui);const race=ui.state().race;
+ ui.click('#skipCelebration');ui.click('#rewardAlternative');assert.equal(ui.state().screen,'race-start');start(ui);const race=ui.state().race;
  for(const key of ['seed','courseId','opponentId','deliveryTheme'])assert.notEqual(race[key],original[key],key);
  assert.equal(ui.state().stars,3);complete(ui);
  assert.equal(ui.state().phase,'complete');assert.equal(ui.state().stars,6);
- ui.click('#rewardAlternative');assert.equal(ui.state().screen,'race-start');assert.equal(node(ui,'raceStartOverlay').hidden,false);
+ ui.click('#skipCelebration');ui.click('#rewardAlternative');assert.equal(ui.state().screen,'race-start');assert.equal(node(ui,'raceStartOverlay').hidden,false);
 });
 test('saved pairing varies new races without erasing legacy rewards; invalid storage remains playable',()=>{
  const saved=JSON.stringify({version:1,stars:12,stickers:['apple-delivery','driving-challenges'],lastRace:{courseId:'country',opponentId:'percy'}});

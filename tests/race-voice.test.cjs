@@ -128,9 +128,9 @@ test('mute cancels race speech and unmute repeats the current railway job', () =
 test('results take priority over boost praise without an obsolete speech queue', () => {
     const ui = heldVoice(); racing(ui);
     speak(ui, 'race.boost');
-    ui.evaluate("state.phase='complete';state.race.phase='complete';state.race.winner='player'");
-    speak(ui, 'race.complete.win');
-    assert.equal(lastWords(ui), 'You win! What a splendid race!');
+    ui.evaluate("state.phase='complete';state.race.phase='complete';state.race.winner='player';ui.festival={stage:'award',results:false}");
+    speak(ui, 'race.festival.win');
+    assert.equal(lastWords(ui), 'First place! A golden trophy for you!');
     assert.equal(ui.evaluate('ui.pendingSpeech'), null);
 });
 

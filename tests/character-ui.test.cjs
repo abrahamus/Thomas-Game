@@ -29,7 +29,7 @@ for(const id of ids)for(const theme of ['passengers','cargo'])test(`${id}: compl
  assert.equal(ui.state().race.deliveryTheme,theme);finish(ui,theme==='passengers');
  const r=ui.state().race;assert.equal(r.winner,'player');assert.equal(r.player.serviceStates.filter(s=>s.completed).length,8);
  assert.equal(node(ui,'raceResultPortrait').getAttribute('href'),'#portrait-'+id);assert.ok(ui.state().stickers.includes('race-winner'));
- ui.click('#rewardReplay');assert.equal(ui.state().screen,'race-start');assert.equal(ui.state().race,null);
+ ui.click('#skipCelebration');ui.click('#rewardAlternative');assert.equal(ui.state().screen,'race-start');assert.equal(ui.state().race,null);
  assert.deepEqual(ui.state().selections,{playerId:id,opponentId:opponent});
  ui.click('#startRaceButton');assert.equal(ui.state().race.playerId,id);assert.equal(ui.state().race.opponentId,opponent);
 });
@@ -41,11 +41,11 @@ test('random choices stay random across rounds and unavailable WebGL preserves c
  const failed=setup(undefined,{raceUnavailable:true});failed.choose('player','diesel');failed.choose('opponent','bulgy');failed.click('#startRaceButton');
  assert.equal(failed.state().screen,'race-start');assert.deepEqual(failed.state().selections,{playerId:'diesel',opponentId:'bulgy'});
 });
-test('all computer winners use their own portraits and never award the player win sticker',()=>{
+test('all computer wins thank the selected player and never award the player win sticker',()=>{
  for(const opponentId of ids){
   const playerId=opponentId==='thomas'?'bulgy':'thomas',ui=setup();ui.choose('player',playerId);ui.choose('opponent',opponentId);ui.click('#startRaceButton');
   ui.evaluate(`{const r=state.race;r.phase='racing';r.countdown=0;r.elapsed=400;for(const who of ['player','rival']){const v=r[who];v.distance=ThomasRaceCore.COURSES[r.courseId].length-(who==='rival'?1:100);v.velocity=825;v.service=null;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete'});v.terrainStates.forEach(s=>s.completed=true);}}`);
-  ui.frames(1,10);assert.equal(ui.state().phase,'complete');assert.equal(ui.state().race.winner,'rival');assert.equal(node(ui,'raceResultPortrait').getAttribute('href'),'#portrait-'+opponentId);
+  ui.frames(1,10);assert.equal(ui.state().phase,'complete');assert.equal(ui.state().race.winner,'rival');assert.equal(node(ui,'raceResultPortrait').getAttribute('href'),'#portrait-'+playerId);
   assert.equal(node(ui,'resultText').textContent,'Our friend wins! Well done. Let’s race again!');assert.equal(ui.state().stars,3);assert.equal(ui.state().stickers.includes('race-winner'),false);
  }
 });

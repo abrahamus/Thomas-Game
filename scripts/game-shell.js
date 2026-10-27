@@ -70,6 +70,10 @@
             }
             if(state.screen!=='play'||!state.race)return false;
             if(action==='pause'){state.paused=true;return true;}
+            if(action==='rematch'&&state.phase==='complete'){
+                const {playerId,opponentId,courseId,deliveryTheme,seed}=state.race;
+                return start({playerId,opponentId,courseId,deliveryTheme,seed});
+            }
             if(state.phase==='complete')return false;
             if(action==='whistle'){ThomasRaceCore.whistle(state.race);syncRace();return true;}
             if(action==='race-help'||action==='race-clean-spot'){

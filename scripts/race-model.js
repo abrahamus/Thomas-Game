@@ -88,7 +88,16 @@
         'race.terrain.wet':'Slow down through the shallow floodwater.',
         'race.service.done':'All done! Off we go!',
         'race.complete.win':'You win! What a splendid race!','race.complete.lose':'Our friend wins! Well done. Let’s race again!',
-        'race.complete.tie':'Together at the finish! What a splendid race!','race.next':'Let’s choose our racers again.'
+        'race.complete.tie':'Together at the finish! What a splendid race!','race.next':'Let’s choose our racers again.',
+        'race.festival.arrival':'Welcome to the finish festival!',
+        'race.festival.win':'First place! A golden trophy for you!',
+        'race.festival.lose':'Well done! A silver rosette for finishing your journey.',
+        'race.festival.tie':'A shared first place! A trophy for each of you!',
+        'race.festival.passengers':'Eight jobs complete. Thank you for bringing our passengers safely!',
+        'race.festival.cargo':'Eight jobs complete. Thank you for delivering our cargo!',
+        'race.festival.skip':'See your race results.',
+        'race.rematch':'Race the same journey again.',
+        'race.choose':'Choose your racers.'
     });
     const RULES=Object.freeze({bend:{name:'Bend',cap:1},'tight-bend':{name:'Bend',cap:1},hill:{name:'Climb',cap:.65},downhill:{name:'Downhill',cap:.60},tunnel:{name:'Tunnel',cap:.50},wet:{name:'Wet track',cap:.40},snow:{name:'Snow',cap:.55}});
     const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
@@ -148,7 +157,7 @@
     function getFlightPose(race,who='player',distance){
         const v=racer(race,who),c=getCharacter(race,v);
         if(c.vehicleType!=='air')return null;
-        const d=distance===undefined?Math.min(v.distance,COURSES[race.courseId].length):distance;
+        const d=distance===undefined?v.distance:distance;
         let altitude=8,side=0,weather=0;
         for(const section of getTravelSections(race,v)){
             if(section.cap>=1||section.type==='level-crossing')continue;
@@ -166,8 +175,10 @@
         const parksLoad=job&&v.carried.container&&CARGO_HANDLING_JOBS.includes(job.type);
         const jobAltitude=ground&&!parksLoad ? .06 : 6;
         altitude=altitude*(1-proximity)+jobAltitude*proximity;side*=1-proximity;
-        const departure=smoother(d/1800),arrival=smoother((COURSES[race.courseId].length-d)/2200);
-        altitude=.06+(altitude-.06)*Math.min(departure,arrival);
+        const departure=smoother(d/1800);
+        // Clear the entire finish banner before descending onto the festival pad.
+        const landing=smoother((d-COURSES[race.courseId].length-950)/(finishRunout(race,who)-950));
+        altitude=.06+(altitude-.06)*departure*(1-landing);
         altitude+=Math.sin(race.elapsed*1.8)*.07*smooth((altitude-1)/4)*(parksLoad||job?.type==='tree'?1-proximity:1);
         const lane=v===race.rival?ROAD_LANE:0,cargoSide=v===race.rival?3:-3;
         const offset=lane+(lane<0?-side:side)+(parksLoad?cargoSide*proximity:0),p=sampleRoute(race.courseId,d,offset);
@@ -363,13 +374,67 @@
             if(service.type==='drawbridge')beginWork(race,v,service,6);
         }
         for(const s of v.serviceStates)if(s.type==='wash'&&!s.mudTriggered&&v.distance>=s.mudAt){s.mudTriggered=true;v.mudPatches.fill(true);v.dirt=1;announce(race,v,'mud-splash',null,{serviceId:s.id});}
-        if(!finishedBefore&&v.distance>=c.length-EPS){v.finishTime=race.elapsed+clamp(m.timeAt(Math.max(0,c.length-before)),0,dt);if(v===race.player)v.distance=c.length;}
+        if(!finishedBefore&&v.distance>=c.length-EPS){
+            const crossing=clamp(m.timeAt(Math.max(0,c.length-before)),0,dt);
+            v.finishTime=race.elapsed+crossing;
+            const speed=beforeVelocity+Math.sign(target-beforeVelocity)*Math.min(Math.abs(target-beforeVelocity),(target>beforeVelocity?ACCELERATION:BRAKING)*crossing);
+            v.finishEvent=Object.freeze({time:v.finishTime,speed,wheelTurns:(v._travelledWorld+(c.length-before)*WORLD_SCALE)/(Math.PI*2*WHEEL_RADIUS)});
+            race.events.push({type:'finish',who:v===race.player?'player':'rival',...v.finishEvent});
+            if(v===race.player)v.distance=c.length;
+        }
         if(finishedBefore)v.distance=Math.min(v.distance,c.length+2500);
         v._travelledWorld+=Math.max(0,v.distance-before)*WORLD_SCALE;v.wheelTurns=v._travelledWorld/(Math.PI*2*WHEEL_RADIUS);
         if(v===race.player&&v.finishTime!==null)v.velocity=v.targetVelocity=0;
     }
-    function tick(race,dt){if(race.phase==='countdown'){const old=race.countdown;race.countdown=Math.max(0,old-dt);if(old>START_COUNTDOWN/2+EPS&&race.countdown<=START_COUNTDOWN/2+EPS)race.events.push({type:'narration',key:'race.steady'});if(race.countdown<=EPS){race.countdown=0;race.phase='racing';race.events.push({type:'narration',key:'race.go'},{type:'delivery-goal',key:`race.${getCharacter(race).vehicleType==='air'?'flight.':''}delivery.${race.deliveryTheme}`});}return;}if(race.phase!=='racing')return;updateRivalIntentions(race);move(race,race.player,dt);if(race.elapsed>=race.profile.startDelay)move(race,race.rival,dt);race.elapsed+=dt;if(race.player.finishTime!==null){const other=race.rival.finishTime;race.winner=other===null||race.player.finishTime<other-.05?'player':Math.abs(race.player.finishTime-other)<=.05?'tie':'rival';race.phase='complete';for(const v of[race.player,race.rival]){v.velocity=v.targetVelocity=0;v.boostActive=false;}race.events.push({type:'complete',key:`race.complete.${race.winner==='player'?'win':race.winner==='tie'?'tie':'lose'}`});}}
+    function tick(race,dt){if(race.phase==='countdown'){const old=race.countdown;race.countdown=Math.max(0,old-dt);if(old>START_COUNTDOWN/2+EPS&&race.countdown<=START_COUNTDOWN/2+EPS)race.events.push({type:'narration',key:'race.steady'});if(race.countdown<=EPS){race.countdown=0;race.phase='racing';race.events.push({type:'narration',key:'race.go'},{type:'delivery-goal',key:`race.${getCharacter(race).vehicleType==='air'?'flight.':''}delivery.${race.deliveryTheme}`});}return;}if(race.phase!=='racing')return;updateRivalIntentions(race);move(race,race.player,dt);if(race.elapsed>=race.profile.startDelay)move(race,race.rival,dt);race.elapsed+=dt;if(race.player.finishTime!==null){const other=race.rival.finishTime;race.winner=other===null||race.player.finishTime<other-.05?'player':Math.abs(race.player.finishTime-other)<=.05?'tie':'rival';race.finishMotion={rivalVelocity:race.rival.velocity,rivalTarget:race.rival.targetVelocity};race.phase='complete';for(const v of[race.player,race.rival]){v.velocity=v.targetVelocity=0;v.boostActive=false;}race.events.push({type:'complete',key:`race.complete.${race.winner==='player'?'win':race.winner==='tie'?'tie':'lose'}`});}}
     function step(race,dt){if(!Number.isFinite(dt)||dt<=0||race.phase==='complete')return false;race._fixedRemainder+=dt;const ticks=Math.floor((race._fixedRemainder+EPS)/STEP);race._fixedRemainder-=ticks*STEP;if(race._fixedRemainder<0&&race._fixedRemainder>-EPS)race._fixedRemainder=0;for(let i=0;i<ticks&&race.phase!=='complete';i++)tick(race,STEP);return true;}
+    // Presentation owns its copy and clock. It may finish the rival's remaining
+    // jobs, but never writes to the completed race or its persisted rewards.
+    function finishRunout(race,who='player'){
+        const c=getCharacter(race,who);
+        return c.vehicleType==='air'?2600:Math.max(1900,c.coachOffset+c.coachRear+500);
+    }
+    function finishArrival(race,who='player',elapsed=race.elapsed){
+        const event=racer(race,who).finishEvent;if(!event)return null;
+        const age=Math.max(0,elapsed-event.time),speed=event.speed,runout=finishRunout(race,who);
+        const duration=2*runout/Math.max(1,speed),u=clamp(age/duration,0,1);
+        const travelled=speed*duration*(u-u*u*u+.5*u*u*u*u);
+        return {age,duration,distance:COURSES[race.courseId].length+travelled,
+            velocity:speed*(1-smooth(u)),wheelTurns:event.wheelTurns+travelled*WORLD_SCALE/(Math.PI*2*WHEEL_RADIUS),landed:u>=1};
+    }
+    function clonePresentationRace(race){
+        const copy=JSON.parse(JSON.stringify(race));copy.events=[];
+        for(const who of ['player','rival'])if(copy[who].service)copy[who].service=copy[who].serviceStates.find(s=>s.id===copy[who].service.id);
+        return copy;
+    }
+    function presentFinishers(race){
+        for(const who of ['player','rival']){const arrival=finishArrival(race,who);if(arrival)Object.assign(race[who],{distance:arrival.distance,velocity:arrival.velocity,wheelTurns:arrival.wheelTurns,targetVelocity:0,boostActive:false});}
+        return race;
+    }
+    function createFinishPresentation(race){
+        if(race.phase!=='complete')throw new RangeError('The finish festival needs a completed race');
+        const copy=clonePresentationRace(race);copy.phase='racing';
+        if(copy.rival.finishTime===null){copy.rival.velocity=race.finishMotion.rivalVelocity;copy.rival.targetVelocity=race.finishMotion.rivalTarget;}
+        return {race:presentFinishers(copy),elapsed:0,results:false,stage:'arrival',_remainder:0};
+    }
+    function stepFinishPresentation(p,dt){
+        if(!Number.isFinite(dt)||dt<=0)return false;
+        p.elapsed+=dt;p._remainder+=dt;
+        const ticks=Math.floor((p._remainder+EPS)/STEP);p._remainder-=ticks*STEP;
+        for(let i=0;i<ticks;i++){
+            const r=p.race;
+            if(r.rival.finishTime===null){updateRivalIntentions(r);move(r,r.rival,STEP);}
+            r.elapsed+=STEP;r.events.length=0;
+        }
+        presentFinishers(p.race);
+        p.stage=p.elapsed<4.5-EPS?'arrival':p.elapsed<7-EPS?'award':'thanks';
+        if(p.elapsed>=9-EPS)p.results=true;
+        return true;
+    }
+    function skipFinishPresentation(p){if(p.results)return false;p.results=true;p.skipped=true;return true;}
+    function getPresentationRace(race){
+        return race.player.finishEvent||race.rival.finishEvent?presentFinishers(clonePresentationRace(race)):race;
+    }
     function getView(race){
         const course=COURSES[race.courseId],v=race.player,service=v.service,nextService=v.serviceStates.find(s=>!s.completed),terrain=activeTerrain(race,v);
         let nextTask=nextService?{kind:'service',type:nextService.type,id:nextService.id,at:nextService.at,index:nextService.index}:null;
@@ -394,5 +459,6 @@
     globalThis.ThomasRaceCore=Object.freeze({SPEEDS,ACCELERATION,BRAKING,WORLD_SCALE,WHEEL_RADIUS,START_COUNTDOWN,LOOK_AHEAD,
         LANE_OFFSETS,ROAD_LANE,ROAD_LANE_SPACING,RIVAL_LANE:ROAD_LANE,BOOST_SECONDS,BOOST_MULTIPLIER,COACH_OFFSET,NEW_JOBS,JOB_DISTANCES,
         RIVAL_PARAMETERS,CARGO_HANDLING_SECONDS,BRANCH_LIFT_SECONDS,getBranchLiftSeconds,getBranchLiftPose,CHARACTERS,OPPONENTS,character,getCharacter,COURSES,RULES,NARRATION,chooseRace,createRace,serviceAction,cleanMud,whistle,step,getView,
+        finishRunout,finishArrival,createFinishPresentation,stepFinishPresentation,skipFinishPresentation,getPresentationRace,
         sampleRoute,sampleTerrainHeight,sampleLaneRoute,sampleRivalLaneRoute,sampleVehicleRoute,sampleCoachRoute,getCoachOffset,getFlightPose,getTravelSections,getCrossingMode});
 })();

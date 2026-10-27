@@ -7,14 +7,24 @@ const sharp=require('/Users/Abraham/.cache/codex-runtimes/codex-primary-runtime/
 const core=global.ThomasRaceCore;
 const args=process.argv.slice(2),course=args[0]||'country',opponent=args[1]||'bertie',distance=Number(args[2]||0),output=args[3]||'/private/tmp/thomas-race-preview.png';
 const w=Number(args[4]||1400),h=Number(args[5]||800);
-const race=core.createRace({courseId:course,playerId:args[11]||'thomas',opponentId:opponent,seed:Number(args[9]||24),deliveryTheme:args[8]||'passengers'});race.phase='racing';race.elapsed=12;race.countdown=0;
+let race=core.createRace({courseId:course,playerId:args[11]||'thomas',opponentId:opponent,seed:Number(args[9]||24),deliveryTheme:args[8]||'passengers'});race.phase='racing';race.elapsed=12;race.countdown=0;
 const effect=args[7]||'',serviceProgress=Math.max(0,Math.min(1,Number(args[10]??.5)));
 for(const [i,state]of [race.player,race.rival].entries()){state.distance=distance-(i?850:0);state.velocity=825;state.wheelTurns=state.distance*core.WORLD_SCALE/(2*Math.PI*core.WHEEL_RADIUS);}
 for(const state of [race.player,race.rival])if(distance>race.services[0].at&&distance<race.services.at(-1).at){if(race.deliveryTheme==='cargo'){state.carried.container='container-1';state.carried.cargo=true;}else{state.carried.passengers=3;state.serviceStates[0].groups.fill(true);}}
 if(effect==='boost'){race.player.boostRemaining=6;race.player.boostActive=true;}
 if(effect.startsWith('service'))for(const who of ['player','rival']){const state=race[who],job=state.serviceStates.reduce((a,s)=>Math.abs(s.at-distance)<Math.abs(a.at-distance)?s:a);state.distance=job.at;state.velocity=0;state.service=job;job.phase=effect==='service-complete'?'complete':effect==='service-working'?'working':'ready';job.duration=job.type==='repairs'?1.5:job.type==='rocks'?2:job.type==='coal'?1:job.type==='wash'?.6:job.type.startsWith('passenger')?1:job.type==='water'?4:job.type==='drawbridge'?6:job.type==='tree'?core.getBranchLiftSeconds(race):5;job.remaining=job.duration*(1-serviceProgress);job.progress=serviceProgress;job.startedAt=race.elapsed-job.duration*.5;job.activeUnit=0;job.targetId='passenger-0';if(job.type==='wash'){state.mudPatches.fill(true);state.dirt=1;}if(job.type==='passenger-unload'){state.carried.passengers=3;state.serviceStates[0].groups.fill(true);}if(job.type==='cargo-unload'){state.carried.container='container-1';state.carried.cargo=true;}if(job.type==='cargo-load')job.selectedContainer='container-1';if(effect==='service-complete'){job.completed=true;state.service=null;job.groups.fill(true);if(job.type==='coal')state.coal=1;}}
 if(['service-cargo-lowering','service-cargo-lifting'].includes(effect))for(const state of [race.player,race.rival]){const job=state.service;job.phase=effect.slice(8);job.handlingProgress=serviceProgress;job.cargoHandling=true;job.workComplete=job.phase==='cargo-lifting';job.activeUnit=null;if(job.workComplete){job.groups.fill(true);state.mudPatches.fill(false);state.dirt=0;}}
-const b=V.makeScene(core,course,opponent,race.deliveryTheme,race);b.camera.aspect=w/h;b.camera.updateProjectionMatrix();V.updateScene(b,race);
+let festival=null;
+if(effect.startsWith('festival')){
+ race.phase='complete';race.winner=effect.includes('lose')?'rival':effect.includes('tie')?'tie':'player';
+ race.finishMotion={rivalVelocity:825,rivalTarget:825};
+ for(const who of ['player','rival']){const v=race[who];v.service=null;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete';});v.carried={passengers:0,container:null,cargo:false};v.distance=core.COURSES[course].length;
+  v.finishTime=who==='player'?12:race.winner==='rival'?11.3:race.winner==='tie'?12:null;
+  if(v.finishTime!==null)v.finishEvent={time:v.finishTime,speed:825,wheelTurns:v.wheelTurns};else v.distance-=850;
+ }
+ festival=core.createFinishPresentation(race);core.stepFinishPresentation(festival,Number(args[10]||0));race=festival.race;
+}
+const b=V.makeScene(core,course,opponent,race.deliveryTheme,race);b.camera.aspect=w/h;b.camera.updateProjectionMatrix();V.updateScene(b,race,{festival});
 const rgb=new Uint8Array(w*h*3),depth=new Float32Array(w*h).fill(Infinity),bg=[182,222,242];
 for(let i=0;i<w*h;i++){const y=Math.floor(i/w),light=1-.045*y/h;rgb[i*3]=bg[0]*light;rgb[i*3+1]=bg[1]*light;rgb[i*3+2]=bg[2]*light;}
 const frustum=new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(b.camera.projectionMatrix,b.camera.matrixWorldInverse));
