@@ -1,0 +1,24 @@
+{
+  "status": "embedded-user-supplied-recording",
+  "tracks": [
+    {
+      "sourceUrl": "https://www.youtube.com/watch?v=SVu10mbaDJw",
+      "title": "All Engines Go (CGI Version)",
+      "uploader": "RighteousDude64",
+      "referenceOnly": true
+    },
+    {
+      "sourceUrl": "https://www.youtube.com/watch?v=R9wzT0WVdrE",
+      "title": "Thomas’s Theme from All Engines Go! (Recreated and Extended)",
+      "uploader": "SmittyG513",
+      "referenceOnly": true
+    }
+  ],
+  "embeddedRecording": {
+    "sourceFile": "Thomas Theme.mp4",
+    "audioFile": "audio/thomas-theme.wav",
+    "metadataFile": "audio/thomas-theme.json",
+    "title": "Thomas Theme",
+    "artistMetadata": "Thomas & Friends - Topic"
+  }
+}

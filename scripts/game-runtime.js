@@ -1,0 +1,508 @@
+/* Browser adapter: the model owns rules; this file owns pictures, sound and input. */
+const storage = (() => { try { return window.localStorage; } catch (_) { return null; } })();
+const game = ThomasGameCore.createGame(storage);
+const state = game.state;
+state.isMuted = false;
+state.musicEnabled = false;
+const $ = id => document.getElementById(id);
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const ui = {
+    audioUnlocked:false,windowActive:true,task:'',taskKey:'',emoji:'🚂',lastGeneration:-1,
+    menuIndex:0,openPicker:null,albumOpen:false,speaking:false,time:0,whistle:0,lastTimestamp:null,
+    pendingSpeech:null,hoverNode:null,hoverDeadline:null,suppressFocus:false,lastAnnouncement:'',
+    raceView:null,raceUnavailable:false,raceLayoutKey:'',racePosition:null,raceVoiceKey:null,racePraiseAt:-Infinity
+};
+if (!globalThis.ThomasNarration) {
+    try { globalThis.ThomasNarration = JSON.parse(document.getElementById('narration-data').textContent); }
+    catch (_) { globalThis.ThomasNarration = {}; }
+}
+let music=null;
+let runningAssets=null;
+try{runningAssets=JSON.parse($('running-audio-data')?.textContent || 'null');}catch(_){}
+const audio = ThomasAudio.create({runningAssets,getState:()=>state,getGeneration:()=>state.generation,onSpeaking:value=>{ui.speaking=value;if(music)music.update();}});
+let musicAsset=null;
+try{musicAsset=JSON.parse($('music-data')?.textContent || 'null');}catch(_){}
+state.musicEnabled=!!(musicAsset && musicAsset.data);
+if(globalThis.ThomasMusic)music=ThomasMusic.create({getContext:()=>audio.context,getOutput:()=>audio.masterBus,
+    getState:()=>({...state,paused:state.paused || ui.albumOpen,hidden:!ui.windowActive || document.hidden,musicEnabled:state.musicEnabled && ui.audioUnlocked}),
+    getGeneration:()=>state.generation,getAsset:()=>musicAsset,isSpeaking:()=>ui.speaking});
+function updateMusicButton(){
+    const button=$('musicButton');if(!button)return;button.hidden=!(musicAsset && musicAsset.data);
+    button.setAttribute('aria-pressed',state.musicEnabled);button.setAttribute('aria-label',state.musicEnabled?'Turn background music off':'Turn background music on');
+    button.setAttribute('data-narration',state.musicEnabled?'ui.music-off':'ui.music-on');$('musicIcon').textContent=state.musicEnabled?'♫':'♫̸';
+}
+function playPeepPeepWhistle() { const power=state.race&&ThomasRaceCore.getCharacter(state.race).power;audio.effect(power==='rotor'?'radio':power==='diesel'?'horn':'whistle'); }
+function playPopSound(frequency=500) { audio.effect('pop',frequency); }
+function playStarChime(fanfare=false) { audio.effect('chime',fanfare); }
+
+function show(id, visible) { const node = $(id); if (!node)return; if(visible)node.removeAttribute('hidden');else node.setAttribute('hidden',''); }
+function svgShow(id, visible) { const node = $(id); if (node) node.style.display = visible ? '' : 'none'; }
+function svgNode(tag, attrs, parent) {
+    const node = document.createElementNS(SVG_NS, tag);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    if (parent) parent.appendChild(node);
+    return node;
+}
+function focusStage() { $('gameStage').focus({preventScroll: true}); }
+function active() { return state.screen === 'play' && !state.paused && !ui.albumOpen; }
+function unlockAudio() { ui.audioUnlocked=true;ui.windowActive=!document.hidden;audio.unlock(); }
+if(!globalThis.ThomasUiNarration){
+    try{globalThis.ThomasUiNarration=JSON.parse($('ui-narration-data').textContent);}catch(_){globalThis.ThomasUiNarration={};}
+}
+function words(key,fallback='') { return globalThis.ThomasRaceCore?.NARRATION[key] || globalThis.ThomasUiNarration[key] || ThomasGameCore.NARRATION[key] || (globalThis.ThomasNarration[key] || {}).text || fallback; }
+function serviceVoice(key){return /^race\.(?:service\.|flight\.(?!(?:delivery|terrain)\.))/.test(key||'');}
+function raceVoicePriority(key) {
+    if(/^race\.complete\./.test(key))return 100;
+    if(/^race\.(?:ready|steady|go)$/.test(key))return 80;
+    if(serviceVoice(key))return 50;
+    if(/^race\.(?:flight\.)?delivery\./.test(key))return 40;
+    if(key==='race.boost')return 10;
+    return 0;
+}
+function raceSpeechRelevant(key) {
+    if(state.mode!=='race' || !state.race || state.screen!=='play')return true;
+    const view=ThomasRaceCore.getView(state.race);
+    if(/^race\.complete\./.test(key))return state.phase==='complete';
+    if(serviceVoice(key))return key==='race.service.done'?!view.currentService:key===view.taskKey;
+    if(/^race\.(?:flight\.)?delivery\./.test(key))return state.phase==='racing' && !view.currentService;
+    if(key==='race.boost')return raceVoicePriority(ui.raceVoiceKey || '')<40 && state.phase==='racing' && !view.currentService;
+    return true;
+}
+function say(text,key,{allowPaused=false,queue=false}={}) {
+    if(!ui.audioUnlocked || state.isMuted || !ui.windowActive || document.hidden || state.paused && !allowPaused)return;
+    if(ui.raceVoiceKey && !audio.busy)ui.raceVoiceKey=null;
+    const racing=state.mode==='race' && state.screen==='play' && state.race;
+    if(racing){
+        if(!raceSpeechRelevant(key))return;
+        const priority=raceVoicePriority(key),current=raceVoicePriority(ui.raceVoiceKey || '');
+        if(!priority && /^(?:gear\.|ui\.(?:slower|faster|brake|accelerate)|drive\.)/.test(key))return;
+        if(ui.raceVoiceKey && audio.busy && key!==ui.raceVoiceKey && priority<current){
+            if(queue && raceSpeechRelevant(key))ui.pendingSpeech={text,key,allowPaused,generation:state.generation};
+            return;
+        }
+        // Starting lights and the result take priority over encouragement.
+        if(priority>=75)queue=false;
+        if(queue && !raceSpeechRelevant(key))return;
+    }
+    if(queue && audio.busy){ui.pendingSpeech={text,key,allowPaused,generation:state.generation};return;}
+    if(racing && raceVoicePriority(key))ui.raceVoiceKey=key;
+    ui.pendingSpeech=null;audio.speak(key,text,{allowPaused});
+}
+function announce(key,{queue=false,force=false}={}) {
+    if(!key || !ui.audioUnlocked || state.isMuted)return;
+    if(!force && ui.lastAnnouncement===key && ui.speaking)return;
+    ui.lastAnnouncement=key;say(words(key),key,{allowPaused:true,queue});
+}
+function task(text,emoji,key='') {
+    $('promptText').textContent=text;$('promptEmoji').textContent=emoji;
+    if(ui.task!==text || ui.taskKey!==key){
+        ui.task=text;ui.taskKey=key;ui.emoji=emoji;
+        const important=/retry|wait|peep|stopped|complete/.test(key);
+        say(text,key,{allowPaused:state.screen==='race-start',queue:!important});
+    }
+}
+function clearTransientPictures() {
+    audio.stop();if(music)music.stop({reset:true});
+    Object.assign(ui,{raceVoiceKey:null,raceLayoutKey:'',racePraiseAt:-Infinity,whistle:0,pendingSpeech:null,hoverNode:null,hoverDeadline:null,lastAnnouncement:'',lastTimestamp:null});
+}
+function menuButtons() {
+    const id=ui.albumOpen?'albumOverlay':state.paused?'pauseOverlay':state.screen==='race-start'?'raceStartOverlay':state.phase==='complete'?'rewardOverlay':null;
+    return id?[...$(id).querySelectorAll('button[data-action]')].filter(button=>!button.closest('[hidden],[inert]')&&!button.disabled):[];
+}
+function selectMenu(index,focus=true,read=true) {
+    const buttons=menuButtons();if(!buttons.length)return;
+    ui.menuIndex=(index+buttons.length)%buttons.length;
+    buttons.forEach((button,i)=>button.classList.toggle('is-selected',i===ui.menuIndex));
+    const selected=buttons[ui.menuIndex];
+    if(focus){ui.suppressFocus=true;selected.focus({preventScroll:true});selected.scrollIntoView?.({block:'nearest',inline:'nearest'});ui.suppressFocus=false;}
+    if(read && ui.audioUnlocked)announce(selected.dataset.narration,{force:true});
+}
+function renderCharacterChoices(){
+    for(const [role,container,key,other]of [['player','playerChoices','playerId','opponentId'],['opponent','opponentChoices','opponentId','playerId']]){
+        const chosen=state.selections[key],name=chosen==='random'?'Random':ThomasRaceCore.character(chosen).name,toggle=$(role+'PickerButton');
+        $(role+'ChoiceName').textContent=name;$(role+'ChoicePortrait').setAttribute('href',`#portrait-${chosen}`);
+        toggle.setAttribute('aria-label',`${role==='player'?'You':'Computer'}: ${name}. Change character`);
+        toggle.setAttribute('data-narration',`race.character.${chosen}`);toggle.setAttribute('aria-expanded',ui.openPicker===role);
+        show(role+'PickerMenu',ui.openPicker===role);
+        if(!$(container).children.length)for(const c of [...ThomasRaceCore.CHARACTERS,{id:'random',name:'Random'}]){
+            const button=htmlNode('button',{id:`choose-${role}-${c.id}`,class:'racer-choice','data-action':`select-${role}`,'data-value':c.id,'data-narration':`race.character.${c.id}`,'aria-label':`${role==='player'?'You':'Computer'}: ${c.name}`},'',$(container));
+            picture(button,c.id,'portrait');htmlNode('span',{},c.name,button);
+            htmlNode('span',{class:'racer-unavailable'},'',button);
+        }
+        for(const button of $(container).children){
+            const id=button.dataset.value,unavailable=id!=='random'&&id===state.selections[other];
+            button.disabled=unavailable;button.setAttribute('aria-pressed',state.selections[key]===id);
+            button.setAttribute('aria-disabled',unavailable);
+            button.setAttribute('aria-label',`${role==='player'?'You':'Computer'}: ${id==='random'?'Random':ThomasRaceCore.character(id).name}${unavailable?'. Already chosen by '+(role==='player'?'Computer':'You'):''}`);
+            button.querySelector('.racer-unavailable').textContent=unavailable?'Already chosen':'';
+            button.title=unavailable?'That character is already racing':'';
+        }
+    }
+}
+function setPicker(role,focus=false){
+    const previous=ui.openPicker;ui.openPicker=role;renderCharacterChoices();
+    if(!focus)return;
+    const selected=role?$(role+'Choices').querySelector('[aria-pressed="true"]'):$(previous+'PickerButton');
+    if(selected)selectMenu(menuButtons().indexOf(selected),true,!!role);
+}
+function focusMenuDefault(){
+    const buttons=menuButtons(),index=state.screen==='race-start'&&!ui.albumOpen?buttons.indexOf($('startRaceButton')):0;
+    selectMenu(Math.max(0,index),true,false);
+}
+function updateHud() {
+    $('starCountText').textContent = state.stars;
+    $('stickerCountText').textContent = state.stickers.length + state.completedMissions.length;
+}
+function htmlNode(tag,attrs,text,parent) {
+    const node=document.createElement(tag);
+    Object.entries(attrs||{}).forEach(([name,value])=>node.setAttribute(name,value));
+    if(text)node.textContent=text;
+    if(parent)parent.appendChild(node);
+    return node;
+}
+function picture(parent,id,kind='landmark') {
+    const svg=svgNode('svg',{viewBox:kind==='portrait'?'0 0 100 100':'0 0 120 100','aria-hidden':'true',class:'card-picture-svg'},parent);
+    svgNode('use',{href:`#${kind}-${id}`,width:kind==='portrait'?100:120,height:100},svg);
+    return svg;
+}
+function resizeScene(){if(ui.raceView && state.race){ui.raceView.resize();ui.raceView.render(state.race,{paused:state.paused,time:ui.time,whistle:ui.whistle});}}
+function drivingWheelTurns(){return state.race?.player.wheelTurns || 0;}
+function ensureRaceView() {
+    if(ui.raceView && ui.raceView.available!==false)return true;
+    let failed=false;
+    try{
+        if(!globalThis.ThomasRaceView)failed=true;
+        else ui.raceView=ThomasRaceView.create({canvas:$('raceCanvas'),onUnavailable:()=>{failed=true;}});
+        if(!ui.raceView || ui.raceView.available===false)failed=true;
+    }catch(error){failed=true;}
+    if(!failed)return true;
+    ui.raceUnavailable=true;ui.raceView=null;
+    game.dispatch('home');render();
+    announce('race.unavailable',{force:true});
+    return false;
+}
+function raceTaskPicture(type) {
+    const c=state.race&&ThomasRaceCore.getCharacter(state.race,'player');
+    if(c?.vehicleType==='air')return ({'passenger-load':'race-flight-passengers','passenger-unload':'race-flight-passengers','cargo-load':'race-flight-cargo','cargo-unload':'race-flight-cargo',repairs:'race-flight-repairs',rocks:'race-ground-crane',tree:'race-flight-winch',coal:'race-flight-fuel',water:'race-flight-water',wash:'race-flight-wash',animals:'rule-radio','level-crossing':'rule-radio',drawbridge:'race-flight-harbour',tunnel:'race-flight-cloud',hill:'race-flight-route',downhill:'race-flight-route',wet:'race-flight-wind',snow:'race-flight-snow'})[type]||'race-flag';
+    if(c?.vehicleType==='road'&&type==='coal')return 'race-fuel';
+    if(c?.vehicleType==='road'&&type==='repairs')return 'race-potholes';
+    if(c?.vehicleType==='road'&&type==='level-crossing')return ThomasRaceCore.getCrossingMode(state.race)==='rail'?'race-crossing-train':'race-road-junction';
+    if(c?.power!=='steam'&&['water','coal'].includes(type))return 'race-depot-'+type;
+    return ({'passenger-load':'race-passengers','passenger-unload':'race-passengers',
+        'cargo-load':'race-container','cargo-unload':'race-container',animals:'challenge-crossing',wash:'challenge-wash',
+        water:'challenge-water',tree:'challenge-tree',drawbridge:'challenge-drawbridge',hill:'challenge-hill',
+        downhill:'challenge-downhill',tunnel:'race-tunnel',snow:'race-snow',wet:'race-water',
+        repairs:'challenge-repairs',rocks:'race-rocks',coal:'race-coal','level-crossing':'race-level-crossing'})[type] || 'race-flag';
+}
+function renderRacePresentation() {
+    const race=state.race;if(!race)return;
+    const view=ThomasRaceCore.getView(race),service=view.currentService;
+    const next=view.nextTask,taskType=next?.type || 'finish';
+    show('raceDashboard',true);
+    $('challengePanel').setAttribute('data-race-phase',race.phase);
+    $('raceDashboard').setAttribute('data-task-type',taskType);
+    $('raceDashboard').setAttribute('data-service-phase',service?.phase || '');
+    $('challengeTitle').textContent='Help, complete, and deliver';
+    $('challengeRule').textContent=words(view.taskKey);
+    show('raceTaskPreview',!!next);show('raceFinishPreview',!next);
+    $('raceTaskPicture').setAttribute('href',`#${raceTaskPicture(taskType)}`);
+    $('raceTaskPreview').setAttribute('aria-label',words(view.taskKey));
+    $('raceTaskPreview').setAttribute('data-task-type',taskType);
+    const working=service?.phase==='working',handling=service?.phase==='cargo-lowering'||service?.phase==='cargo-lifting';
+    if(handling)$('raceTaskPicture').setAttribute('href',view.player.vehicleType==='air'?'#race-flight-cargo':'#race-cargo');
+    $('raceJobStatusPicture').setAttribute('href',service?.type==='animals' && !working?(view.player.power==='rotor'?'#rule-radio':view.player.power==='steam'?'#rule-whistle':'#rule-horn'):working||handling?'#rule-wait':service?'#race-help-hand':'#rule-go');
+    let fraction=0;
+    if(service){fraction=['repairs','coal'].includes(service.type)||service.type.startsWith('passenger-')?(service.unitsDone+(working?service.progress:0))/3:
+        service.type==='rocks'?(service.unitsDone+(working?service.progress:0))/2:
+        service.type==='wash'?(7-view.mudPatches.filter(Boolean).length+(working?service.progress:0))/7:
+        working?service.progress:0;}
+    if(handling)fraction=service.handlingProgress;
+    $('raceJobFill').setAttribute('width',Math.max(0,Math.min(1,fraction))*176);
+    show('raceJobProgress',!!service);
+    const boosting=view.boostActive;
+    show('raceSteamBadge',view.boostRemaining>0);$('raceDashboard').classList.toggle('boosting',boosting);
+    $('raceSteamBadge').setAttribute('data-state',boosting?'active':'queued');
+    $('raceSteamBadge').setAttribute('aria-label',boosting?'Speed boost!':'Speed boost saved for a clear route');
+    $('raceSteamBadge').style.opacity=boosting?'1':'.65';show('raceBoostQueue',view.boostQueued);
+    $('racePlayerPortrait').setAttribute('href',`#portrait-${race.playerId}`);
+    $('raceRivalPortrait').setAttribute('href',`#portrait-${race.opponentId}`);
+    $('racePlayerOrder').setAttribute('transform',`translate(${12+244*view.progress} 0)`);
+    $('raceRivalOrder').setAttribute('transform',`translate(${12+244*view.rivalProgress} 20)`);
+    [...$('raceCourseTicks').children].forEach((tick,i)=>{
+        const item=race.services[i];if(!item)return;
+        const x=25+244*item.at/view.course.length,done=race.player.serviceStates[i].completed;
+        tick.setAttribute('x1',x);tick.setAttribute('x2',x);tick.setAttribute('stroke',done?'#548747':'#c3b994');
+        const picture=$(`raceCompletedJob${i}`);picture.setAttribute('href',`#${raceTaskPicture(item.type)}`);
+        picture.setAttribute('opacity',done?'1':'.3');show(`raceJobCheck${i}`,done);
+    });
+    $('raceJobsCompleted').setAttribute('aria-label',`${view.completed} of ${view.total} jobs completed`);
+    $('raceJourneyProgress').setAttribute('aria-valuenow',view.completed);
+    $('raceJourneyProgress').setAttribute('aria-valuemax',view.total);
+    $('raceJourneyProgress').setAttribute('aria-valuetext',`${view.completed} of ${view.total} jobs completed`);
+    const loaded=view.carried.passengers>0 || !!view.carried.container;
+    show('raceCarriedLoad',loaded);
+    $('raceCarriedPicture').setAttribute('href',`#${raceTaskPicture(view.deliveryTheme==='passengers'?'passenger-load':'cargo-load')}`);
+    $('raceCarriedLoad').setAttribute('aria-label',view.carried.container?'Container aboard':`${view.carried.passengers} passenger groups aboard`);
+    for(let i=0;i<3;i++)show(`racePassengerAboard${i}`,view.deliveryTheme==='passengers' && i<view.carried.passengers);
+    const help=$('action-race-help'),hasHelp=!!service && !['animals','drawbridge'].includes(service.type);
+    show('action-race-help',hasHelp);
+    help.disabled=state.paused || ui.albumOpen || !view.helpEnabled;
+    help.setAttribute('data-narration',view.taskKey);help.setAttribute('aria-label',words(view.taskKey));
+    const helpPicture=view.player.vehicleType==='air'?raceTaskPicture(service?.type):service?.type==='cargo-unload' || service?.type==='cargo-load' && service.selectedContainer?'race-crane':service?.type==='passenger-load'?'race-board':service?.type==='passenger-unload'?'race-alight':raceTaskPicture(service?.type);
+    $('raceHelpPicture').setAttribute('href',working?'#rule-wait':`#${helpPicture}`);
+    help.classList.toggle('hint',!!view.helpEnabled);
+    $('action-whistle').classList.toggle('hint',service?.type==='animals' && !working);
+    if(ui.racePosition!==view.position){ui.racePosition=view.position;
+        $('raceOrder').setAttribute('aria-label',view.position===1?`${view.player.name} is ahead`:`${view.opponent.name} is ahead`);}
+    const counting=race.phase==='countdown',green=race.phase==='racing' && race.elapsed<1.2;
+    show('raceStartLights',counting || green);show('raceMatchup',counting);
+    for(const [role,c]of [['Player',view.player],['Rival',view.opponent]]){
+        $('matchup'+role+'Portrait').setAttribute('href',`#${c.portrait}`);$('matchup'+role+'Name').textContent=c.name;
+    }
+    $('raceRedLight').classList.toggle('lit-red',counting && race.countdown>2.3);
+    $('raceAmberLight').classList.toggle('lit-amber',counting && race.countdown<=2.3);
+    $('raceGreenLight').classList.toggle('lit-green',green);
+    ui.taskKey=view.taskKey;ui.task=words(view.taskKey);$('promptText').textContent=ui.task;
+    // A job stage can change while its previous slow narration is decoding or speaking.
+    if(serviceVoice(ui.raceVoiceKey) && !raceSpeechRelevant(ui.raceVoiceKey)){
+        audio.stop();ui.raceVoiceKey=null;ui.pendingSpeech=null;
+    }
+    const events=race.events.splice(0),lastReward=events.findLast(event=>event.type==='boost-earned');
+    for(const event of events){
+        if(event.type.startsWith('rival-') || event.vehicle==='rival' || event.who==='rival')continue;
+        if(race.phase==='complete' && event.type!=='complete')continue;
+        if(event===lastReward)playStarChime();
+        if(!event.key)continue;
+        if(event.type==='service-action')continue;
+        if(event.type==='service-hint' && audio.busy && ui.raceVoiceKey===event.key)continue;
+        if(event.key==='race.boost'){
+            if(event!==lastReward||race.elapsed-ui.racePraiseAt<12||audio.busy||service)continue;
+            ui.racePraiseAt=race.elapsed;
+        }
+        say(words(event.key),event.key,{queue:event.type==='delivery-goal'});
+    }
+    if(ui.raceView){
+        const layoutKey=`${race.phase}:${state.paused}:${ui.albumOpen}:${!!service}`;
+        if(ui.raceLayoutKey!==layoutKey){ui.raceLayoutKey=layoutKey;ui.raceView.resize();}
+        ui.raceView.render(race,{paused:state.paused || ui.albumOpen,time:ui.time,whistle:ui.whistle});
+    }
+}
+
+function render() {
+    if(ui.lastGeneration!==state.generation){clearTransientPictures();ui.lastGeneration=state.generation;ui.task='';ui.taskKey='';}
+    const playing=state.screen==='play',completed=playing && state.phase==='complete';
+    const overlay=!playing || state.paused || completed || ui.albumOpen;
+    show('raceStartOverlay',!playing && !ui.albumOpen);show('raceUnavailable',!playing && ui.raceUnavailable);
+    show('pauseOverlay',playing && state.paused && !ui.albumOpen);show('rewardOverlay',completed && !state.paused && !ui.albumOpen);show('albumOverlay',ui.albumOpen);
+    for(const id of ['challengePanel','raceOrder','raceDashboard','raceCanvas'])show(id,playing);
+    if(!playing){renderCharacterChoices();show('raceMatchup',false);show('raceStartLights',false);show('action-race-help',false);$('action-whistle').classList.remove('hint');}
+    $('playWorld').classList.add('is-race');$('footerDashboard').classList.add('is-race');
+    if(playing && !ensureRaceView())return;
+    if(!playing && ui.raceView){ui.raceView.dispose();ui.raceView=null;}
+    $('playSurface').inert=overlay;$('footerDashboard').inert=overlay;
+    show('footerDashboard',playing && !completed);show('action-whistle',playing && !completed);
+    document.querySelector('[data-action="pause"]').hidden=!playing || completed;
+    $('modeLabel').textContent=playing?'Sodor Delivery Race':'Ready to race';
+    $('statusText').textContent=playing?'Help with jobs and earn speed boosts.':'';
+    if(playing){
+        $('rewardReplay').setAttribute('aria-label','Choose racers for the next race');
+        const character=ThomasRaceCore.getCharacter(state.race),signal=character.power==='rotor'?'radio':character.power==='diesel'?'horn':'whistle';
+        $('pausePortrait').setAttribute('href',`#${character.portrait}`);$('pauseTitle').textContent=`${character.name} is having a rest`;
+        $('raceCanvas').setAttribute('aria-label',`${character.name} racing against ${ThomasRaceCore.character(state.race.opponentId).name}`);
+        $('action-whistle').setAttribute('data-narration','ui.'+signal);
+        $('action-whistle').setAttribute('aria-label',words('ui.'+signal));
+        $('action-whistle').querySelector('use').setAttribute('href','#rule-'+signal);
+        $('raceResultPortrait').setAttribute('href',`#portrait-${state.race.winner==='player' || state.race.winner==='tie'?state.race.playerId:state.race.opponentId}`);
+        const resultKey=`race.complete.${state.race.winner==='player'?'win':state.race.winner==='tie'?'tie':'lose'}`;
+        $('rewardTitle').textContent=words(resultKey);$('resultText').textContent=words(resultKey);
+        renderRacePresentation();
+    }else task(words('race.menu'),'🏁','race.menu');
+    updateHud();updateMusicButton();if(music)music.update();
+}
+
+function pause() {
+    audio.stop();if(music)music.stop();ui.lastTimestamp=null;ui.pendingSpeech=null;ui.hoverNode=null;ui.hoverDeadline=null;
+    if(state.screen!=='play')return;
+    if(state.paused){render();return;}
+    game.dispatch('pause');ui.pendingSpeech=null;ui.hoverNode=null;render();ui.menuIndex=0;selectMenu(0,true,false);announce('ui.paused',{force:true});
+}
+function dispatchAction(action,payload) {
+    if(ui.albumOpen && !['close-album','hear-sticker','mute','music','home','repeat'].includes(action))return false;
+    unlockAudio();
+    if(action==='repeat'){
+        // Repeat is an explicit request for the current task, even if older,
+        // higher-priority guidance is still finishing.
+        if(state.mode==='race'){ui.raceVoiceKey=null;ui.pendingSpeech=null;}
+        const selected=menuButtons()[ui.menuIndex];
+        if(selected)announce(selected.dataset.narration,{force:true});else say(ui.task,ui.taskKey,{allowPaused:true});
+        return true;
+    }
+    if(action==='hear-sticker'){announce(payload,{force:true});return true;}
+    if(action==='music'){if(!musicAsset || !musicAsset.data)return false;state.musicEnabled=!state.musicEnabled;updateMusicButton();if(music)music.update();return true;}
+    if(action==='mute'){
+        state.isMuted=!state.isMuted;audio.setMuted(state.isMuted);if(music)music.update();
+        $('muteIcon').textContent=state.isMuted?'🔇':'🔊';
+        document.querySelector('[data-action="mute"]').setAttribute('aria-label',state.isMuted?'Turn sound on':'Turn sound off');
+        document.querySelector('[data-action="mute"]').setAttribute('aria-pressed',state.isMuted);
+        document.querySelector('[data-action="mute"]').setAttribute('data-narration',state.isMuted?'ui.sound-on':'ui.sound-off');
+        if(!state.isMuted){audio.unlock();say(ui.task,ui.taskKey,{allowPaused:true});}return true;
+    }
+    if(action==='album'){
+        if(ui.openPicker)setPicker(null);pause();ui.albumOpen=true;$('albumItems').replaceChildren();
+        state.completedMissions.forEach(id=>{
+            const job=ThomasGameCore.LEGACY_STICKERS.find(item=>item.id===id);
+            const sticker=htmlNode('button',{class:'sticker','data-action':'hear-sticker','data-value':`ui.sticker.${id}`,'data-narration':`ui.sticker.${id}`,'aria-label':job.title},'',$('albumItems'));
+            picture(sticker,job.friend,'portrait');htmlNode('span',{class:'sr-only'},job.title,sticker);
+        });
+        const savedStickers=[['driving-challenges','🚦','Really Useful Driver','driver'],['apple-delivery','🍎','Apple Delivery','apple-delivery'],['race-finisher','🏅','Race Finisher','race-finisher'],['race-winner','🏆','Race Winner','race-winner']];
+        savedStickers.forEach(([id,emoji,name,key])=>{
+            if(!state.stickers.includes(id))return;
+            const sticker=htmlNode('button',{class:'sticker','data-action':'hear-sticker','data-value':`ui.sticker.${key}`,'data-narration':`ui.sticker.${key}`,'aria-label':name},'',$('albumItems'));
+            htmlNode('span',{'aria-hidden':'true'},emoji,sticker);htmlNode('span',{class:'sr-only'},name,sticker);
+        });
+        if(!$('albumItems').children.length)htmlNode('p',{class:'album-empty sr-only'},words('ui.album.empty'),$('albumItems'));
+        render();selectMenu(0,true,false);announce(state.stickers.length || state.completedMissions.length?'ui.album.open':'ui.album.empty',{force:true});return true;
+    }
+    if(action==='close-album'){ui.albumOpen=false;render();focusMenuDefault();if(state.paused)announce('ui.paused',{force:true});return true;}
+    if(action==='pause'){pause();return true;}
+    if(['toggle-player-picker','toggle-opponent-picker'].includes(action)){
+        if(state.screen!=='race-start'||ui.albumOpen)return false;
+        const role=action==='toggle-player-picker'?'player':'opponent';setPicker(ui.openPicker===role?null:role,true);return true;
+    }
+    if(!game.dispatch(action,payload))return false;
+    if(['select-player','select-opponent'].includes(action)){
+        const role=action==='select-player'?'player':'opponent';ui.openPicker=null;renderCharacterChoices();selectMenu(menuButtons().indexOf($(role+'PickerButton')),true,false);announce(`race.character.${payload}`,{force:true});return true;
+    }
+    if(['home','next-race','start-race'].includes(action)){
+        ui.albumOpen=false;ui.openPicker=null;ui.menuIndex=0;ui.racePosition=null;ui.raceUnavailable=false;
+    }
+    if(action==='resume'){ui.lastTimestamp=null;audio.unlock();say(ui.task,ui.taskKey);}
+    if(action==='whistle'){playPeepPeepWhistle();ui.whistle=.8;}
+    if(['race-help','race-clean-spot'].includes(action))playPopSound(700);
+    render();
+    if(menuButtons().length){focusMenuDefault();if(action==='home'||action==='next-race')announce('race.menu',{force:true});}
+    else if(['resume','start-race','race-help','race-clean-spot'].includes(action))focusStage();
+    return true;
+}
+
+document.addEventListener('click',event=>{
+    if(ui.openPicker&&!$(ui.openPicker+'PickerPanel').contains(event.target))setPicker(null,true);
+    const node=event.target.closest('[data-action]');if(!node || node.disabled || node.closest('[inert],[hidden]'))return;
+    event.stopPropagation();dispatchAction(node.dataset.action,node.dataset.value);
+    if(event.detail>0 && active() && !menuButtons().length)focusStage();
+});
+document.addEventListener('keydown',event=>{
+    if(event.repeat && !event.ctrlKey && !event.altKey && !event.metaKey &&
+        !event.target.closest('input,textarea,select,[contenteditable]') &&
+        [' ','Enter','Escape','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)){
+        event.preventDefault();return;
+    }
+    if(ThomasGameCore.shouldIgnoreKey(event))return;
+    if(!ui.audioUnlocked && ['Tab',' ','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))unlockAudio();
+    if(state.screen==='race-start'&&!ui.albumOpen){
+        if(ui.openPicker&&event.key==='Escape'){event.preventDefault();setPicker(null,true);return;}
+        const toggle=event.target.closest('.racer-picker-toggle');
+        if(toggle&&!ui.openPicker&&['ArrowDown','ArrowUp'].includes(event.key)){
+            event.preventDefault();setPicker(toggle.id==='playerPickerButton'?'player':'opponent',true);return;
+        }
+        if(ui.openPicker&&$(ui.openPicker+'PickerPanel').contains(event.target)&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key)){
+            event.preventDefault();const choices=[...$(ui.openPicker+'Choices').children].filter(button=>!button.disabled),current=choices.indexOf(document.activeElement);
+            const index=event.key==='Home'?0:event.key==='End'?choices.length-1:current<0?choices.findIndex(button=>button.getAttribute('aria-pressed')==='true'):(current+(['ArrowLeft','ArrowUp'].includes(event.key)?-1:1)+choices.length)%choices.length;
+            selectMenu(menuButtons().indexOf(choices[index]));return;
+        }
+    }
+    const buttons=menuButtons();
+    if(event.key==='Escape' && (state.screen==='play' || ui.albumOpen)){
+        event.preventDefault();dispatchAction(ui.albumOpen?'close-album':state.paused?'resume':'pause');return;
+    }
+    if(buttons.length){
+        if(['ArrowLeft','ArrowUp','ArrowRight','ArrowDown'].includes(event.key)){
+            event.preventDefault();unlockAudio();const current=buttons.indexOf(document.activeElement);
+            selectMenu((current>=0?current:ui.menuIndex)+(['ArrowLeft','ArrowUp'].includes(event.key)?-1:1));return;
+        }
+        if((event.key===' '||event.key==='Enter') && !event.target.closest('button')){
+            event.preventDefault();buttons[ui.menuIndex%buttons.length].click();return;
+        }
+        return;
+    }
+    const driving=active() && state.phase!=='complete';
+    if(driving && event.key==='Enter' && !event.target.closest('button,[role="button"]')){
+        event.preventDefault();if(ThomasRaceCore.getView(state.race).helpEnabled)dispatchAction('race-help');return;
+    }
+    if(driving && event.key===' '){event.preventDefault();dispatchAction('whistle');return;}
+    if(driving && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();return;}
+    const button=event.target.closest('button,[role="button"]');
+    if(button){
+        if(button.tagName.toLowerCase()!=='button' && (event.key===' '||event.key==='Enter')){
+            event.preventDefault();button.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+        }
+        return;
+    }
+    if(!active())return;
+    if(event.key===' '){
+        event.preventDefault();dispatchAction('whistle');
+    }
+});
+
+function racePointer(event, click=false) {
+    if(!active() || state.mode!=='race' || !state.race || !ui.raceView?.pick)return;
+    const service=state.race.player.service;if(!service || service.phase!=='ready')return;
+    if(!click && service.type!=='wash')return;
+    const target=ui.raceView.pick(event.clientX,event.clientY);
+    if(target?.kind==='mud')dispatchAction('race-clean-spot',target.id);
+    else if(click && target?.kind==='service')dispatchAction('race-help',target.id);
+}
+$('raceCanvas').addEventListener('pointermove',event=>racePointer(event));
+$('raceCanvas').addEventListener('click',event=>racePointer(event,true));
+
+window.addEventListener('blur',()=>{ui.windowActive=false;pause();});
+window.addEventListener('focus',()=>{ui.windowActive=true;});
+document.addEventListener('visibilitychange',()=>{ui.windowActive=!document.hidden;if(document.hidden)pause();});
+
+function frame(timestamp) {
+    const elapsed=ui.lastTimestamp===null?0:Math.max(0,(timestamp-ui.lastTimestamp)/1000);
+    const dt=Math.min(.1,elapsed); ui.lastTimestamp=timestamp;
+    if(active() && state.mode==='race'){
+        const before=state.phase;game.step(elapsed);ui.time+=elapsed;ui.whistle=Math.max(0,ui.whistle-elapsed);
+        if(before!==state.phase)render();else renderRacePresentation();
+        if(before!=='complete' && state.phase==='complete'){
+            playPeepPeepWhistle();playStarChime(true);render();ui.menuIndex=0;selectMenu(0,true,false);
+        }
+    }
+    audio.update(dt,{distance:state.distance,velocity:state.velocity,targetVelocity:state.targetVelocity,wheelTurns:drivingWheelTurns(),vehiclePower:state.race?ThomasRaceCore.getCharacter(state.race).power:'steam',vehicleType:state.race?ThomasRaceCore.getCharacter(state.race).vehicleType:'rail',rotorActive:!!state.race&&(ThomasRaceCore.getCharacter(state.race).power==='rotor'||ThomasRaceCore.getCharacter(state.race,'rival').power==='rotor'&&Math.abs(state.race.player.distance-state.race.rival.distance)<6000),rotorLevel:state.race&&ThomasRaceCore.getCharacter(state.race).power==='rotor'?.12:.045,isActive:active() && ui.windowActive && !document.hidden && state.phase==='racing'});if(music)music.update();
+    if(ui.hoverNode && ui.hoverDeadline!==null && timestamp>=ui.hoverDeadline){
+        const node=ui.hoverNode;ui.hoverDeadline=null;
+        if(!node.closest('[hidden],[inert]') && ui.audioUnlocked)announce(node.dataset.narration);
+    }
+    if(ui.pendingSpeech && !audio.busy && ui.windowActive && !document.hidden){
+        const next=ui.pendingSpeech;ui.pendingSpeech=null;
+        if(next.generation===state.generation && (!state.paused || next.allowPaused) && !state.isMuted && raceSpeechRelevant(next.key))say(next.text,next.key,{allowPaused:next.allowPaused});
+    }
+    requestAnimationFrame(frame);
+}
+document.addEventListener('focusin',event=>{
+    if(ui.openPicker&&!$(ui.openPicker+'PickerPanel').contains(event.target))setPicker(null);
+    event.target.closest('.racer-choice')?.scrollIntoView?.({block:'nearest',inline:'nearest'});
+    if(ui.suppressFocus || !ui.audioUnlocked)return;
+    const node=event.target.closest('[data-narration]');
+    if(node && !node.closest('[hidden],[inert]'))announce(node.dataset.narration);
+});
+function hoverAnnouncement(event){
+    const node=event.target.closest('[data-narration]');
+    if(!node || node===ui.hoverNode || node.closest('[hidden],[inert]'))return;
+    ui.hoverNode=node;ui.hoverDeadline=(ui.lastTimestamp || 0)+350;
+}
+document.addEventListener('pointerover',hoverAnnouncement);
+document.addEventListener('mouseover',hoverAnnouncement);
+function leaveAnnouncement(event){
+    const node=event.target.closest('[data-narration]');
+    if(node && event.relatedTarget && node.contains && node.contains(event.relatedTarget))return;
+    if(node===ui.hoverNode){ui.hoverNode=null;ui.hoverDeadline=null;}
+}
+document.addEventListener('pointerout',leaveAnnouncement);
+document.addEventListener('mouseout',leaveAnnouncement);
+render();focusMenuDefault();
+window.addEventListener('resize',resizeScene);
+const sceneResizeObserver=typeof ResizeObserver==='function'?new ResizeObserver(resizeScene):null;
+if(sceneResizeObserver)sceneResizeObserver.observe($('raceCanvas'));
+requestAnimationFrame(frame);

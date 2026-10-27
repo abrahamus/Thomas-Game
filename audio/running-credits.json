@@ -1,0 +1,37 @@
+{
+  "rolling": {
+    "sourceFile": "running-wheels-source.mp3",
+    "title": "Train Wheels Clacking",
+    "creator": "craigsmith",
+    "source": "https://freesound.org/people/craigsmith/sounds/480813/",
+    "download": "https://cdn.freesound.org/previews/480/480813_2524442-hq.mp3",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "sampleRate": 22050,
+    "duration": 23.88,
+    "sourceSha256": "819c1c8e3c91a27a71da692f6a3a097a0b1c75754dba2d3d0baaec309f7ffa69",
+    "editing": "4\u201328 s steady rail section; 45 Hz high-pass/5800 Hz low-pass; 120 ms periodic crossfade; peak normalized.",
+    "loopStart": 0,
+    "loopEnd": 23.88,
+    "peak": 0.67999267578125,
+    "rms": 0.12346222842461571,
+    "embeddedFile": "running-rolling.wav"
+  },
+  "chuff": {
+    "sourceFile": "running-steam-source.mp3",
+    "title": "Single Steam Train Chuff",
+    "creator": "birdOfTheNorth",
+    "originalRecording": "Steam Train by keithpeter (Freesound 125211), also CC0",
+    "source": "https://freesound.org/people/birdOfTheNorth/sounds/623817/",
+    "download": "https://cdn.freesound.org/previews/623/623817_12923717-hq.mp3",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "sampleRate": 22050,
+    "duration": 0.34,
+    "sourceSha256": "35d320af6aa34c36f0e03554124cf28a666633ebcfc64afaef231ab9dc706ee7",
+    "editing": "0.055\u20130.395 s recorded steam attack/body; 45 Hz high-pass/5800 Hz low-pass; 6/22 ms fades; peak normalized.",
+    "peak": 0.719970703125,
+    "rms": 0.1471838839538189,
+    "embeddedFile": "running-chuff.wav"
+  }
+}

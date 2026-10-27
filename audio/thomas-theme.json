@@ -1,0 +1,14 @@
+{
+  "title": "Thomas Theme",
+  "sourceFile": "Thomas Theme.mp4",
+  "artistMetadata": "Thomas & Friends - Topic",
+  "sourceSha256": "2cb6ee43ef66c8b1ad13a052607df27fd8025d59e0f755927e92419ec172c523",
+  "sampleRate": 22050,
+  "duration": 30.96235827664399,
+  "loopStart": 0,
+  "loopEnd": 30.96235827664399,
+  "audioFile": "audio/thomas-theme.wav",
+  "audioSha256": "71c5329c41eee8a116827cdaf2b81620ac021e0d6263f2054194254e1c740719",
+  "gainApplied": 0.6925865257595772,
+  "conversion": "Full recording, mono PCM16 at 22050 Hz; volume reduced for headroom. No pitch, speed, or musical edits."
+}

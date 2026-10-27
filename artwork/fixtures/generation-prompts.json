@@ -1,0 +1,29 @@
+{
+  "generator": "built-in image_gen.imagegen",
+  "transparent_background": true,
+  "conversion": "Original PNGs preserved; WebP quality 90, alphaQuality 100, effort 6, no resize or crop.",
+  "prompts": {
+    "station": "Use case: stylized-concept. Asset type: transparent PNG cutout fixture for a polished side-view railway videogame for a child under six. Primary request: one detailed standalone railway fixture. Style: semi-realistic colourful 3D storybook diorama, polished commercial videogame asset, charming and friendly without cartoon outlines, believable proportions, layered physical materials and realistic texture, sunlit soft rendering. Warm sunlight from upper left with gentle self-shadowing; transparent empty background, no background shadow plane. Broad horizontal landscape frame, entire object fits comfortably within frame with a slim transparent margin on every side. Avoid text, labels, logos, watermarks, characters, faces, engines, train cars, collage, frames, UI and surrounding landscape. Must have genuine alpha transparency behind object and in all open gaps, no checkerboard painted into image, no white background.\nSubject and geometry: One British railway station building with a broad, long stone platform projecting across the whole asset width. Warm red brick building, realistic slate pitched roof, timber-framed glass windows, modest glass-and-metal platform canopy, wooden bench, clear doorway. Camera straight front-side orthographic view, horizontal platform upper surface near the lower quarter of the asset. Include enough exposed platform height for a moving train to sit in front. Entire building and both platform ends visible. No passengers, letters, signs, trains, tracks, rails or surroundings.",
+    "bridge": "Use case: stylized-concept. Asset type: transparent PNG cutout fixture for a polished side-view railway videogame for a child under six. Primary request: one detailed standalone railway fixture. Style: semi-realistic colourful 3D storybook diorama, polished commercial videogame asset, charming and friendly without cartoon outlines, believable proportions, layered physical materials and realistic texture, sunlit soft rendering. Warm sunlight from upper left with gentle self-shadowing; transparent empty background, no background shadow plane. Broad horizontal landscape frame, entire object fits comfortably within frame with a slim transparent margin on every side. Avoid text, labels, logos, watermarks, characters, faces, engines, train cars, collage, frames, UI and surrounding landscape. Must have genuine alpha transparency behind object and in all open gaps, no checkerboard painted into image, no white background.\nSubject and geometry: One broad old stone railway viaduct with four graceful genuine open arches. A straight flat horizontal railway deck at approximately 12 percent down from the top of the asset. Weathered warm grey sandstone blocks with clear masonry joints, four strong piers, thin restrained dark metal parapet rails at deck sides. Orthographic side view showing the whole bridge and both ends without perspective convergence. The arches are completely open and transparent: no opaque backdrop behind the arch openings. No train, tracks, railway rails, water, landscape, ground plane, vegetation or surroundings.",
+    "wash": "Use case: stylized-concept. Asset type: transparent PNG cutout fixture for a polished side-view railway videogame for a child under six. Primary request: one detailed standalone railway fixture. Style: semi-realistic colourful 3D storybook diorama, polished commercial videogame asset, charming and friendly without cartoon outlines, believable proportions, layered physical materials and realistic texture, sunlit soft rendering. Warm sunlight from upper left with gentle self-shadowing; transparent empty background, no background shadow plane. Broad horizontal landscape frame, entire object fits comfortably within frame with a slim transparent margin on every side. Avoid text, labels, logos, watermarks, characters, faces, engines, train cars, collage, frames, UI and surrounding landscape. Must have genuine alpha transparency behind object and in all open gaps, no checkerboard painted into image, no white background.\nSubject and geometry: One railway engine washing shed and gantry with a large open central bay, viewed straight from the side-front in restrained orthographic perspective. Warm brick outer supports, believable slate and metal roof, large glass clerestory panels, an empty clear central opening where a train will be placed, tall turquoise rotating brushes on each side of the bay, overhead metal pipes with several small silver washing nozzles. Floor threshold near the bottom edge, no opaque ground plane. The central opening is genuinely transparent and empty. Softly rounded but believable railway equipment, vivid turquoise brush fibres. No train, letters, signage, people, water spray, foam, exterior surroundings or ground."
+  },
+  "geometry": {
+    "station": {
+      "width": 1916,
+      "height": 821,
+      "platformTopYRatio": 0.78
+    },
+    "bridge": {
+      "width": 1991,
+      "height": 790,
+      "stoneDeckTopYRatio": 0.17,
+      "parapetTopYRatio": 0.11
+    },
+    "wash": {
+      "width": 1536,
+      "height": 1024,
+      "floorTopYRatio": 0.83,
+      "thresholdYRatio": 0.9
+    }
+  }
+}

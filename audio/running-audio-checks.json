@@ -1,0 +1,312 @@
+{
+  "renderer": "web-audio-engine actual ThomasGameCore/ThomasAudio/ThomasMusic modules; mono 22050 Hz PCM",
+  "limitations": "Offline DSP, not a native browser or a claim of subjective listening.",
+  "sources": {
+    "rolling": {
+      "source": "https://freesound.org/people/craigsmith/sounds/480813/",
+      "license": "CC0 1.0",
+      "duration": 23.88
+    },
+    "chuff": {
+      "source": "https://freesound.org/people/birdOfTheNorth/sounds/623817/",
+      "license": "CC0 1.0",
+      "duration": 0.34
+    }
+  },
+  "rollingJoinJump": 0.01666310429573059,
+  "listeningOrder": [
+    {
+      "start": 0,
+      "end": 3,
+      "label": "Previous synthetic full-speed running sound"
+    },
+    {
+      "start": 3.3499773242630386,
+      "end": 6.349977324263039,
+      "label": "Recorded running: gear 1"
+    },
+    {
+      "start": 6.699954648526077,
+      "end": 9.699954648526077,
+      "label": "Recorded running: gear 2"
+    },
+    {
+      "start": 10.049931972789116,
+      "end": 13.049931972789116,
+      "label": "Recorded running: gear 3"
+    },
+    {
+      "start": 13.399909297052154,
+      "end": 16.399909297052154,
+      "label": "Recorded running: gear 4"
+    },
+    {
+      "start": 16.74988662131519,
+      "end": 20.24988662131519,
+      "label": "Recorded full-speed braking to a stop"
+    },
+    {
+      "start": 20.59986394557823,
+      "end": 26.59986394557823,
+      "label": "Recorded full-speed running with supplied music, Ana, and whistle"
+    }
+  ],
+  "scenarios": {
+    "before": {
+      "file": "before-full-speed.wav",
+      "peak": 0.6220600605010986,
+      "rms": 0.09207401264112337,
+      "rmsDb": -20.717258592401183,
+      "clippedSamples": 0,
+      "duration": 13.003174603174603,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.6220600605010986,
+        "rms": 0.11492148425530675,
+        "rmsDb": -18.791975471261605,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 10,
+          "action": "brake to stop"
+        }
+      ]
+    },
+    "gear1": {
+      "file": "recorded-gear-1.wav",
+      "peak": 0.10961443930864334,
+      "rms": 0.015505260493606534,
+      "rmsDb": -36.19041866143143,
+      "clippedSamples": 0,
+      "duration": 13.003174603174603,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.08999462425708771,
+        "rms": 0.01763430099146791,
+        "rmsDb": -35.072835014304594,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 10,
+          "action": "brake to stop"
+        }
+      ]
+    },
+    "gear2": {
+      "file": "recorded-gear-2.wav",
+      "peak": 0.16019098460674286,
+      "rms": 0.02559042215301832,
+      "rmsDb": -31.838450994085804,
+      "clippedSamples": 0,
+      "duration": 13.003174603174603,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.13778293132781982,
+        "rms": 0.031168722059210896,
+        "rmsDb": -30.12562007509876,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 10,
+          "action": "brake to stop"
+        }
+      ]
+    },
+    "gear3": {
+      "file": "recorded-gear-3.wav",
+      "peak": 0.20467226207256317,
+      "rms": 0.034215049210413226,
+      "rmsDb": -29.315656620706584,
+      "clippedSamples": 0,
+      "duration": 13.003174603174603,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.1975577026605606,
+        "rms": 0.043996021743394766,
+        "rmsDb": -27.131731839822827,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 10,
+          "action": "brake to stop"
+        }
+      ]
+    },
+    "gear4": {
+      "file": "recorded-gear-4.wav",
+      "peak": 0.2999440133571625,
+      "rms": 0.04170276347936063,
+      "rmsDb": -27.596703301449928,
+      "clippedSamples": 0,
+      "duration": 13.003174603174603,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.2999440133571625,
+        "rms": 0.05554732421856788,
+        "rmsDb": -25.106737134138104,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 10,
+          "action": "brake to stop"
+        }
+      ]
+    },
+    "loop": {
+      "file": "recorded-full-speed-loop.wav",
+      "peak": 0.3054536283016205,
+      "rms": 0.05145688201181127,
+      "rmsDb": -25.77113066103277,
+      "clippedSamples": 0,
+      "duration": 33.00136054421769,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.2999440133571625,
+        "rms": 0.05554732421856788,
+        "rmsDb": -25.106737134138104,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": []
+    },
+    "mix": {
+      "file": "full-speed-music-Ana-whistle.wav",
+      "peak": 1.0336333513259888,
+      "rms": 0.07141331127710139,
+      "rmsDb": -22.92441658369924,
+      "clippedSamples": 1,
+      "duration": 14.001632653061224,
+      "clippedTimes": [
+        6.5534693877551025
+      ],
+      "settled": {
+        "peak": 1.0336333513259888,
+        "rms": 0.08589648577579186,
+        "rmsDb": -21.320492075971593,
+        "clippedSamples": 1,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 6,
+          "action": "Ana",
+          "text": "A red signal is ahead. Stop before the signal."
+        },
+        {
+          "time": 6.5,
+          "action": "whistle"
+        },
+        {
+          "time": 11,
+          "action": "brake to stop"
+        }
+      ]
+    },
+    "existingMix": {
+      "file": "music-Ana-whistle-without-running.wav",
+      "peak": 1.0180659294128418,
+      "rms": 0.06662977231977707,
+      "rmsDb": -23.52663341509154,
+      "clippedSamples": 2,
+      "duration": 14.001632653061224,
+      "clippedTimes": [
+        6.5534693877551025,
+        6.9734240362811795
+      ],
+      "settled": {
+        "peak": 1.0180659294128418,
+        "rms": 0.0836849836441893,
+        "rmsDb": -21.54704928829243,
+        "clippedSamples": 2,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 6,
+          "action": "Ana",
+          "text": "A red signal is ahead. Stop before the signal."
+        },
+        {
+          "time": 6.5,
+          "action": "whistle"
+        },
+        {
+          "time": 11,
+          "action": "brake to stop"
+        }
+      ]
+    },
+    "music": {
+      "file": "music-reference.wav",
+      "peak": 0.4202270805835724,
+      "rms": 0.06671434290485398,
+      "rmsDb": -23.51561574302015,
+      "clippedSamples": 0,
+      "duration": 10.001995464852607,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.35677003860473633,
+        "rms": 0.07036354108902096,
+        "rmsDb": -23.053046250487146,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": []
+    },
+    "voice": {
+      "file": "Ana-reference.wav",
+      "peak": 0.430127888917923,
+      "rms": 0.036685886941819935,
+      "rmsDb": -28.710019533538656,
+      "clippedSamples": 0,
+      "duration": 10.001995464852607,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.38087403774261475,
+        "rms": 0.05631794281943833,
+        "rmsDb": -24.987064349507616,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 6,
+          "action": "Ana",
+          "text": "A red signal is ahead. Stop before the signal."
+        }
+      ]
+    },
+    "whistle": {
+      "file": "original-whistle-reference.wav",
+      "peak": 0.9711741805076599,
+      "rms": 0.031684576138897934,
+      "rmsDb": -29.98304196567399,
+      "clippedSamples": 0,
+      "duration": 10.001995464852607,
+      "clippedTimes": [],
+      "settled": {
+        "peak": 0.9711741805076599,
+        "rms": 0.05785362830124504,
+        "rmsDb": -24.753387979950215,
+        "clippedSamples": 0,
+        "duration": 3
+      },
+      "events": [
+        {
+          "time": 6.5,
+          "action": "whistle"
+        }
+      ]
+    }
+  }
+}

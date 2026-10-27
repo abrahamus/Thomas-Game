@@ -1,0 +1,83 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const context=vm.createContext({});vm.runInContext(fs.readFileSync(path.join(__dirname,'../scripts/race-model.js'),'utf8'),context);const R=context.ThomasRaceCore,{drive}=require('./helpers/race-driver.cjs');
+const json=x=>JSON.parse(JSON.stringify(x));
+function rolling(options={}){const r=R.createRace(options);R.step(r,R.START_COUNTDOWN);return r;}
+function arrive(r,type){r.player.service=null;const s=r.player.serviceStates.find(s=>s.type===type);assert.ok(s,`Missing ${type}`);for(const q of r.player.serviceStates)if(q.at<s.at)q.processed=q.completed=true;r.player.distance=s.at-.01;r.player.velocity=1;R.step(r,.02);assert.equal(r.player.service,s);assert.equal(r.player.velocity,0);assert.equal(r.phase,'racing');return s;}
+function completePassengers(r,type){const s=arrive(r,type);for(let i=0;i<3;i++){assert.equal(R.serviceAction(r,`passenger-${i}`),true);R.step(r,1.01);}return s;}
+
+test('three courses have eight mandatory jobs and two distinct tunnel sections',()=>{
+ for(const c of Object.values(R.COURSES)){
+  const r=R.createRace({courseId:c.id});assert.equal(c.length,175500);assert.equal(r.services.length,8);
+  assert.equal(new Set(c.sections.map(s=>s.id)).size,c.sections.length);
+  assert.equal(c.sections.filter(s=>s.type==='tunnel').length,2);assert.ok(c.sections.every(s=>s.type!=='bridge'));
+  for(const job of r.services)assert.ok(Math.abs(R.sampleRoute(c.id,job.at).grade)<1e-8,'Jobs stop on level track');
+ }
+});
+test('New rounds alternate delivery themes; exact rematches retain delivery theme and rival work',()=>{
+    const lastRace={opponentId:'percy',courseId:'country',deliveryTheme:'passengers'},a=R.chooseRace({lastRace,random:()=>.25});assert.equal(a.deliveryTheme,'cargo');assert.notEqual(a.opponentId,lastRace.opponentId);assert.notEqual(a.courseId,lastRace.courseId);assert.equal(R.chooseRace({lastRace:{...lastRace,deliveryTheme:'cargo'},opponentId:'james',random:()=>.25}).deliveryTheme,'passengers');assert.ok(a.opponentId!=='thomas'&&a.opponentId!=='percy');assert.throws(()=>R.chooseRace({opponentId:'gordon'}),/Unknown/);
+    const r=R.createRace(a),q=R.createRace(a);assert.deepEqual(json(r),json(q));R.step(r,50);assert.deepEqual(json(r.profile),json(q.profile));assert.deepEqual(json(r.services),json(q.services));
+});
+
+
+test('Climb rises8worldunits,plateaustayshighanddescentreturnsgroundwithmaximum6degreegrade',()=>{
+    for(const c of Object.values(R.COURSES)){assert.equal(R.sampleRoute(c.id,72600).y,0);assert.equal(R.sampleRoute(c.id,90600).y,8);assert.equal(R.sampleRoute(c.id,98600).y,8);assert.equal(R.sampleRoute(c.id,116600).y,0);let previous=0;for(let d=72600;d<=90600;d+=100){const p=R.sampleRoute(c.id,d);assert.ok(p.y>=previous);previous=p.y;assert.ok(Math.abs(p.grade)<=Math.PI/30);}previous=8;for(let d=98600;d<=116600;d+=100){const p=R.sampleRoute(c.id,d);assert.ok(p.y<=previous);previous=p.y;assert.ok(Math.abs(p.grade)<=Math.PI/30);}assert.ok(R.sampleTerrainHeight(c.id,95000,60)<R.sampleTerrainHeight(c.id,95000,0)-7);assert.equal(R.sampleTerrainHeight(c.id,95000,0),7.68);for(const s of c.sections.filter(s=>['tunnel','bridge'].includes(s.type)))for(let d=s.start;d<s.end;d+=100)assert.equal(R.sampleRoute(c.id,d).grade,0);}
+});
+test('Automatic speedcapsanticipateentry,holduntilcoachclears,andboostneveroverridesthem',()=>{
+    for(const type of ['hill','downhill','tunnel','wet','snow']){const courseId=type==='snow'?'mountain':'country',r=rolling({courseId}),s=R.COURSES[courseId].sections.find(s=>s.type===type);for(const v of[r.player,r.rival]){for(const q of v.serviceStates)q.completed=q.processed=true;v.distance=s.start-4000;v.velocity=825;v.boostRemaining=30;}let crossed=false;for(let i=0;i<1500;i++){R.step(r,.05);if(r.player.distance>s.end+R.getCoachOffset(r,'player')+400)break;if(r.player.distance>=s.start){crossed=true;assert.ok(r.player.velocity<=825*s.cap+1e-5);assert.ok(r.player.targetVelocity<=825*s.cap+1e-7);}}assert.ok(crossed);}
+});
+test('Fully automatic braking stops exactlyatjob; earlyactionsdonotqueue; clockandrivalcontinue',()=>{
+    const r=rolling({deliveryTheme:'passengers'});assert.equal(R.serviceAction(r),false);assert.equal(R.cleanMud(r,0),false);assert.equal(R.whistle(r),false);R.step(r,45);assert.equal(r.player.distance,12000);assert.equal(r.player.velocity,0);assert.equal(r.player.service.type,'passenger-load');assert.equal(r.phase,'racing');const t=r.elapsed,p=r.rival.distance;R.step(r,15);assert.ok(r.elapsed>t);assert.ok(r.rival.distance>p);assert.equal(r.player.service.unitsDone,0);assert.equal(r.player.service.phase,'ready');assert.equal(R.getView(r).helpEnabled,true);
+});
+test('Passenger groups boardoneatatime,remaincarried,anddisembarkonlyatthedestination',()=>{
+    const r=rolling({deliveryTheme:'passengers'}),load=arrive(r,'passenger-load');assert.equal(R.serviceAction(r,'passenger-8'),false);assert.equal(R.serviceAction(r,'passenger-0'),true);assert.equal(load.activeUnit,0);assert.equal(load.targetId,'passenger-0');assert.equal(R.serviceAction(r,'passenger-1'),false);R.step(r,1.01);assert.equal(r.player.carried.passengers,1);assert.equal(load.unitsDone,1);assert.equal(R.serviceAction(r,'passenger-0'),false);for(const n of[1,2]){R.serviceAction(r,`passenger-${n}`);R.step(r,1.01);}assert.equal(r.player.service,null);assert.equal(r.player.carried.passengers,3);assert.ok(load.completed);const unload=completePassengers(r,'passenger-unload');assert.equal(unload.unitsDone,3);assert.equal(r.player.carried.passengers,0);
+});
+test('Containerrequiresselectionthencrane;loadedcontainerstaysuntilunloading',()=>{
+    const r=rolling({deliveryTheme:'cargo'}),s=arrive(r,'cargo-load');assert.equal(R.getView(r).taskKey,'race.service.cargo-select');assert.equal(R.serviceAction(r,'container-2'),false);assert.equal(R.serviceAction(r,'container-1'),true);assert.equal(s.selectedContainer,'container-1');assert.equal(s.phase,'ready');assert.equal(r.player.carried.container,null);assert.equal(R.getView(r).taskKey,'race.service.cargo-load');assert.equal(R.serviceAction(r),true);assert.equal(s.duration,5);assert.equal(R.serviceAction(r),false);R.step(r,4.9);assert.equal(r.player.carried.container,null);R.step(r,.11);assert.equal(r.player.carried.container,'container-1');assert.equal(r.player.carried.cargo,true);const q=arrive(r,'cargo-unload');R.serviceAction(r);R.step(r,5.01);assert.ok(q.completed);assert.equal(r.player.carried.container,null);assert.equal(r.player.carried.cargo,false);
+});
+test('Animalwhistlecounts onlyafterautomaticstop,andtwo-secondcrossingholdsThomas',()=>{
+    const r=rolling(),s=arrive(r,'animals');assert.equal(R.getView(r).helpEnabled,false);assert.equal(R.serviceAction(r),false);assert.equal(R.whistle(r),true);assert.equal(s.phase,'working');assert.equal(R.getView(r).taskKey,'race.service.animals-wait');assert.equal(R.whistle(r),false);R.step(r,1.9);assert.equal(r.player.distance,s.at);assert.equal(r.player.velocity,0);assert.equal(s.completed,false);R.step(r,.11);assert.equal(s.completed,true);assert.equal(r.player.service,null);
+});
+test('Mudappearsbeforewash;pointerand600msassistsremoveactualpatcheswithoutoverlap',()=>{
+    const r=rolling(),spec=r.services.find(s=>s.type==='wash');for(const q of r.player.serviceStates)if(q.at<spec.at)q.completed=true;r.player.distance=spec.mudAt-1;r.player.velocity=825;R.step(r,.01);assert.equal(r.player.dirt,1);assert.equal(r.player.mudPatches.filter(Boolean).length,7);assert.equal(R.cleanMud(r,0),false);const s=arrive(r,'wash');assert.equal(R.cleanMud(r,0),true);assert.equal(R.cleanMud(r,0),false);assert.equal(r.player.dirt,6/7);assert.equal(R.serviceAction(r),true);assert.equal(s.duration,.6);assert.equal(R.serviceAction(r),false);assert.equal(R.cleanMud(r,2),false);R.step(r,.59);assert.equal(r.player.mudPatches[1],true);R.step(r,.02);assert.equal(r.player.mudPatches[1],false);for(let n=2;n<7;n++)assert.equal(R.cleanMud(r,n),true);assert.equal(r.player.service,null);assert.equal(r.player.dirt,0);assert.equal(s.unitsDone,7);
+});
+test('Waterandtreeactionsruntheirrequired4/5seconds;drawbridgeautomaticallywaits6seconds',()=>{
+    for(const type of ['water','tree','drawbridge']){let options;for(let seed=1;seed<100;seed++){const r=R.createRace({seed});if(r.services.some(s=>s.type===type)){options={seed};break;}}const r=rolling(options),s=arrive(r,type),duration=type==='water'?4:type==='tree'?5:6;if(type==='drawbridge'){assert.equal(s.phase,'working');assert.equal(R.getView(r).helpEnabled,false);assert.equal(R.serviceAction(r),false);}else{assert.equal(s.phase,'ready');assert.equal(R.serviceAction(r),true);}assert.equal(s.duration,duration);R.step(r,duration-.05);assert.equal(s.completed,false);R.step(r,.06);assert.equal(s.completed,true);}
+});
+test('Currenttask andinactivityhelpfollowstationaryjobwithoutrepeatedaudioqueues',()=>{
+    const r=rolling({deliveryTheme:'cargo'}),s=arrive(r,'cargo-load');assert.equal(R.getView(r).nextTask.kind,'service');assert.equal(R.getView(r).nextTask.id,s.id);const before=r.events.filter(e=>e.type==='service-hint').length;R.step(r,7);assert.equal(r.events.filter(e=>e.type==='service-hint').length,before+1);assert.equal(R.getView(r).inactivityHintKey,'race.service.cargo-select');R.step(r,20);assert.equal(r.events.filter(e=>e.type==='service-hint').length,before+1);R.serviceAction(r);assert.equal(R.getView(r).inactivityHintKey,null);assert.equal(R.getView(r).taskKey,'race.service.cargo-load');R.step(r,7);assert.equal(r.events.filter(e=>e.type==='service-hint').length,before+2);
+});
+
+
+
+
+
+
+test('Coachesfollowindependentgeometryandthelargerterrainprofile',()=>{
+    for(const opponentId of ['percy','james','bertie'])for(const courseId of Object.keys(R.COURSES)){const r=rolling({opponentId,courseId});r.player.distance=r.rival.distance=85000;assert.equal(R.getCoachOffset(r,'player'),900);assert.equal(R.getCoachOffset(r,'rival'),opponentId==='james'?1350:900);assert.deepEqual(json(R.sampleCoachRoute(r,'player')),json(R.sampleRoute(courseId,84100,0)));assert.deepEqual(json(R.sampleCoachRoute(r,'rival')),json(R.sampleRoute(courseId,85000-R.getCoachOffset(r,'rival'),-15)));assert.notEqual(R.sampleCoachRoute(r,'player').y,R.sampleVehicleRoute(r,'player').y);}
+});
+test('seeded rival jobs and rewards remain independent of player input',()=>{
+ const a=R.createRace({seed:542}),b=R.createRace({seed:542});
+ for(let i=0;i<3500;i++){
+  const s=a.player.service;if(s?.phase==='ready'){if(s.type==='animals')R.whistle(a);else R.serviceAction(a);}
+  R.step(a,.1);R.step(b,.1);if(a.phase==='complete')break;
+  assert.deepEqual(json(a.rival),json(b.rival));assert.deepEqual(json(a.profile),json(b.profile));
+ }
+});
+test('Completeordinaryplayboards,delivers,washes,andcompletesjobsin5–6minutes',()=>{
+    for(const deliveryTheme of ['passengers','cargo'])for(const reaction of[.75,1.1,1.5]){const r=drive(R,{deliveryTheme,reaction,washSeconds:reaction===1.5?20:14,seed:199});assert.equal(r.player.serviceStates.filter(s=>s.completed).length,8);assert.ok(['player','rival','tie'].includes(r.winner));assert.equal(r.player.serviceStates.filter(s=>s.completed).length,8);assert.equal(r.player.carried.passengers,0);assert.equal(r.player.carried.container,null);assert.equal(r.player.dirt,0);assert.ok(r.elapsed+R.START_COUNTDOWN>=300&&r.elapsed+R.START_COUNTDOWN<=360);assert.equal(r.events.filter(e=>e.type==='complete').length,1);}
+});
+test('Noinputwaitswithoutpenaltyatliveloadjobwhilerivalcontinuesitsownwork',()=>{
+    const r=drive(R,{noInput:true});assert.equal(r.phase,'racing');assert.equal(r.player.distance,12000);assert.equal(r.player.service.phase,'ready');assert.ok(r.rival.distance>r.player.distance);assert.equal(r.player.finishTime,null);
+});
+test('Largeupdates,60Hzand120Hzpreserveautomaticmotionandjobtimers',()=>{
+    const a=R.createRace({seed:532}),b=R.createRace({seed:532}),c=R.createRace({seed:532});for(let n=0;n<60*100;n++)R.step(a,1/60);for(let n=0;n<120*100;n++)R.step(b,1/120);R.step(c,100);assert.deepEqual(json(a),json(b));assert.ok(Math.abs(a.player.distance-c.player.distance)<1e-7);assert.deepEqual(json(a.rival),json(c.rival));const p=arrive(a,'wash');a.player.mudPatches.fill(true);R.serviceAction(a);const frozen=json(a);for(const dt of[NaN,-1,0,Infinity])assert.equal(R.step(a,dt),false);assert.deepEqual(json(a),frozen);assert.equal(p.remaining,.6);R.step(a,.6);assert.equal(p.unitsDone,1);
+});
+
+test('Approaching delivery stops repeat the journey goal; arrival uses the job instruction',()=>{
+    for(const deliveryTheme of ['passengers','cargo']){const r=rolling({deliveryTheme});r.player.distance=11000;assert.equal(R.getView(r).nextTask.kind,'service');assert.equal(R.getView(r).taskKey,`race.delivery.${deliveryTheme}`);arrive(r,deliveryTheme==='passengers'?'passenger-load':'cargo-load');assert.equal(R.getView(r).taskKey,deliveryTheme==='passengers'?'race.service.passenger-load':'race.service.cargo-select');}
+});
+
+test('Once-onlyfinishrecordsresultandfreezeswithoutduplicatingcompletion',()=>{
+    const r=drive(R,{});const before=json(r),finish=r.player.finishTime;assert.equal(r.phase,'complete');assert.equal(R.step(r,1000),false);assert.deepEqual(json(r),before);assert.equal(r.player.finishTime,finish);assert.equal(r.events.filter(e=>e.type==='complete').length,1);
+});
