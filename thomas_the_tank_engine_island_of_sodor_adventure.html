@@ -795,10 +795,7 @@ body{height:100dvh;overflow:hidden}
  #footerDashboard .pause-bars{font-size:24px}
 }
 @media(max-height:500px) and (orientation:landscape){
- /* Let scenery reach both page edges; only interactive UI needs notch clearance. */
- body{padding-left:0;padding-right:0}
- .overlay,#rewardOverlay.festival-results{left:env(safe-area-inset-left,0px);right:env(safe-area-inset-right,0px)}
- #footerDashboard.is-race{--control-height:48px;--control-width:72px;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px))}
+ #footerDashboard.is-race{--control-height:48px;--control-width:72px}
  #footerDashboard.is-race .actions .action{gap:3px;padding:1px 4px;border-width:1px;border-radius:7px;box-shadow:0 1px 0 #20394b55,0 2px 5px #20394b25}
  #footerDashboard.is-race .actions .action-race-help .control-picture{width:24px;height:18px}
  #footerDashboard.is-race .actions .whistle .control-picture{width:20px;height:17px}
