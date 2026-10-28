@@ -238,8 +238,8 @@ function renderRacePresentation() {
     help.setAttribute('data-narration',view.taskKey);help.setAttribute('aria-label',words(view.taskKey));
     const helpPicture=view.player.vehicleType==='air'?raceTaskPicture(service?.type):service?.type==='cargo-unload' || service?.type==='cargo-load' && service.selectedContainer?'race-crane':service?.type==='passenger-load'?'race-board':service?.type==='passenger-unload'?'race-alight':raceTaskPicture(service?.type);
     $('raceHelpPicture').setAttribute('href',working||handling?'#rule-wait':`#${helpPicture}`);
-    const labels={'cargo-load':'Load cargo','cargo-unload':'Unload cargo','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear rocks',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear branch','level-crossing':'Crossing'};
-    $('raceHelpLabel').textContent=working||handling?'Please wait':labels[service?.type]||'Help';
+    const labels={'cargo-load':'Load','cargo-unload':'Unload','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear','level-crossing':'Cross'};
+    $('raceHelpLabel').textContent=working||handling?'Wait':labels[service?.type]||'Help';
     help.classList.toggle('hint',!!view.helpEnabled);
     $('action-whistle').classList.toggle('hint',service?.type==='animals' && !working);
     const counting=race.phase==='countdown',green=race.phase==='racing' && race.elapsed<1.2;

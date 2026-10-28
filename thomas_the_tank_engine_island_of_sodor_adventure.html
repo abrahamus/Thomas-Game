@@ -755,26 +755,29 @@ body{height:100dvh;overflow:hidden}
 }
 @media(max-width:700px) and (orientation:landscape){.topbar .brand{display:none}}
 
-/* Unobstructed race scene and one bottom control strip on every screen. */
+/* Floating controls leave the full scene visible, including between the two pairs. */
+#playSurface{position:relative}
 #playWorld.is-race{padding:0;background:#a9deee}
 .is-race .scene-surface{min-height:0;display:block;border:0;border-radius:0;box-shadow:none}
 .is-race #raceCanvas{position:absolute;inset:0;width:100%;height:100%}
-#footerDashboard.is-race{padding:9px 12px 13px;gap:0;border-top:3px solid #20394b;background:#fff8e1}
-#footerDashboard.is-race .actions{width:100%;max-width:none;min-height:68px;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:10px}
-#footerDashboard.is-race .actions .action{order:0;flex:0 0 76px;width:auto;max-width:none;min-width:0;height:68px;min-height:68px;flex-direction:column;gap:3px;padding:5px 10px;border:2px solid #fffdf5;border-radius:16px;box-shadow:0 3px 0 #20394b55}
-#footerDashboard.is-race .actions .action-race-help{flex:0 1 220px;min-width:140px;flex-direction:row;gap:12px;background:#f9d85e;color:#20394b}
-#footerDashboard.is-race .actions .action-race-help .control-picture{width:64px;height:50px}
-#footerDashboard.is-race .actions .whistle{flex-basis:80px;background:#c1b2e5;color:#20394b}
-#footerDashboard.is-race .actions .whistle .control-picture{width:42px;height:37px}
-#footerDashboard .control-label{font-size:14px;font-weight:900;line-height:1.15;text-align:center}
-#footerDashboard .control-spacer{flex:1}
+#footerDashboard.is-race{--control-height:36px;--control-width:80px;position:absolute;z-index:3;left:12px;right:12px;bottom:12px;min-height:0;padding:0;gap:0;border:0;background:transparent;pointer-events:none}
+#footerDashboard.is-race .actions{width:100%;max-width:none;min-height:0;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:10px}
+#footerDashboard.is-race .actions .action{position:relative;order:0;flex:0 0 var(--control-width);width:var(--control-width);min-width:var(--control-width);max-width:var(--control-width);height:var(--control-height);min-height:0;flex-direction:row;gap:4px;padding:2px 4px;border:2px solid #fffdf5;border-radius:10px;box-shadow:0 2px 0 #20394b55,0 3px 7px #20394b25;pointer-events:auto}
+/* Keep short visible buttons easy to tap without covering the gap or scene. */
+#footerDashboard.is-race .actions .action::after{content:"";position:absolute;left:0;right:0;top:min(0px,calc((var(--control-height) - 44px)/2));bottom:min(0px,calc((var(--control-height) - 44px)/2))}
+#footerDashboard.is-race .actions .action-race-help{background:#f9d85e;color:#20394b}
+#footerDashboard.is-race .actions .action-race-help .control-picture{width:24px;height:24px}
+#footerDashboard.is-race .actions .whistle{background:#c1b2e5;color:#20394b}
+#footerDashboard.is-race .actions .whistle .control-picture{width:20px;height:23px}
+#footerDashboard .control-label{font:700 12px/1 "Trebuchet MS",Arial,sans-serif;text-align:center;white-space:nowrap}
+#footerDashboard .control-spacer{display:block;flex:1;min-width:0}
 #footerDashboard .race-utility{background:#1677ae;color:#fffdf5}
-#footerDashboard .utility-picture{display:flex;align-items:center;justify-content:center;height:31px;font-size:36px;font-family:Arial,sans-serif;line-height:1}
-#footerDashboard .pause-bars{font-size:30px;font-weight:900}
-#footerDashboard.is-race .actions .hint{box-shadow:0 3px 0 #20394b55,0 0 0 3px #f8cd67}
+#footerDashboard .utility-picture{display:flex;flex:none;align-items:center;justify-content:center;width:19px;height:19px;font-size:23px;font-family:Arial,sans-serif;line-height:1}
+#footerDashboard .pause-bars{font-size:20px;font-weight:900}
+#footerDashboard.is-race .actions .hint{box-shadow:0 2px 0 #20394b55,0 0 0 3px #f8cd67}
 #footerDashboard.is-race .actions .action:active{transform:translateY(2px);box-shadow:0 1px 0 #20394b55}
-#footerDashboard.festival-footer .actions{min-height:68px!important;flex-wrap:nowrap!important}
-#footerDashboard #skipCelebration{flex:0 1 220px;max-width:220px;width:auto;min-width:88px;min-height:68px;padding:6px 12px;font-size:14px}
+#footerDashboard.festival-footer .actions{min-height:0!important;flex-wrap:nowrap!important}
+#footerDashboard #skipCelebration{position:absolute;left:0;bottom:calc(var(--control-height) + 16px);width:auto;max-width:220px;min-width:0;min-height:44px;padding:6px 12px;font-size:14px;pointer-events:auto}
 .game-options{flex:none;text-align:center;margin-top:6px}
 .options-toggle{min-height:44px;padding:6px 12px;border:1px solid #b9ccd3;border-radius:12px;background:#edf3f4;font-size:14px;font-weight:800}
 .menu-utilities{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;padding:8px 0 0}
@@ -785,27 +788,33 @@ body{height:100dvh;overflow:hidden}
 .option-label{display:block;font-size:11px;font-weight:800}
 #raceStartOverlay #startOptionsHost{flex:none;max-height:32%;overflow:auto}
 #pauseOptionsHost{margin-top:12px}
-@media(max-width:540px){
- #footerDashboard.is-race{padding:7px 7px 12px}
+@media(max-width:700px) and (orientation:portrait){
+ #footerDashboard.is-race{--control-height:48px;--control-width:56px}
  #footerDashboard.is-race .actions{gap:6px}
- #footerDashboard.is-race .actions .action{flex-basis:54px;padding:5px;border-radius:13px}
- #footerDashboard.is-race .actions .action-race-help{flex:1 1 90px;min-width:90px;flex-direction:column;gap:1px}
- #footerDashboard.is-race .actions .action-race-help .control-picture{width:54px;height:41px}
- #footerDashboard.is-race .actions .whistle{flex-basis:56px}
- #footerDashboard.is-race .actions .whistle .control-picture{width:38px;height:35px}
- #footerDashboard .control-label{font-size:12px}
- #footerDashboard .utility-picture{font-size:32px}
- #footerDashboard .pause-bars{font-size:28px}
- #footerDashboard #skipCelebration{flex:1 1 90px;min-width:90px;padding:4px;font-size:12px}
+ #footerDashboard.is-race .actions .action{flex-direction:column;padding:2px 4px;gap:1px;border-radius:11px}
+ #footerDashboard.is-race .actions .action-race-help .control-picture{width:38px;height:25px}
+ #footerDashboard.is-race .actions .whistle .control-picture{width:27px;height:24px}
+ #footerDashboard .control-label{font-size:11.5px}
+ #footerDashboard .utility-picture{width:22px;height:22px;font-size:28px}
+ #footerDashboard .pause-bars{font-size:24px}
 }
 @media(max-height:500px) and (orientation:landscape){
- #footerDashboard.is-race{padding:5px 10px 9px}
- #footerDashboard.is-race .actions,#footerDashboard.festival-footer .actions{min-height:60px!important}
- #footerDashboard.is-race .actions .action,#footerDashboard #skipCelebration{height:60px;min-height:60px}
- #footerDashboard.is-race .actions .action-race-help .control-picture{height:42px}
- #footerDashboard .control-label{font-size:12px}
+ #footerDashboard.is-race{--control-height:24px;--control-width:72px}
+ #footerDashboard.is-race .actions .action{gap:3px;padding:1px 4px;border-width:1px;border-radius:7px;box-shadow:0 1px 0 #20394b55,0 2px 5px #20394b25}
+ #footerDashboard.is-race .actions .action-race-help .control-picture{width:24px;height:18px}
+ #footerDashboard.is-race .actions .whistle .control-picture{width:20px;height:17px}
+ #footerDashboard .control-label{font-size:11px}
+ #footerDashboard .utility-picture{width:14px;height:14px;font-size:18px}
+ #footerDashboard .pause-bars{font-size:16px}
  .menu-utilities{gap:6px;padding-top:4px}.menu-controls .icon-button{min-height:44px}
  #pauseOptionsHost{margin-top:6px}
+}
+@media(max-width:540px) and (orientation:landscape){
+ #footerDashboard.is-race{--control-width:64px}
+ #footerDashboard.is-race .actions{gap:6px}
+ #footerDashboard.is-race .actions .action{padding:1px 3px;gap:2px}
+ #footerDashboard.is-race .actions .action-race-help .control-picture{width:20px;height:17px}
+ #footerDashboard.is-race .actions .whistle .control-picture{width:16px;height:16px}
 }
 </style>
 </head>
@@ -1328,8 +1337,8 @@ body{height:100dvh;overflow:hidden}
                 
                 
 
-<button id="action-race-help" class="action action-gold action-race-help" data-action="race-help" data-narration="race.service.wash" aria-label="Help at this stop" aria-keyshortcuts="Enter" hidden><svg class="control-picture" viewBox="0 0 120 100" aria-hidden="true"><use id="raceHelpPicture" href="#challenge-wash" width="120" height="100"/></svg><span id="raceHelpLabel" class="control-label">Help</span></button>
 <button id="action-whistle" class="action action-purple whistle" data-action="whistle" data-narration="ui.whistle" aria-label="Blow the whistle." aria-keyshortcuts="Space" hidden><svg class="control-picture" viewBox="0 0 120 100" aria-hidden="true"><use href="#rule-whistle" width="120" height="100"/></svg><span id="signalLabel" class="control-label">Whistle</span></button>
+<button id="action-race-help" class="action action-gold action-race-help" data-action="race-help" data-narration="race.service.wash" aria-label="Help at this stop" aria-keyshortcuts="Enter" hidden><svg class="control-picture" viewBox="0 0 120 100" aria-hidden="true"><use id="raceHelpPicture" href="#challenge-wash" width="120" height="100"/></svg><span id="raceHelpLabel" class="control-label">Help</span></button>
 <span class="control-spacer" aria-hidden="true"></span>
 <button id="pauseButton" class="action race-utility" data-action="pause" data-narration="ui.pause" aria-label="Pause game" aria-keyshortcuts="Escape"><span class="utility-picture pause-bars" aria-hidden="true">Ⅱ</span><span class="control-label">Pause</span></button>
 <button id="homeButton" class="action race-utility" data-action="home" data-narration="ui.home" aria-label="Choose racers"><span class="utility-picture" aria-hidden="true">⌂</span><span class="control-label">Home</span></button>
@@ -59286,8 +59295,8 @@ function renderRacePresentation() {
     help.setAttribute('data-narration',view.taskKey);help.setAttribute('aria-label',words(view.taskKey));
     const helpPicture=view.player.vehicleType==='air'?raceTaskPicture(service?.type):service?.type==='cargo-unload' || service?.type==='cargo-load' && service.selectedContainer?'race-crane':service?.type==='passenger-load'?'race-board':service?.type==='passenger-unload'?'race-alight':raceTaskPicture(service?.type);
     $('raceHelpPicture').setAttribute('href',working||handling?'#rule-wait':`#${helpPicture}`);
-    const labels={'cargo-load':'Load cargo','cargo-unload':'Unload cargo','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear rocks',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear branch','level-crossing':'Crossing'};
-    $('raceHelpLabel').textContent=working||handling?'Please wait':labels[service?.type]||'Help';
+    const labels={'cargo-load':'Load','cargo-unload':'Unload','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear','level-crossing':'Cross'};
+    $('raceHelpLabel').textContent=working||handling?'Wait':labels[service?.type]||'Help';
     help.classList.toggle('hint',!!view.helpEnabled);
     $('action-whistle').classList.toggle('hint',service?.type==='animals' && !working);
     const counting=race.phase==='countdown',green=race.phase==='racing' && race.elapsed<1.2;
