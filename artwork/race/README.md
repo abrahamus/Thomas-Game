@@ -60,6 +60,8 @@ A complete job or fully cleared restricted terrain section adds six seconds of 2
 
 ## Verification and current previews
 
+Large decorative hills and mountains near the eight job stops now sit behind both routes. Their placement reserves the fixed camera's approach and working sightlines when the scene is built, rather than removing scenery as a racer arrives. `tests/station-sightlines.test.cjs` reproduces the previously obscured mountain water/coal stops with train, bus and helicopter players in portrait, landscape and desktop views, including approaches and work animation stages. The shared harbour tests also verify that a waiting player's boat and raised bridge remain stationary until activation while the rival proceeds independently. The raised bridge is directly selectable as well as usable through Enter or the Bridge picture.
+
 `tests/character-renderer.test.cjs` covers all ten models in either role, actual wheel contact and coupled drawbars on bends/slopes, passenger/cargo tunnel fit and gate passage, reachable and unoccluded wash targets at four viewport sizes, and independent crossing traffic in both mixed-route orders and both bus pairings. `tests/character-ui.test.cjs` completes passenger and cargo races with every player character and checks every possible computer winner. These are geometry and DOM simulations, not a live layout or animation check.
 
 `tests/lakeside-services.test.cjs` checks water depth, exposed rail heads, thin ice, weather pause/visibility, crane support, grounded handcarts, sling attachment and clearance, and equal branch timing.

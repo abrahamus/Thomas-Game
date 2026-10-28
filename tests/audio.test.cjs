@@ -99,6 +99,21 @@ test('only the master gain reaches destination; all sounds use separate channel 
     assert.deepEqual(context.nodes.filter(node => node.connections.includes(context.destination)), [master]);
 });
 
+test('cancelling stale narration preserves the active signal until mute or pause', async () => {
+    for (const signal of ['whistle', 'horn', 'radio']) {
+        const { audio } = setup(); audio.unlock();
+        const pending = audio.speak('first'), context = audio.context;
+        audio.effect(signal);
+        const sources = context.nodes.filter(node => node.started);
+        assert.ok(sources.length > 0);
+        audio.stopNarration();
+        for (const node of sources) assert.ok(!node.disconnected && node.stopTimes.every(time => time > context.currentTime), `${signal} must keep its scheduled audible duration`);
+        context.resolve(); assert.equal(await pending, false, 'Stale narration cannot start later');
+        audio.setMuted(true);
+        for (const node of sources) assert.ok(node.disconnected, 'Mute still stops the signal');
+    }
+});
+
 test('a stopped or changed mission cannot play a delayed decoded clip', async () => {
     for (const reason of ['stop', 'generation', 'pause', 'mute']) {
         const { audio, state, spoken } = setup(); audio.unlock();

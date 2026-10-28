@@ -77,7 +77,7 @@ const deliveryPhrases = {
     'race.service.wash': 'Let’s wash our vehicle. Wipe away the mud.',
     'race.service.water': 'Let’s fill our engine’s water tank.',
     'race.service.tree': 'Call the crane to lift the branch.',
-    'race.service.drawbridge': 'Let’s watch the boat. Then the bridge can come down.',
+    'race.service.drawbridge': 'Let the boat through. Then the bridge can come down.',
     'race.service.done': 'All done! Off we go!'
 };
 

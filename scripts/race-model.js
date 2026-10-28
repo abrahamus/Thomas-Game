@@ -61,7 +61,7 @@
         'race.flight.water':'Deliver water to the ground crew.',
         'race.flight.wash':'We have landed. Wash the mud off Harold.',
         'race.flight.level-crossing':'Call the ground crew. Wait for the crossing traffic to pass.',
-        'race.flight.drawbridge':'Hover here while the boat passes the harbour.',
+        'race.flight.drawbridge':'Call the harbour crew to let the boat through.',
         'race.flight.terrain.tunnel':'Fly gently through the clouds.',
         'race.flight.terrain.hill':'Climb gently over the hill.',
         'race.flight.terrain.downhill':'Come down gently on the other side.',
@@ -76,7 +76,7 @@
         'race.service.cargo-unload':'We’ve arrived. Lift the container onto the ground.',
         'race.service.animals':'Blow the whistle so the animals can move along.','race.service.animals-wait':'Here they go. Let’s wait until the track is clear.',
         'race.service.wash':'Let’s wash our vehicle. Wipe away the mud.','race.service.water':'Let’s fill our engine’s water tank.',
-        'race.service.tree':'Call the crane to lift the branch.','race.service.drawbridge':'Let’s watch the boat. Then the bridge can come down.',
+        'race.service.tree':'Call the crane to lift the branch.','race.service.drawbridge':'Let the boat through. Then the bridge can come down.',
         'race.service.repairs':'Let’s help the workers mend the track.',
         'race.service.rocks':'Use the crane to lift the rocks away.',
         'race.service.coal':'Let’s fill our engine’s coal bunker.',
@@ -287,6 +287,10 @@
             if(targetId!=null&&targetId!=='crossing')return false;
             beginWork(race,v,s,5,'crossing');return true;
         }
+        if(s.type==='drawbridge'){
+            if(targetId!=null&&targetId!=='drawbridge')return false;
+            beginWork(race,v,s,6,'drawbridge');return true;
+        }
         if(s.type==='passenger-load'||s.type==='passenger-unload'){if(s.type==='passenger-unload'&&v.carried.passengers<=0)return false;let n=targetId===undefined||targetId===null?s.groups.findIndex(x=>!x):Number(String(targetId).replace(/^passenger-/,''));if(!Number.isInteger(n)||n<0||n>2||s.groups[n])return false;s.activeUnit=n;beginWork(race,v,s,1,`passenger-${n}`);return true;}
         if(s.type==='cargo-load'){if(!s.selectedContainer){if(targetId!==undefined&&targetId!==null&&targetId!=='container-1'&&targetId!=='container')return false;s.selectedContainer='container-1';s.lastActionAt=race.elapsed;s.hinted=false;v._npcNextAction=null;announce(race,v,'service-selected',taskKey(s,race,v),{serviceId:s.id,targetId:'container-1'});return true;}beginWork(race,v,s,5,'container-1');return true;}
         if(s.type==='cargo-unload'){if(!v.carried.container)return false;beginWork(race,v,s,5,'container-1');return true;}
@@ -371,7 +375,6 @@
             service.cargoHandling=Boolean(v.carried.container&&CARGO_HANDLING_JOBS.includes(service.type)&&[race.playerId,race.opponentId].some(id=>character(id).vehicleType==='air'));
             if(service.cargoHandling)beginCargoHandling(race,v,service,'cargo-lowering');
             else announce(race,v,'service-start',taskKey(service,race,v),{serviceId:service.id,serviceType:service.type});
-            if(service.type==='drawbridge')beginWork(race,v,service,6);
         }
         for(const s of v.serviceStates)if(s.type==='wash'&&!s.mudTriggered&&v.distance>=s.mudAt){s.mudTriggered=true;v.mudPatches.fill(true);v.dirt=1;announce(race,v,'mud-splash',null,{serviceId:s.id});}
         if(!finishedBefore&&v.distance>=c.length-EPS){
@@ -448,7 +451,7 @@
         return {course,player,opponent,winnerId:race.winner==='player'?race.playerId:race.winner==='rival'?race.opponentId:null,opponentName:opponent.name,deliveryTheme:race.deliveryTheme,phase:race.phase,
             services:race.services,serviceStates:v.serviceStates,currentService:service,nextTask,nextService,
             nextServiceKey:nextService?taskKey(nextService,race,v):null,
-            helpEnabled:Boolean(service&&service.phase==='ready'&&!['animals','drawbridge'].includes(service.type)),
+            helpEnabled:Boolean(service&&service.phase==='ready'&&service.type!=='animals'),
             carried:v.carried,mudPatches:v.mudPatches,dirt:v.dirt,terrain,inactivityHintKey:service?.hinted?taskKey(service,race,v):null,
             taskKey:key,instructionKey:key,taskText:NARRATION[key],completed:v.serviceStates.filter(s=>s.completed).length,total:race.services.length,
             progress:clamp(v.distance/course.length,0,1),rivalProgress:clamp(race.rival.distance/course.length,0,1),

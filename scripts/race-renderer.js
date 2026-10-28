@@ -611,6 +611,7 @@
       else plainBox(slot.bridgeLeaf,5.5,.04,9,0x7e8b88,0,.02,4.5,'drawbridge-road');
       for(const z of [-.8,9.8])box(base,width+1.2,3.4,1.6,0xb6ad94,0,-1.7,z,'drawbridge-abutment');
       slot.signal=sphere(g,.22,0xd75547,2.3,2.5,6,1,1,.4,'drawbridge-signal');cyl(g,.09,2.3,C.outline,2.3,1.2,6,'y','drawbridge-signal-post');
+      slot.targets.push({object:slot.bridgeLeaf,id:'drawbridge'});
   }
   function harbourChannelZ(x) {
     const bend=Math.max(0,Math.min(1,(Math.abs(x+7.5)-22)/25));
@@ -1163,7 +1164,13 @@
     const lakeside=terrainAndTrack(core,courseId,opponent,world,race?.services||[],race?.playerId||'thomas');
     const course=core.COURSES[courseId],crossings=(race?.services||[]).filter(s=>s.type==='level-crossing'),harbours=(race?.services||[]).filter(s=>s.type==='drawbridge');
     const clearCrossing=(distance,radius)=>Math.abs((distance-128600)*core.WORLD_SCALE)>38+radius&&crossings.every(s=>Math.abs((distance-s.at)*core.WORLD_SCALE-8.45)>radius+4)&&harbours.every(s=>Math.abs((distance-s.at)*core.WORLD_SCALE-18.5)>radius+12);
-    for(let i=0;i<Math.ceil(course.length/3200);i++){if(!clearCrossing(-5000+i*3200,38))continue;const p=route(core,courseId,-5000+i*3200,(i%2?-1:1)*(65+i%3*14)-6);sphere(world,12+i%4,courseId==='harbour'?0x88b8a2:0x8db97e,p.x,p.y-7,p.z,2.2,.8,2.3,'distant-rolling-hill');}
+    // The fixed camera looks from +lane and 80 world units ahead. Keep a clear
+    // approach and working view at every shuffled job, across both corridors.
+    // Relocate large scenery behind the routes instead of hiding it on arrival.
+    const sceneryLane=(distance,lane,radius)=>lane+radius>-30&&(race?.services||[]).some(s=>{
+      const ahead=(distance-s.at)*core.WORLD_SCALE;return ahead>-24-radius&&ahead<80+radius;
+    })?Math.min(lane,-45-radius):lane;
+    for(let i=0;i<Math.ceil(course.length/3200);i++){const d=-5000+i*3200,size=12+i%4;if(!clearCrossing(d,38))continue;const lane=sceneryLane(d,(i%2?-1:1)*(65+i%3*14)-6,size*2.3),p=route(core,courseId,d,lane);sphere(world,size,courseId==='harbour'?0x88b8a2:0x8db97e,p.x,p.y-7,p.z,2.2,.8,2.3,'distant-rolling-hill');}
     let k=0;
     for(let d=-3500;d<course.length+5000;d+=1500) {
       if(d>course.length-6000)continue;
@@ -1180,9 +1187,9 @@
     const objects=buildRaceObjects(core,world);
     if(courseId==='harbour')harbour(core,courseId,world);
     if(courseId==='mountain')for(let i=0;i<12;i++) {
-      if(!clearCrossing(3500+i*4300,22))continue;
-      const p=route(core,courseId,3500+i*4300,(i%2?-1:1)*(35+i%3*8));
-      sphere(world,8+i%4,0x8cb394,p.x,p.y-1,p.z,1.7,1.6,1.7,'distant-mountain');
+      const d=3500+i*4300,size=8+i%4;if(!clearCrossing(d,22))continue;
+      const p=route(core,courseId,d,sceneryLane(d,(i%2?-1:1)*(35+i%3*8),size*1.7));
+      sphere(world,size,0x8cb394,p.x,p.y-1,p.z,1.7,1.6,1.7,'distant-mountain');
     }
     if(core.sampleTerrainHeight)for(let d=79000;d<114000;d+=2800){if(!clearCrossing(d,2))continue;const lane=22+(Math.floor(d/2800)%3)*3,p=route(core,courseId,d,lane);p.y=core.sampleTerrainHeight(courseId,d,lane);sphere(world,.55,0x9a9b87,p.x,p.y+.25,p.z,1.5,.8,1.2,'hillside-rock');}
     const start=startFinish(core,courseId,world,-900,false);startFinish(core,courseId,world,course.length,true);

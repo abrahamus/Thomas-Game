@@ -6,6 +6,22 @@ function fixture(playerId,opponentId,courseId='country',firstSeed=1){
  r.phase='racing';r.countdown=0;const spec=r.services.find(s=>s.type==='drawbridge');r.player.distance=r.rival.distance=spec.at;
  const b=V.makeScene(R,courseId,opponentId,'cargo',r);V.updateScene(b,r);return{r,b,spec};
 }
+test('the raised bridge and its boat wait for a player action while the rival proceeds independently',()=>{
+ for(const pair of [['thomas','percy'],['bertie','bulgy'],['harold','thomas']]){
+  const {r,b,spec}=fixture(...pair);
+  for(const v of [r.player,r.rival])v.serviceStates.forEach(s=>s.completed=s.index<spec.index);
+  R.step(r,.02);V.updateScene(b,r);
+  const slot=b.objects.services.find(s=>s.spec.id===spec.id).slots[0],boat=slot.boat.position.clone(),angle=slot.bridgeLeaf.rotation.x;
+  const p=new T.Box3().setFromObject(slot.bridgeLeaf).getCenter(new T.Vector3()).project(b.camera);
+  assert.deepEqual(V.pickScene(b,r,(p.x+1)*700,(1-p.y)*400,1400,800),{kind:'service',id:'drawbridge'});
+  R.step(r,10);V.updateScene(b,r);
+  assert.deepEqual(slot.boat.position.toArray(),boat.toArray());assert.equal(slot.bridgeLeaf.rotation.x,angle);
+  assert.equal(r.player.service.phase,'ready');assert.equal(r.rival.serviceStates[spec.index].completed,true);
+  assert.equal(R.serviceAction(r,'drawbridge'),true);R.step(r,6.01);V.updateScene(b,r);
+  assert.ok(slot.boat.position.distanceTo(boat)>20);assert.ok(Math.abs(slot.bridgeLeaf.rotation.x)<1e-8);
+  V.disposeScene(b);
+ }
+});
 test('one continuous level river passes beneath two drawbridges, including Harold’s corridor',()=>{
  for(const [player,opponent]of [['harold','bertie'],['thomas','harold'],['bertie','bulgy'],['thomas','percy']]){
   const{r,b,spec}=fixture(player,opponent),bundle=b.objects.services.find(s=>s.spec.id===spec.id);

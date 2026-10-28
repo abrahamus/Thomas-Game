@@ -232,13 +232,13 @@ function renderRacePresentation() {
     const race=state.race;if(!race)return;
     const view=ThomasRaceCore.getView(race),service=view.currentService;
     const working=service?.phase==='working',handling=service?.phase==='cargo-lowering'||service?.phase==='cargo-lifting';
-    const help=$('action-race-help'),hasHelp=!!service && !['animals','drawbridge'].includes(service.type);
+    const help=$('action-race-help'),hasHelp=!!service && service.type!=='animals';
     show('action-race-help',hasHelp);
     help.disabled=state.paused || ui.albumOpen || !view.helpEnabled;
     help.setAttribute('data-narration',view.taskKey);help.setAttribute('aria-label',words(view.taskKey));
     const helpPicture=view.player.vehicleType==='air'?raceTaskPicture(service?.type):service?.type==='cargo-unload' || service?.type==='cargo-load' && service.selectedContainer?'race-crane':service?.type==='passenger-load'?'race-board':service?.type==='passenger-unload'?'race-alight':raceTaskPicture(service?.type);
     $('raceHelpPicture').setAttribute('href',working||handling?'#rule-wait':`#${helpPicture}`);
-    const labels={'cargo-load':'Load','cargo-unload':'Unload','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear','level-crossing':'Cross'};
+    const labels={'cargo-load':'Load','cargo-unload':'Unload','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear','level-crossing':'Cross',drawbridge:'Bridge'};
     $('raceHelpLabel').textContent=working||handling?'Wait':labels[service?.type]||'Help';
     help.classList.toggle('hint',!!view.helpEnabled);
     $('action-whistle').classList.toggle('hint',service?.type==='animals' && !working);
@@ -253,7 +253,7 @@ function renderRacePresentation() {
     ui.taskKey=view.taskKey;ui.task=words(view.taskKey);$('promptText').textContent=ui.task;
     // A job stage can change while its previous slow narration is decoding or speaking.
     if(serviceVoice(ui.raceVoiceKey) && !raceSpeechRelevant(ui.raceVoiceKey)){
-        audio.stop();ui.raceVoiceKey=null;ui.pendingSpeech=null;
+        audio.stopNarration();ui.raceVoiceKey=null;ui.pendingSpeech=null;
     }
     const events=race.phase==='complete'?[]:race.events.splice(0),lastReward=events.findLast(event=>event.type==='boost-earned');
     for(const event of events){
@@ -374,6 +374,7 @@ function dispatchAction(action,payload) {
         audio.stop();ui.pendingSpeech=null;ui.raceVoiceKey=null;render();ui.menuIndex=0;selectMenu(0,true,false);return true;
     }
     if(action==='whistle'&&ui.festival&&active()){playPeepPeepWhistle();ui.whistle=.8;return true;}
+    const signalsAnimals=action==='race-help'&&state.race?.player.service?.type==='animals';
     if(!game.dispatch(action,payload))return false;
     if(['select-player','select-opponent'].includes(action)){
         const role=action==='select-player'?'player':'opponent';ui.openPicker=null;renderCharacterChoices();selectMenu(menuButtons().indexOf($(role+'PickerButton')),true,false);announce(`race.character.${payload}`,{force:true});return true;
@@ -382,8 +383,8 @@ function dispatchAction(action,payload) {
         ui.albumOpen=false;ui.openPicker=null;ui.optionsOpen=false;ui.menuIndex=0;ui.raceUnavailable=false;
     }
     if(action==='resume'){ui.lastTimestamp=null;audio.unlock();say(ui.task,ui.taskKey);}
-    if(action==='whistle'){playPeepPeepWhistle();ui.whistle=.8;}
-    if(['race-help','race-clean-spot'].includes(action))playPopSound(700);
+    if(action==='whistle'||signalsAnimals){playPeepPeepWhistle();ui.whistle=.8;}
+    else if(['race-help','race-clean-spot'].includes(action))playPopSound(700);
     render();
     if(menuButtons().length){focusMenuDefault();if(action==='home'||action==='next-race')announce('race.menu',{force:true});}
     else if(['resume','start-race','rematch','race-help','race-clean-spot'].includes(action))focusStage();

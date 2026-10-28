@@ -41,8 +41,27 @@ test('Animalwhistlecounts onlyafterautomaticstop,andtwo-secondcrossingholdsThoma
 test('Mudappearsbeforewash;pointerand600msassistsremoveactualpatcheswithoutoverlap',()=>{
     const r=rolling(),spec=r.services.find(s=>s.type==='wash');for(const q of r.player.serviceStates)if(q.at<spec.at)q.completed=true;r.player.distance=spec.mudAt-1;r.player.velocity=825;R.step(r,.01);assert.equal(r.player.dirt,1);assert.equal(r.player.mudPatches.filter(Boolean).length,7);assert.equal(R.cleanMud(r,0),false);const s=arrive(r,'wash');assert.equal(R.cleanMud(r,0),true);assert.equal(R.cleanMud(r,0),false);assert.equal(r.player.dirt,6/7);assert.equal(R.serviceAction(r),true);assert.equal(s.duration,.6);assert.equal(R.serviceAction(r),false);assert.equal(R.cleanMud(r,2),false);R.step(r,.59);assert.equal(r.player.mudPatches[1],true);R.step(r,.02);assert.equal(r.player.mudPatches[1],false);for(let n=2;n<7;n++)assert.equal(R.cleanMud(r,n),true);assert.equal(r.player.service,null);assert.equal(r.player.dirt,0);assert.equal(s.unitsDone,7);
 });
-test('Waterandtreeactionsruntheirrequired4/5seconds;drawbridgeautomaticallywaits6seconds',()=>{
-    for(const type of ['water','tree','drawbridge']){let options;for(let seed=1;seed<100;seed++){const r=R.createRace({seed});if(r.services.some(s=>s.type===type)){options={seed};break;}}const r=rolling(options),s=arrive(r,type),duration=type==='water'?4:type==='tree'?5:6;if(type==='drawbridge'){assert.equal(s.phase,'working');assert.equal(R.getView(r).helpEnabled,false);assert.equal(R.serviceAction(r),false);}else{assert.equal(s.phase,'ready');assert.equal(R.serviceAction(r),true);}assert.equal(s.duration,duration);R.step(r,duration-.05);assert.equal(s.completed,false);R.step(r,.06);assert.equal(s.completed,true);}
+test('water, branch and harbour jobs wait for an action, then keep their work durations',()=>{
+    for(const type of ['water','tree','drawbridge']){
+        let options;for(let seed=1;seed<100;seed++){const r=R.createRace({seed});if(r.services.some(s=>s.type===type)){options={seed};break;}}
+        const r=rolling(options);assert.equal(R.serviceAction(r),false,'An early action does not queue');
+        const s=arrive(r,type),duration=type==='water'?4:type==='tree'?5:6;
+        assert.equal(s.phase,'ready');assert.equal(R.getView(r).helpEnabled,true);
+        R.step(r,8);assert.equal(s.phase,'ready');assert.equal(s.progress,0);
+        if(type==='drawbridge')assert.equal(R.serviceAction(r,'wrong-control'),false);
+        assert.equal(R.serviceAction(r),true);assert.equal(R.serviceAction(r),false);assert.equal(s.duration,duration);
+        R.step(r,duration-.05);assert.equal(s.completed,false);R.step(r,.06);assert.equal(s.completed,true);
+        R.serviceAction(r);assert.equal(r.events.filter(e=>e.type==='boost-earned'&&e.completionId===s.id).length,1);
+    }
+});
+test('the rival initiates its harbour job after its own seeded reaction while the player can wait',()=>{
+    let r;for(let seed=1;seed<100;seed++){r=rolling({seed});if(r.services.some(s=>s.type==='drawbridge'))break;}
+    r.elapsed=10; // This station fixture is beyond the rival's initial start delay.
+    const s=arrive(r,'drawbridge'),v=r.rival,q=v.serviceStates.find(q=>q.id===s.id);
+    v.service=null;v._npcNextAction=null;v.serviceStates.forEach(t=>t.completed=t.index<q.index);v.distance=q.at;v.velocity=0;
+    R.step(r,.01);assert.equal(q.phase,'ready');R.step(r,.2);assert.equal(q.phase,'ready');
+    R.step(r,2);assert.equal(q.phase,'working');assert.equal(s.phase,'ready');
+    R.step(r,6);assert.equal(q.completed,true);assert.equal(s.phase,'ready');
 });
 test('Currenttask andinactivityhelpfollowstationaryjobwithoutrepeatedaudioqueues',()=>{
     const r=rolling({deliveryTheme:'cargo'}),s=arrive(r,'cargo-load');assert.equal(R.getView(r).nextTask.kind,'service');assert.equal(R.getView(r).nextTask.id,s.id);const before=r.events.filter(e=>e.type==='service-hint').length;R.step(r,7);assert.equal(r.events.filter(e=>e.type==='service-hint').length,before+1);assert.equal(R.getView(r).inactivityHintKey,'race.service.cargo-select');R.step(r,20);assert.equal(r.events.filter(e=>e.type==='service-hint').length,before+1);R.serviceAction(r);assert.equal(R.getView(r).inactivityHintKey,null);assert.equal(R.getView(r).taskKey,'race.service.cargo-load');R.step(r,7);assert.equal(r.events.filter(e=>e.type==='service-hint').length,before+2);
