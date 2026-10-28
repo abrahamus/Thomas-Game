@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const {setup}=require('./helpers/game-harness.cjs');
 const node=(ui,id)=>ui.document.getElementById(id);
 function arrive(ui,winner='player'){
- ui.evaluate(`{const r=state.race;r.phase='racing';r.countdown=0;r.elapsed=300;for(const who of ['player','rival']){const v=r[who];v.distance=ThomasRaceCore.COURSES[r.courseId].length-('${winner}'==='tie'||'${winner}'===who?1:100);v.velocity=825;v.service=null;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete'});v.terrainStates.forEach(s=>s.completed=true);}}`);
+ ui.evaluate(`{const r=state.race;r.phase='racing';r.countdown=0;r.elapsed=300;for(const who of ['player','rival']){const v=r[who];v.distance=ThomasRaceCore.COURSES[r.courseId].length-('${winner}'==='tie'||'${winner}'===who?1:100);v.velocity=ThomasRaceCore.CRUISE_SPEED;v.service=null;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete'});v.terrainStates.forEach(s=>s.completed=true);}}`);
  ui.frames(.3,30);assert.equal(ui.state().phase,'complete');
 }
 function start(){const ui=setup();ui.click('#startRaceButton');return ui;}
@@ -39,8 +39,8 @@ test('pause, focus loss, hidden tabs, Home and mute stop the appropriate festiva
   const time=elapsed(ui),copy=ui.evaluate('JSON.stringify(ui.festival)');ui.frames(10,20);assert.equal(elapsed(ui),time);assert.equal(ui.evaluate('JSON.stringify(ui.festival)'),copy);
   ui.windowListeners.get('focus')();ui.document.hidden=false;ui.document.emit('visibilitychange');ui.click('#pauseOverlay [data-action="resume"]');ui.frames(.5,10);assert.ok(elapsed(ui)>time);
  }
- ui.click('#pauseButton');ui.click('#optionsToggle');ui.click('[data-action="mute"]');assert.equal(ui.state().isMuted,true);ui.click('#pauseOverlay [data-action="resume"]');ui.frames(2,20);assert.ok(elapsed(ui)>2);
- ui.click('[data-action="home"]');assert.equal(ui.evaluate('ui.festival'),null);ui.frames(20,10);assert.equal(ui.state().screen,'race-start');assert.equal(ui.state().stars,3);
+ ui.click('#pauseButton');ui.evaluate("dispatchAction('mute')");assert.equal(ui.state().isMuted,true);ui.click('#pauseOverlay [data-action="resume"]');ui.frames(2,20);assert.ok(elapsed(ui)>2);
+ ui.click('#pauseButton');ui.evaluate("dispatchAction('home')");assert.equal(ui.evaluate('ui.festival'),null);ui.frames(20,10);assert.equal(ui.state().screen,'race-start');assert.equal(ui.state().stars,3);
 });
 for(const [id,sound]of [['thomas','whistle'],['bertie','horn'],['bulgy','horn'],['harold','radio']])test(`${id}: Space and the signal picture work during celebration, held keys do not`,()=>{
  const ui=setup();ui.choose('player',id);ui.click('#startRaceButton');arrive(ui);

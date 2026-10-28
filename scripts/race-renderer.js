@@ -384,12 +384,166 @@
     for(let i=0;i<9;i++)sphere(fill,.20,0x34454c,(i%3-1)*.52,.20+Math.floor(i/3)*.09,(Math.floor(i/3)-1)*.17,1.3,.8,1,'coal-lump');
     engine.userData.coalFill=fill;
   }
-  function makeCrane(parent,x=6,z=-7) {
+  function makeCrane(parent,x,z) {
     const g=new T.Group();g.name='delivery-yard-crane';add(parent,g,x,0,z);
-    box(g,2.6,.82,2.7,0xe0b459,0,.08,0,'crane-foot');cyl(g,.28,6.7,0xe1b54e,0,3.6,0,'y','crane-tower');
-    const boom=new T.Group();boom.name='crane-turning-boom';add(g,boom,0,6.8,0);beam(boom,[0,0,0],[-6,0,0],.17,0xe4bb5a,'crane-boom');beam(boom,[0,.9,0],[-5.7,0,0],.07,C.outline,'crane-stay');
-    const cable=beam(boom,[-5.5,0,0],[-5.5,-4.3,0],.035,C.outline,'crane-cable');const hook=new T.Group();hook.name='crane-hook';add(boom,hook,-5.5,-4.4,0);torus(hook,.15,.045,C.outline,0,0,0,'z','lifting-hook');
-    return {group:g,boom,cable,hook};
+    box(g,2.6,1.1,2.7,0xb3b6ab,0,.25,0,'crane-foot');cyl(g,.30,6.8,0xe1b54e,0,4.2,0,'y','crane-tower');
+    const height=7.6,boom=new T.Group();boom.name='crane-turning-boom';add(g,boom,0,height,0);
+    box(boom,8.4,.30,.38,0xe4bb5a,-3.9,0,0,'fixed-crane-arm');beam(boom,[0,1,0],[-7.9,.15,0],.045,C.steel,'crane-stay');
+    box(boom,.25,1.3,.25,0xe4bb5a,0,.5,0);box(boom,1.1,.8,1,0x647278,.85,-.22,0,'crane-counterweight');
+    const trolley=new T.Group();trolley.name='pulley-carriage';boom.add(trolley);box(trolley,.6,.30,.5,C.steel,0,.18,0);
+    const pulley=cyl(trolley,.19,.15,C.outline,0,0,0,'z','rope-pulley'),drum=cyl(boom,.24,.42,C.steel,0,-.55,0,'z','hoist-winding-drum');
+    for(let i=0;i<5;i++)torus(boom,.25,.035,C.outline,0,-.55,(i-2)*.07);
+    const palette=[0x52636b,0x94a6aa],feed=makeRope(boom,'pulley-feed-rope',.035,palette),cable=makeRope(boom,'flexible-hoist-rope',.045,palette);
+    const hook=new T.Group();hook.name='crane-hook';boom.add(hook);torus(hook,.13,.04,C.steel,0,0,0);
+    const crane={group:g,boom,trolley,pulley,drum,feed,cable,hook,height};poseJibCrane(crane,new T.Vector3(x-5,4,z),false,0);return crane;
+  }
+  function makeRope(parent,name='flexible-hoist-rope',radius=.045,palette=[0xc99f63,0xedd2a1]){
+    // Reuse a small woven tube buffer; never allocate new geometry per frame.
+    const rings=20,sides=8,positions=new Float32Array((rings+1)*sides*3),colors=new Float32Array(positions.length),indices=[];
+    for(let i=0;i<=rings;i++)for(let j=0;j<sides;j++){
+      const k=(i*sides+j)*3,c=new T.Color((i+j)%3?palette[0]:palette[1]);colors.set([c.r,c.g,c.b],k);
+      if(i<rings){const a=i*sides+j,b=i*sides+(j+1)%sides;indices.push(a,b,a+sides,b,b+sides,a+sides);}
+    }
+    const geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(positions,3).setUsage(T.DynamicDrawUsage));geo.setAttribute('color',new T.BufferAttribute(colors,3));geo.setIndex(indices);
+    const rope=mesh(geo,0xffffff,name,{vertexColors:true});rope.userData={rings,sides,radius};parent.add(rope);return rope;
+  }
+  function makeContainerLift(slot,core,course,character){
+    // A fixed berth prevents a finished crane from following a departing wagon.
+    const parked=new T.Object3D();transformRoute(parked,core.sampleRoute(course,slot.spec.at-character.coachOffset,slot.who==='player'?0:core.ROAD_LANE),slot.road?-.015:RAIL_TOP);parked.updateMatrixWorld(true);
+    slot.group.updateMatrixWorld(true);
+    slot.cargoBerth=slot.group.worldToLocal(new T.Vector3(0,1.36,0).applyMatrix4(parked.matrixWorld));
+    slot.cargoBerthRotation=slot.group.getWorldQuaternion(new T.Quaternion()).invert().multiply(parked.quaternion);
+    slot.cargoYard=new T.Vector3(3.8,.53,slot.cargoBerth.z+4);
+    slot.crane=makeCrane(slot.group,6.2,slot.cargoBerth.z+4);
+    const spreader=new T.Group();spreader.name='four-corner-container-spreader';slot.group.add(spreader);slot.spreader=spreader;slot.containerLocks=[];
+    for(const x of [-.94,.94])box(spreader,.14,.14,3.6,0xe6b44e,x,0,0,'spreader-side');
+    for(const z of [-1.8,1.8])box(spreader,1.88,.14,.14,0xe6b44e,0,0,z,'spreader-end');
+    for(const x of [-.94,.94])for(const z of [-1.8,1.8]){
+      beam(spreader,[x,.06,z],[0,.85,0],.035,C.steel,'spreader-suspension-leg');
+      const pin=new T.Group();pin.name='container-twist-lock';add(spreader,pin,x,-.12,z);
+      cyl(pin,.04,.16,C.outline,0,0,0);box(pin,.16,.045,.065,C.steel,0,-.065,0);slot.containerLocks.push(pin);
+    }
+    torus(spreader,.10,.03,C.steel,0,.85,0,'z','spreader-lifting-eye');
+    slot.container=makeContainer();slot.container.position.copy(slot.cargoYard);slot.group.add(slot.container);slot.container.userData.targetId='container-1';slot.targets.push({object:slot.container,id:'container-1'});
+  }
+  function updateContainerLift(slot,state,t,working,done,time){
+    const unloading=slot.spec.type==='cargo-unload',from=unloading?slot.cargoBerth:slot.cargoYard,to=unloading?slot.cargoYard:slot.cargoBerth;
+    const yardRotation=new T.Quaternion(),fromRotation=unloading?slot.cargoBerthRotation:yardRotation,toRotation=unloading?yardRotation:slot.cargoBerthRotation;
+    const ease=(a,z)=>{const u=Math.max(0,Math.min(1,(t-a)/(z-a)));return u*u*(3-2*u);},travel=done?1:working?ease(.40,.68):0,clearY=Math.max(from.y,to.y)+3;
+    const load=slot.container;load.position.copy(from).lerp(to,travel);load.quaternion.slerpQuaternions(fromRotation,toRotation,travel);load.scale.setScalar(1);
+    if(working)load.position.y=from.y+(clearY-from.y)*ease(.24,.40)+(to.y-clearY)*ease(.68,.82);
+    load.visible=unloading?working||done:!done;
+    // The frame locks all four roof corners before lifting. The container stays
+    // level, moves vertically at either end, and is grounded before unlocking.
+    const gap=done?2.1:working?2.1*(1-ease(0,.18)+ease(.90,1)):2.1;
+    slot.spreader.quaternion.copy(load.quaternion);slot.spreader.position.copy(load.position).add(new T.Vector3(0,1.48+gap,0).applyQuaternion(load.quaternion));
+    const locked=working?ease(.18,.24)*(1-ease(.82,.90)):0;
+    slot.containerLocks.forEach(pin=>pin.rotation.y=locked*PI/2);
+    const hook=slot.spreader.position.clone().add(new T.Vector3(0,.85,0).applyQuaternion(slot.spreader.quaternion));
+    poseJibCrane(slot.crane,hook,working&&t>=.24&&t<.82,time);
+    slot.crane.group.userData.liftStage=done?'parked':!working?'waiting':t<.18?'lower-frame':t<.24?'lock':t<.40?'lift':t<.68?'transfer':t<.82?'lower-load':t<.90?'unlock':'retract';
+  }
+  function poseRope(rope,top,bottom,slack=0){
+    const pose=[...top.toArray(),...bottom.toArray(),slack];
+    if(rope.userData.lastPose?.every((v,i)=>v===pose[i]))return;rope.userData.lastPose=pose;
+    const {rings,sides,radius}=rope.userData,axis=bottom.clone().sub(top).normalize(),across=new T.Vector3(0,0,1).cross(axis).normalize();
+    if(across.lengthSq()<.1)across.set(1,0,0);
+    const other=axis.clone().cross(across).normalize(),p=rope.geometry.attributes.position,centre=new T.Vector3(),v=new T.Vector3();
+    for(let i=0;i<=rings;i++){
+      const u=i/rings;centre.copy(top).lerp(bottom,u).addScaledVector(across,Math.sin(u*PI)*slack);
+      for(let j=0;j<sides;j++){const a=j*TAU/sides+u*TAU*2;v.copy(centre).addScaledVector(across,Math.cos(a)*radius).addScaledVector(other,Math.sin(a)*radius);p.setXYZ(i*sides+j,v.x,v.y,v.z);}
+    }
+    p.needsUpdate=true;rope.geometry.computeVertexNormals();rope.geometry.computeBoundingSphere();rope.geometry.computeBoundingBox();
+  }
+  function makeObstacleCrane(parent,x,z){
+    const g=new T.Group();g.name='obstacle-sling-crane';add(parent,g,x,0,z);
+    box(g,2.6,.55,2.7,0xb2b5a5,0,.1,0,'crane-foot');box(g,.44,6.2,.44,C.wood,0,3.1,0,'timber-crane-mast');
+    for(const side of [-1,1])beam(g,[side*1.1,.2,0],[0,2.6,0],.12,C.wood,'mast-brace');
+    const boom=new T.Group();boom.name='fixed-timber-jib';add(g,boom,0,6.2,0);
+    box(boom,9,.3,.32,C.wood,-4.1,0,0,'fixed-crane-arm');beam(boom,[0,1.2,0],[-8.4,.15,0],.035,C.steel,'crane-support-wire');
+    box(boom,.35,1.4,.35,C.wood,0,.6,0);box(boom,1,.8,.9,0x6a7477,.7,-.25,0,'crane-counterweight');
+    const trolley=new T.Group();trolley.name='pulley-carriage';boom.add(trolley);
+    box(trolley,.55,.28,.48,C.steel,0,.2,0);const pulley=cyl(trolley,.19,.14,C.outline,0,0,0,'z','rope-pulley');torus(trolley,.15,.025,C.steel,0,0,.09);
+    const drum=cyl(boom,.23,.42,C.steel,0,-.55,0,'z','hoist-winding-drum');for(let i=0;i<5;i++)torus(boom,.24,.035,0xc99f63,0,-.55,(i-2)*.07);
+    const feed=makeRope(boom,'pulley-feed-rope',.035),cable=makeRope(boom),hook=new T.Group();hook.name='crane-hook';boom.add(hook);
+    line(hook,[[0,.06,0],[0,-.12,0],[.12,-.23,0],[.25,-.12,0],[.23,-.04,0]],.045,C.steel,'open-metal-hook');
+    const crane={group:g,boom,trolley,pulley,drum,feed,cable,hook,height:6.2};poseJibCrane(crane,new T.Vector3(x-6,3.8,z),false,0);return crane;
+  }
+  function poseJibCrane(crane,hookPoint,attached,time){
+    const dx=hookPoint.x-crane.group.position.x,dz=hookPoint.z-crane.group.position.z,r=Math.hypot(dx,dz);
+    crane.boom.rotation.y=Math.atan2(dz,-dx);crane.trolley.position.set(-r,0,0);
+    const bottom=new T.Vector3(-r,hookPoint.y-crane.height,0);crane.hook.position.copy(bottom);
+    poseRope(crane.cable,new T.Vector3(-r,.02,0),bottom,attached?.012:.07*Math.sin(time*3));
+    poseRope(crane.feed,new T.Vector3(0,-.32,.07),new T.Vector3(-r,.18,.07),.035);
+    crane.drum.rotation.z=(crane.height-hookPoint.y)*3;crane.pulley.rotation.z=crane.drum.rotation.z;
+  }
+  function fitObstacleSling(object,branch=false){
+    const g=new T.Group();g.name=branch?'branch-two-point-sling':'rock-rope-cradle';object.add(g);g.visible=false;
+    const top=branch?1.25:1.12;
+    if(branch)for(const x of [-1.7,1.7]){
+      torus(g,.29,.045,0xd1ac76,x,.07,0,'x','branch-rope-loop');line(g,[[x,.22,0],[x*.5,.65,0],[0,top,0]],.045,0xd1ac76,'branch-sling-leg');
+    }else for(const a of [0,PI/2,PI/4,-PI/4]){
+      const points=[[-.87,.16],[-.70,-.56],[0,-.88],[.70,-.56],[.87,.16],[0,top]].map(([x,y])=>[Math.cos(a)*x,y,Math.sin(a)*x]);
+      points.unshift([0,top,0]);line(g,points,.045,0xd1ac76,'rock-supporting-rope');
+    }
+    object.userData.obstacleSling=g;object.userData.slingTop=top;return g;
+  }
+  function addObstacleRigger(slot){
+    slot.obstacleRigger=makePerson(0xe9b64f,.9);add(slot.group,slot.obstacleRigger,3.3,0,5);
+    slot.dropRigger=makePerson(0xe9b64f,.9);add(slot.group,slot.dropRigger,9.7,0,16);
+  }
+  function updateObstacleLift(slot,state,t,working,done,time){
+    const crane=slot.groundCrane||slot.crane,loads=slot.airRocks||slot.rocks||[slot.branch],branch=!!slot.branch;
+    const ease=(a,z)=>{const u=Math.max(0,Math.min(1,(t-a)/(z-a)));return u*u*(3-2*u);};
+    const home=new T.Vector3(crane.group.position.x-6,3.8,crane.group.position.z);let hook=home.clone(),held=false,worker=new T.Vector3(3.3,0,5),receiver=new T.Vector3(9.7,0,16),stage='waiting';
+    for(const [i,load]of loads.entries()){
+      const start=branch?new T.Vector3(0,.8,8):new T.Vector3(i?-1.1:1.1,slot.airRocks?.72:.65,slot.airRocks?6+i*2.6:7+i*3);
+      const dx=start.x-crane.group.position.x,dz=start.z-crane.group.position.z,r=Math.hypot(dx,dz),angle=Math.atan2(dz,dx),moving=working&&(branch||state.activeUnit===i),cleared=branch?done:!!state.groups?.[i];
+      // Swing ahead and away from the waiting vehicle, never back across its nose.
+      const swing=cleared?1:moving?ease(.45,.70):0,a=angle-1.8*swing;
+      load.position.set(crane.group.position.x+r*Math.cos(a),start.y+(moving?1.6*(ease(.30,.45)-ease(.70,.85)):0),crane.group.position.z+r*Math.sin(a));
+      const suspended=moving&&t>=.30&&t<.85,settle=suspended?Math.sin(PI*(t-.30)/.55)*Math.sin(t*PI*5)*.025:0;
+      load.rotation.z=settle;load.userData.obstacleSling.visible=moving&&t>=.22&&t<.90;
+      if(moving){
+        const top=load.position.clone().add(new T.Vector3(0,load.userData.slingTop,0).multiply(load.scale).applyEuler(load.rotation));held=t>=.30&&t<.90;
+        hook=t<.22?home.clone().lerp(top,ease(0,.22)):t<.90?top:top.lerp(home,ease(.90,1));
+        // Two workers stay on the ground at the pickup and drop sites; neither
+        // chases a suspended rock around the crane's swinging arc.
+        worker.lerp(new T.Vector3(start.x+1.6,0,start.z-.8),ease(0,.22)*(1-ease(.30,.45)));
+        const end=new T.Vector3(crane.group.position.x+r*Math.cos(angle-1.8)+1.6,0,crane.group.position.z+r*Math.sin(angle-1.8)-.8);
+        receiver.lerp(end,ease(.70,.85)*(1-ease(.90,1)));
+        stage=t<.22?'lower-hook':t<.30?'attach':t<.45?'lift':t<.70?'swing':t<.85?'lower-load':t<.90?'detach':'retract';
+      }
+    }
+    crane.group.userData.liftStage=stage;poseJibCrane(crane,hook,held,time);
+    if(slot.obstacleRigger){slot.obstacleRigger.position.copy(worker);slot.obstacleRigger.rotation.z=stage==='attach'?-.18:0;slot.dropRigger.position.copy(receiver);slot.dropRigger.rotation.z=stage==='detach'?-.18:0;}
+  }
+  function makeAirClearance(slot){
+    const g=slot.group,tower=new T.Group();tower.name='airfield-control-tower';add(g,tower,-6,0,-8);
+    box(tower,2,3.8,2,0xe4d9b5,0,1.9,0,'tower-base');box(tower,2.7,1.2,2.7,0x8abecb,0,4.35,0,'tower-windows');box(tower,3,.22,3,C.outline,0,5.05,0,'tower-roof');
+    for(const x of [-1.15,1.15])for(const z of [-1.15,1.15])box(tower,.10,1.2,.10,C.cream,x,4.35,z);
+    beam(tower,[0,5.15,0],[0,6,0],.045,C.steel,'tower-aerial');
+    slot.clearancePicture=new T.Group();slot.clearancePicture.name='clearance-radio-waves';add(slot.control,slot.clearancePicture,.4,1.4,0);
+    for(const r of [.25,.48,.7])line(slot.clearancePicture,[[0,r,.03],[r*.65,r*.65,.03],[r,0,.03]],.04,0xffdd74,'radio-wave');
+    const aircraft=new T.Group();aircraft.name='crossing-utility-helicopter';g.add(aircraft);slot.crossingAircraft=aircraft;
+    sphere(aircraft,1.05,0xe4a348,0,0,0,1,.85,1.65,'utility-cabin');sphere(aircraft,.87,0x9dd4e4,0,.15,1,.9,.75,.8,'utility-windscreen');
+    beam(aircraft,[0,.15,-1],[0,.4,-4],.16,0xe4a348,'utility-tail');box(aircraft,1.4,.10,.6,0xe4a348,0,.4,-3.5);
+    for(const x of [-.85,.85]){beam(aircraft,[x,-.8,-1.4],[x,-.8,1.3],.06,C.steel,'utility-skid');beam(aircraft,[x,-.8,-.6],[x*.6,-.35,-.6],.055,C.steel);}
+    cyl(aircraft,.08,.7,C.outline,0,1,0);const rotor=new T.Group();rotor.name='crossing-aircraft-rotor';add(aircraft,rotor,0,1.4,0);box(rotor,6,.06,.18,C.outline,0,0,0);box(rotor,.18,.06,6,C.outline,0,0,0);slot.crossingRotor=rotor;
+  }
+  function updateAirClearance(race,slot,state,t,working,done){
+    if(!slot.crossingAircraft)return;
+    const v=race[slot.who],direction=slot.who==='rival'?-1:1,near=Math.max(0,Math.min(1,(slot.spec.at-v.distance)/6500));
+    const seconds=working?5*t:done?5+Math.max(0,race.elapsed-(state.completedAt??race.elapsed)):0;
+    // An approaching helicopter settles at a holding point, then crosses on
+    // acknowledgement. Its outward route never crosses the other racer.
+    const u=Math.min(1,seconds/1.2),travel=seconds<1.2?5*1.2*(u*u*u-.5*u*u*u*u):5*(seconds-.6);
+    slot.crossingAircraft.position.set(direction*(-10-28*near+travel),10.4,18);
+    slot.crossingAircraft.rotation.set(0,direction*PI/2,0);slot.crossingRotor.rotation.y=race.elapsed*24;
+    slot.crossingAircraft.visible=seconds<25;
+    slot.clearancePicture.visible=working||done;slot.clearancePicture.scale.setScalar(working?1+Math.sin(t*PI*8)*.08:1);
+    // This is a status lamp on a ground radio, not a floating traffic light.
+    slot.signal.material=material(done?C.green:working?0xe6b44e:C.red);
   }
   function makeAnimal(color=0xeee5ce) {
     const g=new T.Group();g.name='farm-animal';sphere(g,.58,color,0,.84,0,1.35,.85,.7,'animal-body');sphere(g,.31,color,.73,1.02,0,1,.9,.7,'animal-head');for(const x of [-.4,.4])for(const z of [-.2,.2])cyl(g,.07,.5,0x685946,x,.31,z,'y','animal-leg');for(const z of [-.2,.2])sphere(g,.11,color,.76,1.3,z,1.2,.45,1,'animal-ear');sphere(g,.028,C.outline,.93,1.10,.18,1,1,.5,'animal-eye');return g;
@@ -413,7 +567,8 @@
     slot.fuelButtons.forEach((button,i)=>button.material=material(state.groups[i]?0x73c87b:0x5db3df));
   }
   function makeAirServiceSlot(g,spec,who){
-    const slot={group:g,spec,who,air:true,road:false,targets:[],people:[],animals:[],barriers:[]};helipad(g);
+    const slot={group:g,spec,who,air:true,road:false,targets:[],people:[],animals:[],barriers:[]};
+    if(spec.type!=='level-crossing')helipad(g);
     if(['wash','coal','water','repairs','rocks','tree'].includes(spec.type))for(const x of [-.7,.7])for(const z of [-1.1,1.1])plainBox(g,.25,.025,.25,0xf7cf6a,(who==='rival'?3:-3)+x,.03,z,'temporary-cargo-spot');
     const sign=new T.Group();add(g,sign,5.8,0,-3);box(sign,.16,2.3,.16,C.steel,0,1,0);box(sign,1.15,.9,.12,0xf6df9c,0,2.1,0,'flight-job-board');
     slot.winch=cyl(g,.026,1,C.outline,0,2,0,'y','working-helicopter-winch');slot.winch.visible=false;
@@ -433,9 +588,9 @@
         const worker=makePerson(0xe9b64f,.9);add(g,worker,5.2+i%2*1.4,0,-1.85+i*2);slot.workers.push(worker);
       }
     }else if(spec.type==='rocks'){
-      slot.groundCrane=makeCrane(g,6.5,-3);slot.groundCrane.group.name='ground-rock-crane';
+      slot.groundCrane=makeObstacleCrane(g,6.5,8);slot.groundCrane.group.name='ground-rock-crane';addObstacleRigger(slot);
       const operator=makePerson(0xe9b64f,.9);add(g,operator,7.8,0,-4.5);slot.airRocks=[];
-      for(let i=0;i<2;i++){const rock=sphere(g,.85,0x9c9e91,i?-1.1:1.1,.72,6+i*2.6,1.1,.85,.9,'heavy-ground-rock');slot.airRocks.push(rock);slot.targets.push({object:rock,id:'rock-'+i});}
+      for(let i=0;i<2;i++){const rock=sphere(g,.85,0x9c9e91,i?-1.1:1.1,.72,6+i*2.6,1.1,.85,.9,'heavy-ground-rock');fitObstacleSling(rock);slot.airRocks.push(rock);slot.targets.push({object:rock,id:'rock-'+i});}
     }else if(spec.type==='tree'){
       slot.airBranch=new T.Group();slot.airBranch.name='light-sling-branch';add(g,slot.airBranch,0,.3,3);beam(slot.airBranch,[-1,0,0],[1,.12,0],.11,C.wood);beam(slot.airBranch,[0,.06,0],[.4,.35,.55],.065,C.wood);slot.targets.push({object:slot.airBranch,id:'branch'});
       slot.branchSlings=new T.Group();slot.branchSlings.name='branch-supporting-sling';slot.airBranch.add(slot.branchSlings);
@@ -451,6 +606,7 @@
       slot.groundCrew=makePerson(0xe3b053,.95);add(g,slot.groundCrew,5.6,0,4);
       slot.control=new T.Group();slot.control.name='landing-area-radio';add(g,slot.control,5.4,0,1);box(slot.control,.8,1.1,.6,0x5f8f97,0,.55,0);cyl(slot.control,.03,.6,C.outline,0,1.4,0);slot.signal=sphere(slot.control,.16,C.red,0,.9,.33,1,1,.5,'landing-area-signal');slot.targets.push({object:slot.control,id:spec.type==='animals'?'animals':'crossing'});
       if(spec.type==='animals')for(let i=0;i<3;i++){const a=makeAnimal();add(g,a,(i-1)*1.3,0,6+i%2);slot.animals.push(a);}
+      else makeAirClearance(slot);
     }else if(spec.type==='wash'){
       slot.airWash=new T.Group();slot.airWash.name='open-helicopter-wash-pad';add(g,slot.airWash,5.5,0,-2);cyl(slot.airWash,.45,1.1,0x60a8b9,0,.55,0);slot.spray=[];for(let i=0;i<10;i++)slot.spray.push(sphere(g,.07,0x9bd7e8,1.4,1+(i%4)*.35,-1.5+i%4,.7,1.5,.7,'wash-water-drop'));
     }else if(spec.type==='drawbridge'){
@@ -471,7 +627,7 @@
       slot.container.visible=unloading?working||done:!done;slot.container.position.copy(yard);if(working)slot.container.position.copy(unloading?from:yard).lerp(unloading?yard:from,e);if(active&&!done)hooked=slot.container.position.clone().add(new T.Vector3(0,.72,0));
     }
     if(slot.handcarts)slot.handcarts.forEach((cart,i)=>{const moving=working&&state.activeUnit===i,u=state.groups[i]?1:moving?e:0;cart.position.set(5.2+i%2*1.4+u*1.4,0,-1+i*2+u*1.4);slot.workers[i].position.copy(cart.position).add(new T.Vector3(0,0,-.85));slot.workers[i].rotation.z=moving?Math.sin(t*PI*4)*.04:0;cart.traverse(o=>{if(o.name==='handcart-wheel')o.rotation.x=u*12;});});
-    if(slot.airRocks)slot.airRocks.forEach((rock,i)=>{const moving=working&&state.activeUnit===i,u=state.groups[i]?1:moving?e:0;rock.position.set((i?-1.1:1.1)+u*4.5,.72+Math.sin(u*PI)*1.2,6+i*2.6);if(moving||!working&&i===Math.min(state.unitsDone||0,1))setCraneTarget(slot.groundCrane,rock.position,rock.position.y+.7);});
+    if(slot.airRocks)updateObstacleLift(slot,state,t,working,done,time);
     if(slot.airBranch){
       const lift=b.core.getBranchLiftPose(done?1:working?state.progress:0);slot.airBranch.position.set(lift.load.x,lift.load.y,lift.load.z);slot.branchSlings.visible=working&&lift.attached;
       const attaching=working&&['attach','detach'].includes(lift.stage),reach=attaching?Math.sin(PI*(lift.seconds-(lift.stage==='attach'?2:9)))**2:0;slot.rigger.position.set(lift.load.x+2-.8*reach,0,3);slot.rigger.rotation.z=-.12*reach;
@@ -481,6 +637,7 @@
     if(slot.waterStore){slot.waterLevel.scale.y=.1+.9*(done?1:working?t:0);slot.waterCrate.visible=!done;slot.waterCrate.position.set(1.5+(working?e:0)*4,.4,.8);}
     if(slot.animals.length){slot.animals.forEach((a,i)=>{a.position.x=(i-1)*1.3+8*e;});slot.groundCrew.position.z=4+Math.sin(t*PI)*2;}
     if(slot.signal)slot.signal.material=material(done?0x5fbb69:C.red);
+    updateAirClearance(race,slot,state,t,working,done);
     if(slot.spray)slot.spray.forEach((drop,i)=>{drop.visible=active&&working;drop.position.y=.5+((time*2+i*.3)%2);});
     slot.winch.visible=!!hooked;slot.hook.visible=!!hooked;
     if(hooked){setCable(slot.winch,top,hooked);slot.hook.position.copy(hooked);}
@@ -503,7 +660,7 @@
       }
     }
   }
-  function makeServiceSlot(core,course,spec,who,characterId,crossingMode='road') {
+  function makeServiceSlot(core,course,spec,who,characterId) {
     const g=new T.Group();g.name='service-'+spec.type;g.userData={id:spec.id,type:spec.type,corridor:who};
     const p=core.sampleRoute(course,spec.at,who==='player'?0:-15);g.position.set(p.x,p.y,p.z);g.rotation.y=p.heading;
     const c=core.character(characterId),road=c.vehicleType==='road',depot=c.power!=='steam',stockZ=-c.coachOffset*core.WORLD_SCALE;
@@ -515,7 +672,7 @@
       if(spec.type.startsWith('passenger')) {
         const shelter=new T.Group();shelter.name='station-shelter';add(g,shelter,7.1,.48,-8);box(shelter,2.3,2.1,4.0,0xd8cfad,0,1.05,0,'station-shelter-wall');box(shelter,2.8,.22,4.6,0xb25846,0,2.2,0,'station-canopy');
         for(let i=0;i<3;i++){const group=new T.Group();group.name='passenger-job-group';group.userData.targetId='passenger-'+i;for(let j=0;j<2;j++){const p=makePerson([0xb55365,0x528ea6,0xe4b951][i],.85+j*.10);add(group,p,(j-.5)*.70,0,0);}add(g,group,3.35,.51,4+i*2.2);slot.people.push(group);slot.targets.push({object:group,id:'passenger-'+i});}
-      } else {slot.crane=makeCrane(g,7.1,1.5);slot.container=makeContainer();add(g,slot.container,5.2,.53,6);slot.container.userData.targetId='container-1';slot.targets.push({object:slot.container,id:'container-1'});}
+      } else makeContainerLift(slot,core,course,c);
     } else if(spec.type==='animals') {
       const halfWidth=road?3.35:2.65,width=halfWidth*2;
       const gate=new T.Group();gate.name='opening-farm-gate';add(g,gate,0,0,6);
@@ -536,8 +693,8 @@
         beam(worker,[.35,.85,0],[.35,1.4,.1],.045,C.steel,'repair-tool');
       }
     } else if(spec.type==='rocks') {
-      slot.crane=makeCrane(g,6.5,8);slot.rocks=[];
-      for(let i=0;i<2;i++){const rock=sphere(g,.85,0x9c9e91,i?-1.1:1.1,.65,7+i*3,1.2,.9,.9,'blocking-rock');slot.rocks.push(rock);slot.targets.push({object:rock,id:`rock-${i}`});}
+      slot.crane=makeObstacleCrane(g,6.5,8);slot.rocks=[];addObstacleRigger(slot);
+      for(let i=0;i<2;i++){const rock=sphere(g,.85,0x9c9e91,i?-1.1:1.1,.65,7+i*3,1.2,.9,.9,'blocking-rock');fitObstacleSling(rock);slot.rocks.push(rock);slot.targets.push({object:rock,id:`rock-${i}`});}
     } else if(spec.type==='coal') {
       if(road)makeFuelPump(slot);
       else {
@@ -559,18 +716,29 @@
         }
       }
     } else if(spec.type==='level-crossing') {
-      const roadGate=road&&crossingMode==='rail';slot.roadJunction=road&&crossingMode==='road';
+      slot.roadJunction=road;
       slot.barriers=[];
       if(!slot.roadJunction)for(const side of [-1,1]){
-        const stand=new T.Group();stand.name='crossing-barrier-stand';add(g,stand,side*(roadGate?2.75:3.5),0,roadGate?(side<0?3.4:13.5):(side<0?5.45:11.45));stand.rotation.y=roadGate?(side<0?PI/2:-PI/2):(side<0?0:PI);
+        const stand=new T.Group();stand.name='crossing-barrier-stand';add(g,stand,side*3.5,0,side<0?5.45:11.45);stand.rotation.y=side<0?0:PI;
         box(stand,.65,.35,.65,0xb0b4a8,0,-.15,0,'crossing-foundation');box(stand,.28,1.15,.28,C.outline,0,.55,0,'crossing-post');
         const arm=new T.Group();arm.name='hinged-crossing-arm';add(stand,arm,0,1.15,0);
         for(let i=0;i<8;i++)box(arm,.16,.18,.68,i%2?C.white:C.red,0,0,.34+i*.68,'crossing-arm-stripe',.025);
         cyl(stand,.20,.38,C.steel,0,1.15,0,'x','crossing-hinge');slot.barriers.push(arm);
       }
       slot.control=new T.Group();slot.control.name='crossing-control';add(g,slot.control,3.6,0,2.8);
-      box(slot.control,.9,1.45,.65,0x668f8c,0,.4,0,'crossing-control-box');
-      slot.crossingSignal=sphere(slot.control,.24,C.red,0,1.35,0,1,1,1,road?'road-crossing-signal':'railway-crossing-signal');
+      if(road){
+        slot.control.name='traffic-light-control';
+        cyl(slot.control,.09,2.6,C.outline,0,1.3,0,'y','traffic-light-pole');
+        box(slot.control,.64,1.65,.46,C.outline,0,2.7,0,'traffic-light-housing');slot.trafficLights=[];
+        for(let i=0;i<3;i++){
+          const lamp=sphere(slot.control,.20,i===0?C.red:0x344441,0,3.2-i*.5,-.25,1,1,.5,['traffic-red','traffic-amber','traffic-green'][i]);
+          lamp.userData.reverse=sphere(slot.control,.20,i===0?C.red:0x344441,0,3.2-i*.5,.25,1,1,.5,'opposite-direction-light');slot.trafficLights.push(lamp);
+        }
+        plainBox(g,5.5,.025,.16,C.white,0,.035,4.4,'junction-stop-line');
+      }else{
+        box(slot.control,.9,1.45,.65,0x668f8c,0,.4,0,'crossing-control-box');
+        slot.crossingSignal=sphere(slot.control,.24,C.red,0,1.35,0,1,1,1,'railway-crossing-signal');
+      }
       slot.targets.push({object:slot.control,id:'crossing'});
     } else if(spec.type==='wash') {
       slot.wash=new T.Group();slot.wash.name='working-wash-shed';add(g,slot.wash,0,0,-1.2);
@@ -596,7 +764,7 @@
       const spout=new T.Group();spout.name='swinging-water-spout';add(tower,spout,0,4.9,0);beam(spout,[0,0,0],[-4.9,0,0],.14,0x4f7b88,'water-column-arm');beam(spout,[-4.9,0,0],[-4.9,-1.3,0],.16,0x4f7b88,'water-column-nozzle');slot.spout=spout;slot.waterTower=tower;slot.targets.push({object:tower,id:'water'});const gauge=new T.Group();gauge.name='water-tower-level-window';add(tower,gauge,1.53,4.05,0);box(gauge,.06,1.3,.33,C.cream,0,.65,0);slot.towerLevel=box(gauge,.08,1.05,.22,0x58bfda,.02,.62,0,'tower-water-level');slot.stream=cyl(spout,.09,1.2,0x9bdbe6,-4.9,-1.8,0,'y','refill-water-stream');
       }
     } else if(spec.type==='tree') {
-      slot.crane=makeCrane(g,6.5,8);const branch=new T.Group();branch.name='fallen-branch';add(g,branch,0,.8,8);beam(branch,[-2.8,0,-.4],[2.6,.3,.4],.25,0x916c45,'fallen-tree-trunk');beam(branch,[.2,.2,0],[1.4,1.1,1],.12,0x916c45,'fallen-tree-branch');sphere(branch,.65,0x699762,1.5,1.1,1,1.7,.8,1.2,'fallen-tree-leaves');slot.branch=branch;slot.targets.push({object:slot.crane.group,id:'tree'});
+      slot.crane=makeObstacleCrane(g,6.5,8);addObstacleRigger(slot);const branch=new T.Group();branch.name='fallen-branch';add(g,branch,0,.8,8);beam(branch,[-2.8,0,-.4],[2.6,.3,.4],.25,0x916c45,'fallen-tree-trunk');beam(branch,[.2,.2,0],[1.4,1.1,1],.12,0x916c45,'fallen-tree-branch');sphere(branch,.65,0x699762,1.5,1.1,1,1.7,.8,1.2,'fallen-tree-leaves');fitObstacleSling(branch,true);slot.branch=branch;slot.targets.push({object:slot.crane.group,id:'tree'});
     } else if(spec.type==='drawbridge') {
       makeDrawbridge(slot,road);
     }
@@ -724,7 +892,7 @@
   }
   function chunkRange(start,end,size,fn) {for(let d=start;d<end;d+=size)fn(d,Math.min(end,d+size));}
   function lakeRadius(core,d,lane) {
-    const x=(lane+7.5)/28,z=(d-128600)*core.WORLD_SCALE/27,angle=Math.atan2(z,x);
+    const x=(lane+7.5)/28,z=(d-core.courseDistance(128600))*core.WORLD_SCALE/(27*core.COURSE_SCALE),angle=Math.atan2(z,x);
     return Math.hypot(x,z)/(1+.045*Math.sin(angle*3)+.035*Math.cos(angle*5));
   }
   function lakeGround(core,course,d,lane,playerId,opponent) {
@@ -751,11 +919,11 @@
   }
   function makeLakeside(core,course,world,playerId,opponent) {
     const frozen=course==='mountain',level=frozen?-.82:-.48,g=new T.Group();g.name=frozen?'shared-frozen-lake':'shared-flooded-lake';world.add(g);
-    const bed=surfacePatch(core,course,128600,-7.5,25,24,-1.32,0x82958c,'visible-lake-bed',1);bed.material.transparent=false;bed.material.depthWrite=true;g.add(bed);
-    const water=surfacePatch(core,course,128600,-7.5,28,27,level,frozen?0xc1dfdf:0x62a7b7,frozen?'lake-ice-surface':'lake-water-surface',frozen?.68:.58);g.add(water);
+    const bed=surfacePatch(core,course,core.courseDistance(128600),-7.5,25,24*core.COURSE_SCALE,-1.32,0x82958c,'visible-lake-bed',1);bed.material.transparent=false;bed.material.depthWrite=true;g.add(bed);
+    const water=surfacePatch(core,course,core.courseDistance(128600),-7.5,28,27*core.COURSE_SCALE,level,frozen?0xc1dfdf:0x62a7b7,frozen?'lake-ice-surface':'lake-water-surface',frozen?.68:.58);g.add(water);
     const ripples=[];
     for(let i=0;i<16;i++){
-      const d=126700+(i%5)*720,lane=-30+(i%4)*14,p=route(core,course,d,lane);
+      const d=core.courseDistance(126700+(i%5)*720),lane=-30+(i%4)*14,p=route(core,course,d,lane);
       if(lakeGround(core,course,d,lane,playerId,opponent)>level-.06)continue;
       if(frozen){const crack=line(g,[[p.x-1,level+.009,p.z],[p.x,level+.009,p.z+.4],[p.x+.9,level+.009,p.z+.1]],.018,0x88b2bd,'lake-ice-hairline');crack.castShadow=false;}
       else{const ring=torus(g,.65,.014,0xb3e1e5,p.x,level+.012,p.z,'y','lake-ripple');ring.castShadow=false;ring.material=material(0xb3e1e5,{transparent:true,opacity:.42,depthWrite:false});ripples.push(ring);}
@@ -765,41 +933,41 @@
       if(frozen){
         const ice=new T.Group();ice.name='surface-ice-patches';ice.userData.corridor=who;g.add(ice);
         for(let i=0;i<12;i++){
-          const d=126500+i*345,offset=lane+(kind==='road'?Math.sin(i*2.1)*.9:0),width=kind==='road'?1.2+i%3*.2:.78;
+          const d=core.courseDistance(126500+i*345),offset=lane+(kind==='road'?Math.sin(i*2.1)*.9:0),width=kind==='road'?1.2+i%3*.2:.78;
           ice.add(surfacePatch(core,course,d,offset,width,1.1+(i*13%7)*.12,at=>route(core,course,at,offset).y+(kind==='road'?.018:.065),0xb8dfe5,'thin-route-ice',.40+(i%3)*.08));
         }
-        if(kind==='road')for(const side of [-1.2,1.2]){const marks=mesh(stripGeometry(core,course,lane+side,126800,130400,.24,.022),0x718987,'icy-tyre-trace',{transparent:true,opacity:.3,depthWrite:false});marks.castShadow=false;ice.add(marks);}
+        if(kind==='road')for(const side of [-1.2,1.2]){const marks=mesh(stripGeometry(core,course,lane+side,core.courseDistance(126800),core.courseDistance(130400),.24,.022),0x718987,'icy-tyre-trace',{transparent:true,opacity:.3,depthWrite:false});marks.castShadow=false;ice.add(marks);}
         for(let i=0;i<16;i++)for(const sign of [-1,1]){
-          const d=126300+i*300+Math.sin(i*2.3)*80,offset=lane+sign*((kind==='road'?3.5:2.3)+.15*Math.sin(i)),p=route(core,course,d,offset),bank=sphere(g,.48,0xe9f1ec,p.x,lakeGround(core,course,d,offset,playerId,opponent)+.15,p.z,.65+i%3*.12,.25+i%2*.08,1.1+i%4*.2,'uneven-snow-verge');bank.castShadow=false;
+          const d=core.courseDistance(126300+i*300+Math.sin(i*2.3)*80),offset=lane+sign*((kind==='road'?3.5:2.3)+.15*Math.sin(i)),p=route(core,course,d,offset),bank=sphere(g,.48,0xe9f1ec,p.x,lakeGround(core,course,d,offset,playerId,opponent)+.15,p.z,.65+i%3*.12,.25+i%2*.08,1.1+i%4*.2,'uneven-snow-verge');bank.castShadow=false;
         }
       }
     }
     for(let i=0;i<18;i++){
-      const a=TAU*i/18,d=128600+Math.sin(a)*27/core.WORLD_SCALE,lane=-7.5+Math.cos(a)*28,p=route(core,course,d,lane);p.y=lakeGround(core,course,d,lane,playerId,opponent);
+      const a=TAU*i/18,d=core.courseDistance(128600)+Math.sin(a)*27*core.COURSE_SCALE/core.WORLD_SCALE,lane=-7.5+Math.cos(a)*28,p=route(core,course,d,lane);p.y=lakeGround(core,course,d,lane,playerId,opponent);
       if(Math.min(Math.abs(lane),Math.abs(lane+15))<5)continue;
       if(frozen){const rock=sphere(g,.4,0xd6e5df,p.x,p.y+.15,p.z,1.4,.6,1,'frosted-shore-rock');rock.castShadow=false;}
       else for(let j=0;j<3;j++){beam(g,[p.x+j*.18,p.y,p.z],[p.x+j*.18+.12,p.y+.8+j*.12,p.z],.025,0x718858,'lakeside-reed');cyl(g,.055,.25,0x947449,p.x+j*.18+.12,p.y+.9+j*.12,p.z,'y','reed-head');}
     }
     const weather=new T.Group();weather.name=frozen?'blowing-lakeside-snow':'lakeside-wind-and-rain';world.add(weather);
-    const centre=route(core,course,128600,-7.5);transformRoute(weather,{...centre,y:0,grade:0});
-    for(const x of [-24,24]){const clouds=new T.Group();clouds.name='weather-cloud-bank';add(weather,clouds,x,14,8);for(let i=0;i<4;i++){const puff=sphere(clouds,2.2,frozen?0xd2dfe0:0x9fb3bc,(i-1.5)*2.5,i%2*.7,i%2,1.3,.8+i%2*.2,1.4,'weather-cloud');puff.castShadow=puff.receiveShadow=false;}}
+    const centre=route(core,course,core.courseDistance(128600),-7.5);transformRoute(weather,{...centre,y:0,grade:0});
+    for(const x of [-24,24]){const clouds=new T.Group();clouds.name='weather-cloud-bank';add(weather,clouds,x,14,8*core.COURSE_SCALE);for(let i=0;i<4;i++){const puff=sphere(clouds,2.2,frozen?0xd2dfe0:0x9fb3bc,(i-1.5)*2.5,i%2*.7,i%2,1.3,.8+i%2*.2,1.4,'weather-cloud');puff.castShadow=puff.receiveShadow=false;}}
     const particles=new T.InstancedMesh(frozen?new T.SphereGeometry(.075,5,4):new T.CylinderGeometry(.015,.015,.72,4),material(frozen?0xf3fbff:0x7aafc1,{transparent:true,opacity:frozen?.8:.62,depthWrite:false}),120);particles.name=frozen?'windblown-snowflakes':'slanting-rain';particles.castShadow=false;particles.frustumCulled=false;weather.add(particles);
     const gusts=[];for(let i=0;i<7;i++){const gust=line(weather,[[-2,0,0],[0,.16,.3],[2,.1,.5]],.022,0xc2e0e6,'wind-streak');gust.castShadow=false;gusts.push(gust);}
-    const sockGroup=new T.Group();sockGroup.name='lakeside-windsock';add(weather,sockGroup,18,0,-18);cyl(sockGroup,.07,4,0x879c9e,0,1.6,0);const sock=cyl(sockGroup,.32,1.8,0xe58c54,.9,3.5,0,'x','storm-windsock',.17);
+    const sockGroup=new T.Group();sockGroup.name='lakeside-windsock';add(weather,sockGroup,18,0,-18*core.COURSE_SCALE);cyl(sockGroup,.07,4,0x879c9e,0,1.6,0);const sock=cyl(sockGroup,.32,1.8,0xe58c54,.9,3.5,0,'x','storm-windsock',.17);
     return {group:g,weather,particles,gusts,sock,ripples,frozen,level};
   }
   function updateLakeside(b,race) {
-    const lake=b.lakeside;if(!lake)return;const t=race.elapsed||0,matrix=new T.Matrix4(),rotation=new T.Quaternion().setFromEuler(new T.Euler(0,0,-.42)),scale=new T.Vector3(1,1,1);
-    lake.weather.visible=Math.abs(race.player.distance-128600)<15000||Math.abs(race.rival.distance-128600)<15000;
+    const core=b.core,lake=b.lakeside;if(!lake)return;const t=race.elapsed||0,matrix=new T.Matrix4(),rotation=new T.Quaternion().setFromEuler(new T.Euler(0,0,-.42)),scale=new T.Vector3(1,1,1);
+    lake.weather.visible=Math.abs(race.player.distance-core.courseDistance(128600))<15000||Math.abs(race.rival.distance-core.courseDistance(128600))<15000;
     for(let i=0;i<120;i++){
-      const x=((i*7.31+t*(lake.frozen?1.5:3))%40)-20,y=1+((i*3.73-t*(lake.frozen?1:7))%13+13)%13,z=((i*5.87+t*.6)%42)-21;
+      const x=((i*7.31+t*(lake.frozen?1.5:3))%40)-20,y=1+((i*3.73-t*(lake.frozen?1:7))%13+13)%13,z=(((i*5.87+t*.6)%42)-21)*core.COURSE_SCALE;
       matrix.compose(new T.Vector3(x,y,z),rotation,scale);lake.particles.setMatrixAt(i,matrix);
     }lake.particles.instanceMatrix.needsUpdate=true;
-    lake.gusts.forEach((g,i)=>g.position.set(((t*2+i*5)%30)-15,5+i%3*2.2,-16+i*5));
+    lake.gusts.forEach((g,i)=>g.position.set(((t*2+i*5)%30)-15,5+i%3*2.2,(-16+i*5)*core.COURSE_SCALE));
     lake.sock.rotation.y=.1*Math.sin(t*1.9);lake.sock.rotation.z=-PI/2+.07*Math.sin(t*2.3);
     lake.ripples.forEach((r,i)=>{const age=(t*.45+i*.27)%1;r.scale.setScalar(.6+age*.8);});
     for(const who of ['player','rival']){
-      const v=race[who],g=b[who+'Splashes'],c=b.core.getCharacter(race,who);g.visible=!lake.frozen&&c.vehicleType==='road'&&v.velocity>1&&v.distance>126600&&v.distance<130600;
+      const v=race[who],g=b[who+'Splashes'],c=b.core.getCharacter(race,who);g.visible=!lake.frozen&&c.vehicleType==='road'&&v.velocity>1&&v.distance>core.courseDistance(126600)&&v.distance<core.courseDistance(130600);
       if(!g.visible)continue;
       const p=b.core.sampleVehicleRoute(race,who),cs=Math.cos(p.heading),sn=Math.sin(p.heading);
       g.children.forEach((drop,i)=>{const age=(t*2.5+i*.19)%1,side=i%2?1:-1,x=side*(c.vehicleType==='road'?1.35:1.1)+side*age*.35,z=(i%4<2?1.5:-1.5)-age*.5;drop.position.set(p.x+x*cs+z*sn,lake.level+.02+Math.sin(age*PI)*.22,p.z-x*sn+z*cs);drop.scale.setScalar(.5+age*.7);});
@@ -823,7 +991,7 @@
     chunkRange(railStart,railEnd,10000,(start,end)=>{const nearRiver=services.some(s=>s.type==='drawbridge'&&s.at>start-6000&&s.at<end+6000);const ground=mesh(groundGeometry(core,courseId,start,end,terrainOffset,nearRiver?riverRows:null),C.grass,'continuous-ground');world.add(ground);ground.receiveShadow=true;});
     if(courseId==='harbour')chunkRange(6000,railEnd,10000,(start,end)=>world.add(mesh(stripGeometry(core,courseId,-77,start,end,104,d=>-1.25-route(core,courseId,d,-77).y),0x79bed1,'continuous-harbour-water')));
     for(const offset of [0,-15].filter(lane=>core.character(lane===0?playerId:opponent).vehicleType!=='air'))chunkRange(railStart,railEnd,6000,(start,end)=>world.add(mesh(stripGeometry(core,courseId,offset,start,end,4.1,d=>{const bridge=course.sections.find(s=>s.type==='bridge'&&d>=s.start&&d<=s.end);return bridge?(core.sampleTerrainHeight?core.sampleTerrainHeight(courseId,d,offset)-route(core,courseId,d,offset).y+.02:-3.5):-.09+terrainOffset(d,offset);},125),C.grassLight,'railway-verge')));
-    if(core.sampleTerrainHeight)for(const rows of [[8,10,14,19],[-23,-25,-29,-34]])world.add(mesh(groundGeometry(core,courseId,77000,113000,(d,lane)=>terrainOffset(d,lane)+.025,rows),0xa99875,'exposed-hillside-earth'));
+    if(core.sampleTerrainHeight)for(const rows of [[8,10,14,19],[-23,-25,-29,-34]])world.add(mesh(groundGeometry(core,courseId,core.courseDistance(77000),core.courseDistance(113000),(d,lane)=>terrainOffset(d,lane)+.025,rows),0xa99875,'exposed-hillside-earth'));
     // One player railway and one independent neighbouring route: no branchwork.
     for(const [offset,corridor,road]of [[0,'player',core.character(playerId).vehicleType==='road'],[-15,'rival',core.character(opponent).vehicleType==='road']].filter((_,i)=>core.character(i?opponent:playerId).vehicleType!=='air'))chunkRange(railStart,railEnd,6000,(start,end)=>{
       let ranges=[[start,end]];for(const spec of services.filter(s=>s.type==='drawbridge')){const a=spec.at+14/core.WORLD_SCALE,z=spec.at+23/core.WORLD_SCALE;ranges=ranges.flatMap(([l,r])=>r<=a||l>=z?[[l,r]]:[[l,Math.min(r,a)],[Math.max(l,z),r]].filter(([l,r])=>r>l));}
@@ -857,32 +1025,18 @@
     corridor.name='crossing-corridor';corridor.userData={mode};transformRoute(corridor,base);group.add(corridor);
     const start=-300,end=285;
     const elevation=x=>core.sampleTerrainHeight(race.courseId,spec.at,x)-base.y+.32;
-    const railBase=x=>{const distance=Math.min(Math.abs(x),Math.abs(x-core.ROAD_LANE)),u=Math.max(0,Math.min(1,(distance-3.2)/3));return elevation(x)-RAIL_TOP*(1-u*u*(3-2*u));};
-    if(mode==='rail'){
-      for(const z of [6.9,10]){
-        const sample=x=>({x,y:railBase(x),z,heading:PI/2});
-        corridor.add(mesh(sampledStrip(sample,start,end,3.3,.035,1),C.ballast,'crossing-rail-bed'));
-        for(const dz of [-1.02,1.02])addRail(corridor,x=>({...sample(x),z:z+dz}),start,end,'crossing-running-rail',1);
-        const sleepers=[];for(let x=start;x<=end;x+=.76)sleepers.push({x,y:railBase(x)-.005,z,heading:0});
-        instanced(corridor,new T.BoxGeometry(.20,.11,2.55),C.sleeper,sleepers,'crossing-sleeper');
-      }
-    }else{
       const sample=x=>({x,y:elevation(x)-.015,z:8.45,heading:PI/2});
       corridor.add(mesh(sampledStrip(sample,start,end,7,-.08,2),0xb4b7a6,'crossing-road-shoulder'));
       corridor.add(mesh(sampledStrip(sample,start,end,6,0,2),0x929b96,'crossing-road'));
       for(const z of [5.65,11.25])corridor.add(mesh(sampledStrip(x=>({...sample(x),z}),start,end,.07,.012,2),C.cream,'crossing-road-edge'));
       for(let x=start+3;x<end;x+=5)plainBox(corridor,2,.018,.09,C.cream,x,elevation(x)+.002,8.45,'crossing-road-dash');
-    }
     for(const [i,slot]of slots.entries()){
+      if(slot.air)continue;
       slot.crossingMode=mode;slot.crossingLane=i?10:6.9;slot.crossingDirection=i?-1:1;
-      slot.crossingSurface=mode==='rail'?railBase:x=>elevation(x)-.015;
-      if(mode==='rail'){
-        slot.crossingTrain=makeEngine('percy');slot.crossingTrain.name='passing-crossing-train';slot.group.add(slot.crossingTrain);
-      }else{
+      slot.crossingSurface=x=>elevation(x)-.015;
         const car=new T.Group();car.name='crossing-car';slot.group.add(car);slot.car=car;
         box(car,2,.64,1.1,0xe4b653,0,.55,0,'car-body');box(car,.95,.5,1,0xa4d7e5,-.1,1.1,0,'car-cabin');
         for(const x of [-.65,.65])for(const z of [-.55,.55])cyl(car,.26,.13,C.outline,x,.26,z,'z','car-wheel');
-      }
     }
   }
   function updateCrossingTraffic(race,slot,state,t,working,done){
@@ -892,12 +1046,11 @@
     // camera, without driving across an opponent that has already departed.
     const seconds=working?(state.duration||5)*t:done?5+Math.max(0,race.elapsed-(state.completedAt??race.elapsed)):0;
     const direction=slot.crossingDirection,travel=seconds*6.4,x=-7.5+direction*travel;
-    const vehicle=slot.crossingTrain||slot.car,offset=slot.who==='rival'?-15:0;
+    const vehicle=slot.car,offset=slot.who==='rival'?-15:0;
     const y=slot.crossingSurface(x),slope=(slot.crossingSurface(x+.1)-slot.crossingSurface(x-.1))/.2;
-    vehicle.position.set(x-offset,y+(slot.crossingTrain?RAIL_TOP:0),slot.crossingLane);
-    if(slot.crossingTrain){vehicle.rotation.set(-Math.atan(slope*direction),direction*PI/2,0,'YXZ');for(const wheel of vehicle.userData.wheels)wheel.rotation.x=travel/wheel.userData.radius;}
-    else vehicle.rotation.z=Math.atan(slope);
+    vehicle.position.set(x-offset,y,slot.crossingLane);vehicle.rotation.z=Math.atan(slope);
     vehicle.visible=x>-295&&x<280;
+    if(slot.trafficLights)slot.trafficLights.forEach((lamp,i)=>{lamp.material=material(i===(done?2:working&&t>=.9?1:0)?[C.red,0xe6b44e,C.green][i]:0x344441);lamp.userData.reverse.material=lamp.material;});
     const signal=slot.crossingSignal||slot.signal;if(signal)signal.material=material(done?0x58ad50:working&&t>=.6?0xe6b44e:C.red);
   }
   function buildRaceObjects(core,world) {return {key:'',services:[],world};}
@@ -908,18 +1061,13 @@
     for(const bundle of b.objects.services){bundle.group.traverse(o=>{if(o.geometry&&!shared.has(o.geometry))o.geometry.dispose();});b.world.remove(bundle.group);}
     b.objects.key=key;b.objects.services=[];
     for(const spec of services){const group=new T.Group();group.name='delivery-service-event';b.world.add(group);const slots=[];
-      for(const who of ['player','rival']){const slot=makeServiceSlot(b.core,b.courseId,spec,who,who==='player'?race.playerId:race.opponentId,b.core.getCrossingMode(race));group.add(slot.group);slots.push(slot);}
+      for(const who of ['player','rival']){const slot=makeServiceSlot(b.core,b.courseId,spec,who,who==='player'?race.playerId:race.opponentId);group.add(slot.group);slots.push(slot);}
       if(spec.type==='level-crossing')makeCrossingCorridor(b.core,race,spec,group,slots);
       if(spec.type==='drawbridge')makeHarbourCorridor(b.core,race,spec,group,slots);
       b.objects.services.push({group,spec,slots});
     }
   }
   function updateRaceObjects(b,race) {syncRaceObjects(b,race);}
-  function setCraneTarget(crane,target,height) {
-    const dx=target.x-crane.group.position.x,dz=target.z-crane.group.position.z,r=Math.max(.5,Math.hypot(dx,dz));
-    crane.boom.rotation.y=Math.atan2(dz,-dx);crane.boom.scale.x=r/5.5;
-    const drop=Math.max(.15,6.8-height);crane.cable.position.set(-5.5,-drop/2,0);crane.cable.scale.y=drop/4.3;crane.hook.position.set(-5.5,-drop,0);
-  }
   function updateServices(b,race) {
     const time=race.elapsed||0;
     for(const bundle of b.objects.services){bundle.group.visible=Math.abs(bundle.spec.at-race.player.distance)<18000||Math.abs(bundle.spec.at-race.rival.distance)<18000;
@@ -942,11 +1090,7 @@
           else {person.scale.setScalar(1);person.rotation.y=0;}
           person.traverse(o=>{if(o.name==='passenger-waving-arm')o.rotation.z=unloading&&finished?-.9+Math.sin(time*3+i)*.12:0;});
         }}
-        if(slot.container){const unloading=slot.spec.type==='cargo-unload',from=new T.Vector3(0,1.36,0).applyMatrix4(coach.matrixWorld);slot.group.worldToLocal(from);const yard=new T.Vector3(5.2,.53,6);
-          slot.container.visible=unloading?working||done:!done;slot.container.position.copy(yard);
-          if(working){const a=unloading?from:yard,z=unloading?yard:from;slot.container.position.copy(a.clone().lerp(z,e));slot.container.position.y+=Math.sin(t*PI)*3.6;}
-          slot.container.scale.setScalar(active&&state.selectedContainer&& !working?1.04:1);setCraneTarget(slot.crane,slot.container.position,slot.container.position.y+1.55);
-        }
+        if(slot.container)updateContainerLift(slot,state,t,working,done,time);
         if(slot.animals.length){
           // Sheep leave first; the gate then swings away from the waiting
           // vehicle and folds along the verge while
@@ -963,11 +1107,7 @@
           const worker=slot.workers[i];worker.position.x=fixed?4.6:moving?3.2-Math.sin(t*PI)*.7:3.2;
           worker.rotation.z=moving?Math.sin(t*PI*4)*.08:0;
         });}
-        if(slot.rocks){slot.rocks.forEach((rock,i)=>{
-          const cleared=state.groups?.[i],moving=working&&state.activeUnit===i,u=cleared?1:moving?e:0;
-          rock.position.set((i?-1.1:1.1)+u*6,.65-.2*u+Math.sin(u*PI)*3.0,7+i*3);
-          if(moving||!working&&i===Math.min(state.unitsDone||0,1))setCraneTarget(slot.crane,rock.position,rock.position.y+.7);
-        });}
+        if(slot.rocks||slot.branch)updateObstacleLift(slot,state,t,working,done,time);
         updateFuelPump(slot,state,t,working,active);
         if(slot.coalFill){const partial=working?t/3:0;slot.coalFill.scale.y=.2+.8*Math.min(1,v.coal+partial);}
         if(slot.scoops){slot.scoops.forEach((scoop,i)=>{
@@ -989,7 +1129,7 @@
         if(slot.depotWater){const fill=.1+.9*(done?1:working?t:0);slot.depotWater.scale.y=fill;slot.depotWater.position.y=.1+.75*fill;slot.stream.visible=working;}
         if(slot.wash){const cleaning=active&&working;for(const brush of slot.brushes)brush.rotation.y=active?time*2:0;slot.waterDrops.forEach((drop,i)=>{drop.visible=cleaning;drop.position.y=.8+((time*1.7+i*.27)%2.7);});}
         if(slot.spout){slot.spout.rotation.y=working||done?0:-PI/2;slot.stream.visible=working;slot.stream.scale.x=working?.8+Math.sin(time*8)*.1:1;const fill=done?1:working?t:0;slot.towerLevel.scale.y=1-fill*.35;slot.towerLevel.position.y=.62-fill*.18;const gauge=b[slot.who].userData.waterGauge;gauge.group.visible=active||done&&Math.abs(v.distance-slot.spec.at)<4000;gauge.level.scale.y=.20+.8*fill;gauge.level.position.y=.06+.27*(.20+.8*fill);}
-        if(slot.branch){slot.branch.position.y=.8+(working?e*4.4:done?4.4:0);slot.branch.position.x=working?e*6:done?6:0;slot.branch.rotation.z=working?e*.35:done?.35:0;setCraneTarget(slot.crane,slot.branch.position,slot.branch.position.y+1.25);}
+
       }
     }
   }
@@ -1163,7 +1303,7 @@
     const world=new T.Group();world.name='race-world-'+courseId;
     const lakeside=terrainAndTrack(core,courseId,opponent,world,race?.services||[],race?.playerId||'thomas');
     const course=core.COURSES[courseId],crossings=(race?.services||[]).filter(s=>s.type==='level-crossing'),harbours=(race?.services||[]).filter(s=>s.type==='drawbridge');
-    const clearCrossing=(distance,radius)=>Math.abs((distance-128600)*core.WORLD_SCALE)>38+radius&&crossings.every(s=>Math.abs((distance-s.at)*core.WORLD_SCALE-8.45)>radius+4)&&harbours.every(s=>Math.abs((distance-s.at)*core.WORLD_SCALE-18.5)>radius+12);
+    const clearCrossing=(distance,radius)=>Math.abs((distance-core.courseDistance(128600))*core.WORLD_SCALE)>38*core.COURSE_SCALE+radius&&crossings.every(s=>Math.abs((distance-s.at)*core.WORLD_SCALE-8.45)>radius+4)&&harbours.every(s=>Math.abs((distance-s.at)*core.WORLD_SCALE-18.5)>radius+12);
     // The fixed camera looks from +lane and 80 world units ahead. Keep a clear
     // approach and working view at every shuffled job, across both corridors.
     // Relocate large scenery behind the routes instead of hiding it on arrival.
@@ -1179,7 +1319,7 @@
       if(k%5===0&&clearCrossing(d+400,4)){const lane=courseId==='harbour'?18:(k%2?22:-30),p=route(core,courseId,d+400,lane);if(core.sampleTerrainHeight)p.y=core.sampleTerrainHeight(courseId,d+400,lane);house(world,p,k);}
       k++;
     }
-    for(let d=-1000;d<course.length;d+=13000){let ranges=[[d,d+7500]];for(const spec of [...crossings,...harbours]){const a=spec.at+(spec.type==='drawbridge'?8:2)/core.WORLD_SCALE,z=spec.at+(spec.type==='drawbridge'?29:15)/core.WORLD_SCALE;ranges=ranges.flatMap(([l,r])=>r<=a||l>=z?[[l,r]]:[[l,Math.min(r,a)],[Math.max(l,z),r]].filter(([l,r])=>r>l));}ranges=ranges.flatMap(([l,r])=>r<=124500||l>=132700?[[l,r]]:[[l,Math.min(r,124500)],[Math.max(l,132700),r]].filter(([l,r])=>r>l));for(const [a,z]of ranges)fence(core,courseId,world,a,z,11.2);}
+    for(let d=-1000;d<course.length;d+=13000){let ranges=[[d,d+7500]];for(const spec of [...crossings,...harbours]){const a=spec.at+(spec.type==='drawbridge'?8:2)/core.WORLD_SCALE,z=spec.at+(spec.type==='drawbridge'?29:15)/core.WORLD_SCALE;ranges=ranges.flatMap(([l,r])=>r<=a||l>=z?[[l,r]]:[[l,Math.min(r,a)],[Math.max(l,z),r]].filter(([l,r])=>r>l));}ranges=ranges.flatMap(([l,r])=>r<=core.courseDistance(124500)||l>=core.courseDistance(132700)?[[l,r]]:[[l,Math.min(r,core.courseDistance(124500))],[Math.max(l,core.courseDistance(132700)),r]].filter(([l,r])=>r>l));for(const [a,z]of ranges)fence(core,courseId,world,a,z,11.2);}
     for(const section of course.sections) {
       if(section.type==='tunnel')tunnel(core,courseId,world,section,opponent,race?.playerId||'thomas');
     }
@@ -1191,7 +1331,7 @@
       const p=route(core,courseId,d,sceneryLane(d,(i%2?-1:1)*(35+i%3*8),size*1.7));
       sphere(world,size,0x8cb394,p.x,p.y-1,p.z,1.7,1.6,1.7,'distant-mountain');
     }
-    if(core.sampleTerrainHeight)for(let d=79000;d<114000;d+=2800){if(!clearCrossing(d,2))continue;const lane=22+(Math.floor(d/2800)%3)*3,p=route(core,courseId,d,lane);p.y=core.sampleTerrainHeight(courseId,d,lane);sphere(world,.55,0x9a9b87,p.x,p.y+.25,p.z,1.5,.8,1.2,'hillside-rock');}
+    if(core.sampleTerrainHeight)for(let d=core.courseDistance(79000);d<core.courseDistance(114000);d+=core.courseDistance(2800)){if(!clearCrossing(d,2))continue;const lane=22+(Math.floor(d/core.courseDistance(2800))%3)*3,p=route(core,courseId,d,lane);p.y=core.sampleTerrainHeight(courseId,d,lane);sphere(world,.55,0x9a9b87,p.x,p.y+.25,p.z,1.5,.8,1.2,'hillside-rock');}
     const start=startFinish(core,courseId,world,-900,false);startFinish(core,courseId,world,course.length,true);
     const festival=makeFestival(core,race||core.createRace({courseId,playerId:opponent==='thomas'?'percy':'thomas',opponentId:opponent}),world);
     return {world,start,objects,lakeside,festival};
@@ -1215,7 +1355,7 @@
     if(coach.userData.occupants){const load=state.serviceStates?.find(s=>s.type==='passenger-load'),unload=state.serviceStates?.find(s=>s.type==='passenger-unload');coach.userData.occupants.forEach((group,i)=>group.visible=b.theme==='passengers'&&(load?.groups?!!load.groups[i]&&!unload?.groups?.[i]:i<(state.carried?.passengers||0))&&!(state.service?.type==='passenger-unload'&&state.service.phase==='working'&&state.service.activeUnit===i));}
     if(coach.userData.container)coach.userData.container.visible=b.theme==='cargo'&&!!(state.carried?.container||state.carried?.cargo)&&!(state.service?.type==='cargo-unload'&&state.service.phase==='working');
     if(flight){
-      const load=coach.userData.container,sway=flight.cargo?0:Math.sin(race.elapsed*1.8)*.12*Math.min(1,state.velocity/825);
+      const load=coach.userData.container,sway=flight.cargo?0:Math.sin(race.elapsed*1.8)*.12*Math.min(1,state.velocity/b.core.CRUISE_SPEED);
       const cargo=flight.cargo||{x:flight.x+sway*Math.cos(flight.heading),y:flight.y-2.55,z:flight.z-sway*Math.sin(flight.heading),attached:true};
       coach.updateMatrixWorld(true);
       load.position.copy(coach.worldToLocal(new T.Vector3(cargo.x,cargo.y,cargo.z)));

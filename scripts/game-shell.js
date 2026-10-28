@@ -2,7 +2,7 @@
 (() => {
     'use strict';
     const STORAGE_KEY='thomas-first-adventure-progress-v1';
-    const SPEEDS=[0,206.25,412.5,618.75,825],MAX_SPEED=825;
+    const SPEEDS=ThomasRaceCore.SPEEDS,MAX_SPEED=ThomasRaceCore.CRUISE_SPEED;
     const STICKER_IDS=['apple-delivery','race-finisher','race-winner','driving-challenges'];
     // Labels only: preserve albums earned in older versions of the game.
     const LEGACY_STICKERS=[

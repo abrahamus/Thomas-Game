@@ -8,7 +8,7 @@ const $ = id => document.getElementById(id);
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const ui = {
     audioUnlocked:false,windowActive:true,task:'',taskKey:'',emoji:'🚂',lastGeneration:-1,
-    festival:null,finishWelcomed:false,menuIndex:0,openPicker:null,albumOpen:false,optionsOpen:false,speaking:false,time:0,whistle:0,lastTimestamp:null,
+    festival:null,finishWelcomed:false,menuIndex:0,openPicker:null,albumOpen:false,speaking:false,time:0,whistle:0,lastTimestamp:null,
     pendingSpeech:null,hoverNode:null,hoverDeadline:null,suppressFocus:false,lastAnnouncement:'',
     raceView:null,raceUnavailable:false,raceLayoutKey:'',raceVoiceKey:null,racePraiseAt:-Infinity
 };
@@ -26,11 +26,6 @@ state.musicEnabled=!!(musicAsset && musicAsset.data);
 if(globalThis.ThomasMusic)music=ThomasMusic.create({getContext:()=>audio.context,getOutput:()=>audio.masterBus,
     getState:()=>({...state,paused:state.paused || ui.albumOpen,hidden:!ui.windowActive || document.hidden,musicEnabled:state.musicEnabled && ui.audioUnlocked}),
     getGeneration:()=>state.generation,getAsset:()=>musicAsset,isSpeaking:()=>ui.speaking});
-function updateMusicButton(){
-    const button=$('musicButton');if(!button)return;button.hidden=!(musicAsset && musicAsset.data);
-    button.setAttribute('aria-pressed',state.musicEnabled);button.setAttribute('aria-label',state.musicEnabled?'Turn background music off':'Turn background music on');
-    button.setAttribute('data-narration',state.musicEnabled?'ui.music-off':'ui.music-on');$('musicIcon').textContent=state.musicEnabled?'♫':'♫̸';
-}
 function playPeepPeepWhistle() { const power=state.race&&ThomasRaceCore.getCharacter(state.race).power;audio.effect(power==='rotor'?'radio':power==='diesel'?'horn':'whistle'); }
 function playPopSound(frequency=500) { audio.effect('pop',frequency); }
 function playStarChime(fanfare=false) { audio.effect('chime',fanfare); }
@@ -150,10 +145,6 @@ function focusMenuDefault(){
     const buttons=menuButtons(),index=state.screen==='race-start'&&!ui.albumOpen?buttons.indexOf($('startRaceButton')):0;
     selectMenu(Math.max(0,index),true,false);
 }
-function updateHud() {
-    $('starCountText').textContent = state.stars;
-    $('stickerCountText').textContent = state.stickers.length + state.completedMissions.length;
-}
 function htmlNode(tag,attrs,text,parent) {
     const node=document.createElement(tag);
     Object.entries(attrs||{}).forEach(([name,value])=>node.setAttribute(name,value));
@@ -184,10 +175,10 @@ function ensureRaceView() {
 }
 function raceTaskPicture(type) {
     const c=state.race&&ThomasRaceCore.getCharacter(state.race,'player');
-    if(c?.vehicleType==='air')return ({'passenger-load':'race-flight-passengers','passenger-unload':'race-flight-passengers','cargo-load':'race-flight-cargo','cargo-unload':'race-flight-cargo',repairs:'race-flight-repairs',rocks:'race-ground-crane',tree:'race-flight-winch',coal:'race-flight-fuel',water:'race-flight-water',wash:'race-flight-wash',animals:'rule-radio','level-crossing':'rule-radio',drawbridge:'race-flight-harbour',tunnel:'race-flight-cloud',hill:'race-flight-route',downhill:'race-flight-route',wet:'race-flight-wind',snow:'race-flight-snow'})[type]||'race-flag';
+    if(c?.vehicleType==='air')return ({'passenger-load':'race-flight-passengers','passenger-unload':'race-flight-passengers','cargo-load':'race-flight-cargo','cargo-unload':'race-flight-cargo',repairs:'race-flight-repairs',rocks:'race-ground-crane',tree:'race-flight-winch',coal:'race-flight-fuel',water:'race-flight-water',wash:'race-flight-wash',animals:'rule-radio','level-crossing':'race-flight-clearance',drawbridge:'race-flight-harbour',tunnel:'race-flight-cloud',hill:'race-flight-route',downhill:'race-flight-route',wet:'race-flight-wind',snow:'race-flight-snow'})[type]||'race-flag';
     if(c?.vehicleType==='road'&&type==='coal')return 'race-fuel';
     if(c?.vehicleType==='road'&&type==='repairs')return 'race-potholes';
-    if(c?.vehicleType==='road'&&type==='level-crossing')return ThomasRaceCore.getCrossingMode(state.race)==='rail'?'race-crossing-train':'race-road-junction';
+    if(c?.vehicleType==='road'&&type==='level-crossing')return 'race-road-junction';
     if(c?.power!=='steam'&&['water','coal'].includes(type))return 'race-depot-'+type;
     return ({'passenger-load':'race-passengers','passenger-unload':'race-passengers',
         'cargo-load':'race-container','cargo-unload':'race-container',animals:'challenge-crossing',wash:'challenge-wash',
@@ -238,7 +229,7 @@ function renderRacePresentation() {
     help.setAttribute('data-narration',view.taskKey);help.setAttribute('aria-label',words(view.taskKey));
     const helpPicture=view.player.vehicleType==='air'?raceTaskPicture(service?.type):service?.type==='cargo-unload' || service?.type==='cargo-load' && service.selectedContainer?'race-crane':service?.type==='passenger-load'?'race-board':service?.type==='passenger-unload'?'race-alight':raceTaskPicture(service?.type);
     $('raceHelpPicture').setAttribute('href',working||handling?'#rule-wait':`#${helpPicture}`);
-    const labels={'cargo-load':'Load','cargo-unload':'Unload','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear','level-crossing':'Cross',drawbridge:'Bridge'};
+    const labels={'cargo-load':'Load','cargo-unload':'Unload','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear','level-crossing':view.player.vehicleType==='air'?'Call':view.player.vehicleType==='road'?'Lights':'Cross',drawbridge:'Bridge'};
     $('raceHelpLabel').textContent=working||handling?'Wait':labels[service?.type]||'Help';
     help.classList.toggle('hint',!!view.helpEnabled);
     $('action-whistle').classList.toggle('hint',service?.type==='animals' && !working);
@@ -296,10 +287,6 @@ function render() {
     $('footerDashboard').classList.toggle('festival-footer',completed);
     show('footerDashboard',playing&&!results);show('action-whistle',playing&&!results);
     document.querySelector('[data-action="pause"]').hidden=!playing;
-    const options=$('gameOptions'),host=$(state.paused?'pauseOptionsHost':'startOptionsHost');
-    if(options.parentNode!==host){options.remove();host.appendChild(options);}
-    show('menuUtilities',ui.optionsOpen);
-    $('optionsToggle').setAttribute('aria-expanded',ui.optionsOpen);
     $('statusText').textContent=playing?'Help with jobs and earn speed boosts.':'';
     if(playing){
         const character=ThomasRaceCore.getCharacter(state.race),signal=character.power==='rotor'?'radio':character.power==='diesel'?'horn':'whistle';
@@ -314,7 +301,7 @@ function render() {
         $('rewardTitle').textContent=words(resultKey);$('resultText').textContent=words(resultKey);
         renderRacePresentation();
     }else task(words('race.menu'),'🏁','race.menu');
-    updateHud();updateMusicButton();if(music)music.update();
+    if(music)music.update();
 }
 
 function pause() {
@@ -326,9 +313,6 @@ function pause() {
 function dispatchAction(action,payload) {
     if(ui.albumOpen && !['close-album','hear-sticker','mute','music','home','repeat'].includes(action))return false;
     unlockAudio();
-    if(action==='toggle-options'){
-        ui.optionsOpen=!ui.optionsOpen;render();return true;
-    }
     if(action==='repeat'){
         // Repeat is an explicit request for the current task, even if older,
         // higher-priority guidance is still finishing.
@@ -338,13 +322,9 @@ function dispatchAction(action,payload) {
         return true;
     }
     if(action==='hear-sticker'){announce(payload,{force:true});return true;}
-    if(action==='music'){if(!musicAsset || !musicAsset.data)return false;state.musicEnabled=!state.musicEnabled;updateMusicButton();if(music)music.update();return true;}
+    if(action==='music'){if(!musicAsset || !musicAsset.data)return false;state.musicEnabled=!state.musicEnabled;if(music)music.update();return true;}
     if(action==='mute'){
         state.isMuted=!state.isMuted;audio.setMuted(state.isMuted);if(music)music.update();
-        $('muteIcon').textContent=state.isMuted?'🔇':'🔊';
-        document.querySelector('[data-action="mute"]').setAttribute('aria-label',state.isMuted?'Turn sound on':'Turn sound off');
-        document.querySelector('[data-action="mute"]').setAttribute('aria-pressed',state.isMuted);
-        document.querySelector('[data-action="mute"]').setAttribute('data-narration',state.isMuted?'ui.sound-on':'ui.sound-off');
         if(!state.isMuted){audio.unlock();say(ui.task,ui.taskKey,{allowPaused:true});}return true;
     }
     if(action==='album'){
@@ -375,15 +355,16 @@ function dispatchAction(action,payload) {
     }
     if(action==='whistle'&&ui.festival&&active()){playPeepPeepWhistle();ui.whistle=.8;return true;}
     const signalsAnimals=action==='race-help'&&state.race?.player.service?.type==='animals';
+    const requestsClearance=action==='race-help'&&state.race?.player.service?.type==='level-crossing'&&ThomasRaceCore.getCharacter(state.race).vehicleType==='air';
     if(!game.dispatch(action,payload))return false;
     if(['select-player','select-opponent'].includes(action)){
         const role=action==='select-player'?'player':'opponent';ui.openPicker=null;renderCharacterChoices();selectMenu(menuButtons().indexOf($(role+'PickerButton')),true,false);announce(`race.character.${payload}`,{force:true});return true;
     }
     if(['home','next-race','start-race','rematch'].includes(action)){
-        ui.albumOpen=false;ui.openPicker=null;ui.optionsOpen=false;ui.menuIndex=0;ui.raceUnavailable=false;
+        ui.albumOpen=false;ui.openPicker=null;ui.menuIndex=0;ui.raceUnavailable=false;
     }
     if(action==='resume'){ui.lastTimestamp=null;audio.unlock();say(ui.task,ui.taskKey);}
-    if(action==='whistle'||signalsAnimals){playPeepPeepWhistle();ui.whistle=.8;}
+    if(action==='whistle'||signalsAnimals||requestsClearance){playPeepPeepWhistle();ui.whistle=.8;}
     else if(['race-help','race-clean-spot'].includes(action))playPopSound(700);
     render();
     if(menuButtons().length){focusMenuDefault();if(action==='home'||action==='next-race')announce('race.menu',{force:true});}

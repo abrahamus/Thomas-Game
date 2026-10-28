@@ -35,7 +35,7 @@ for(const id of ids)for(const theme of ['passengers','cargo'])test(`${id}: compl
 });
 test('random choices stay random across rounds and unavailable WebGL preserves choices',()=>{
  const ui=setup();ui.choose('player','random');ui.choose('opponent','random');ui.click('#startRaceButton');
- const first=ui.state().race;assert.notEqual(first.playerId,first.opponentId);ui.click('[data-action="home"]');ui.click('#startRaceButton');
+ const first=ui.state().race;assert.notEqual(first.playerId,first.opponentId);ui.click('#pauseButton');ui.evaluate("dispatchAction('home')");ui.click('#startRaceButton');
  assert.notEqual(ui.state().race.playerId,first.playerId);assert.notEqual(ui.state().race.opponentId,first.opponentId);
  assert.deepEqual(ui.state().selections,{playerId:'random',opponentId:'random'});
  const failed=setup(undefined,{raceUnavailable:true});failed.choose('player','diesel');failed.choose('opponent','bulgy');failed.click('#startRaceButton');
@@ -44,7 +44,7 @@ test('random choices stay random across rounds and unavailable WebGL preserves c
 test('all computer wins thank the selected player and never award the player win sticker',()=>{
  for(const opponentId of ids){
   const playerId=opponentId==='thomas'?'bulgy':'thomas',ui=setup();ui.choose('player',playerId);ui.choose('opponent',opponentId);ui.click('#startRaceButton');
-  ui.evaluate(`{const r=state.race;r.phase='racing';r.countdown=0;r.elapsed=400;for(const who of ['player','rival']){const v=r[who];v.distance=ThomasRaceCore.COURSES[r.courseId].length-(who==='rival'?1:100);v.velocity=825;v.service=null;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete'});v.terrainStates.forEach(s=>s.completed=true);}}`);
+  ui.evaluate(`{const r=state.race;r.phase='racing';r.countdown=0;r.elapsed=400;for(const who of ['player','rival']){const v=r[who];v.distance=ThomasRaceCore.COURSES[r.courseId].length-(who==='rival'?1:100);v.velocity=ThomasRaceCore.CRUISE_SPEED;v.service=null;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete'});v.terrainStates.forEach(s=>s.completed=true);}}`);
   ui.frames(1,10);assert.equal(ui.state().phase,'complete');assert.equal(ui.state().race.winner,'rival');assert.equal(node(ui,'raceResultPortrait').getAttribute('href'),'#portrait-'+playerId);
   assert.equal(node(ui,'resultText').textContent,'Our friend wins! Well done. Let’s race again!');assert.equal(ui.state().stars,3);assert.equal(ui.state().stickers.includes('race-winner'),false);
  }

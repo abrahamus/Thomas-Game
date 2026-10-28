@@ -11,10 +11,10 @@ test('one irregular lake surrounds both routes, with shallow water above road an
   assert.equal(water[0].material.transparent,true);assert.ok(water[0].material.opacity<.7);assert.equal(water[0].castShadow,false);
   const vertices=water[0].geometry.attributes.position;for(let i=0;i<vertices.count;i++)assert.ok(Math.abs(vertices.getY(i)-lake.level)<1e-6,'water stays level');
   for(const who of ['player','rival'])if(R.getCharacter(r,who).vehicleType!=='air'){
-   const p=R.sampleVehicleRoute(r,who,128600);assert.ok(p.y+.05<lake.level,'water covers sleepers and pavement');assert.ok(p.y+.3>lake.level,'rail heads remain above the flood');
+   const p=R.sampleVehicleRoute(r,who,R.courseDistance(128600));assert.ok(p.y+.05<lake.level,'water covers sleepers and pavement');assert.ok(p.y+.3>lake.level,'rail heads remain above the flood');
    const ground=all(b.world,'continuous-ground'),hit=new T.Raycaster(new T.Vector3(p.x,p.y+2,p.z),new T.Vector3(0,-1,0)).intersectObjects(ground)[0];assert.ok(hit&&hit.point.y<p.y-.1,'ground never pokes through the road');
   }
-  r.player.distance=r.rival.distance=128600;r.player.velocity=r.rival.velocity=330;V.updateScene(b,r);
+  r.player.distance=r.rival.distance=R.courseDistance(128600);r.player.velocity=r.rival.velocity=330;V.updateScene(b,r);
   for(const who of ['player','rival'])assert.equal(b[who+'Splashes'].visible,R.getCharacter(r,who).vehicleType==='road');
   V.disposeScene(b);
  }
@@ -23,14 +23,14 @@ test('one irregular lake surrounds both routes, with shallow water above road an
 test('frozen lake stays beside a raised route, with translucent thin ice and uneven verge snow',()=>{
  const{r,b}=fixture('bertie','thomas','mountain'),lake=b.lakeside;assert.equal(all(b.world,'lake-ice-surface').length,1);assert.equal(all(b.world,'shallow-wet-track').length,0);
  const patches=all(b.world,'thin-route-ice');assert.equal(patches.length,24);assert.ok(all(b.world,'uneven-snow-verge').length>20);
- for(const who of ['player','rival'])assert.ok(R.sampleVehicleRoute(r,who,128600).y>lake.level,'vehicles do not drive through solid lake ice');
+ for(const who of ['player','rival'])assert.ok(R.sampleVehicleRoute(r,who,R.courseDistance(128600)).y>lake.level,'vehicles do not drive through solid lake ice');
  for(const patch of patches){assert.equal(patch.material.transparent,true);assert.ok(patch.material.opacity<.7);assert.equal(patch.castShadow,false);assert.ok(patch.geometry.attributes.position.count>20,'irregular flat patches, not raised boxes');}
- r.player.distance=r.rival.distance=128600;r.player.velocity=r.rival.velocity=400;V.updateScene(b,r);assert.equal(b.playerSplashes.visible,false);assert.equal(b.rivalSplashes.visible,false);V.disposeScene(b);
+ r.player.distance=r.rival.distance=R.courseDistance(128600);r.player.velocity=r.rival.velocity=400;V.updateScene(b,r);assert.equal(b.playerSplashes.visible,false);assert.equal(b.rivalSplashes.visible,false);V.disposeScene(b);
 });
 
 test('rain, blowing snow and windsocks move only with the race clock and do not hide either racer',()=>{
  for(const course of ['country','mountain'])for(const pair of [['harold','bertie'],['thomas','harold']]){
-  const{r,b}=fixture(...pair,course);r.player.distance=r.rival.distance=128600;V.updateScene(b,r);
+  const{r,b}=fixture(...pair,course);r.player.distance=r.rival.distance=R.courseDistance(128600);V.updateScene(b,r);
   const first=Array.from(b.lakeside.particles.instanceMatrix.array);r.elapsed+=.5;V.updateScene(b,r);assert.notDeepEqual(Array.from(b.lakeside.particles.instanceMatrix.array),first);
   const paused=Array.from(b.lakeside.particles.instanceMatrix.array),pose=R.getFlightPose(r,pair[0]==='harold'?'player':'rival');V.updateScene(b,r,{paused:true,time:999});assert.deepEqual(Array.from(b.lakeside.particles.instanceMatrix.array),paused);assert.deepEqual(R.getFlightPose(r,pair[0]==='harold'?'player':'rival'),pose);
   for(const [w,h]of [[320,420],[375,420],[1400,800],[1920,900]]){
@@ -47,7 +47,7 @@ test('heavy rocks are supported by a ground crane and repair packages stay on ha
   const{r,b}=fixture(who==='player'?'harold':'bertie',who==='rival'?'harold':'bertie','country',seed),s=job(r,who,type),slot=b.objects.services.find(x=>x.spec.id===s.id)?.slots.find(x=>x.who===who);
   V.updateScene(b,r);const actual=slot||b.objects.services.find(x=>x.spec.id===s.id).slots.find(x=>x.who===who);
   for(const t of [0,.2,.5,.8,1]){s.progress=t;s.remaining=s.duration*(1-t);V.updateScene(b,r);assert.equal(actual.winch.visible,false,'Harold’s rope does not move heavy objects');assert.ok(R.getFlightPose(r,who).altitude<.1,'Harold waits on the pad');
-   if(type==='rocks'){const rock=actual.airRocks[0],hook=actual.groundCrane.hook.getWorldPosition(new T.Vector3()),target=rock.getWorldPosition(new T.Vector3()).add(new T.Vector3(0,.7,0));assert.ok(hook.distanceTo(target)<1e-6);
+   if(type==='rocks'){const rock=actual.airRocks[0],hook=actual.groundCrane.hook.getWorldPosition(new T.Vector3()),target=rock.localToWorld(new T.Vector3(0,rock.userData.slingTop,0));if(t>=.3&&t<.9)assert.ok(hook.distanceTo(target)<1e-6);else assert.ok(hook.y>target.y,'empty hook lowers before attachment and retracts after release');
     for(const [w,h]of [[320,420],[375,420],[1400,800],[1920,900]]){b.camera.aspect=w/h;V.updateScene(b,r);const solid=[];actual.groundCrane.group.traverse(o=>{if(o.isMesh)solid.push(o);});for(const role of ['player','rival']){const point=b[role].localToWorld(new T.Vector3(0,2,2)),delta=point.clone().sub(b.camera.position),length=delta.length();assert.equal(new T.Raycaster(b.camera.position,delta.normalize(),0,length-.12).intersectObjects(solid).length,0,'ground crane keeps both faces visible');}}
    }
    else for(const [i,crate]of actual.packages.entries()){assert.equal(crate.parent,actual.handcarts[i]);assert.equal(crate.position.y,.32);assert.equal(actual.handcarts[i].position.y,0);assert.equal(new T.Box3().setFromObject(actual.handcarts[i]).intersectsBox(new T.Box3().setFromObject(b[who+'Coach'].userData.container)),false,'handcarts stay clear of the parked delivery cargo');}

@@ -74,11 +74,11 @@ function setup(options = {}) {
     vm.runInContext(source, box);
     const audio = box.ThomasAudio.create({ getState: () => state, getGeneration: () => state.generation,
         runningAssets: options.noAssets ? null : assets });
-    const motion = (distance, velocity = 825, targetVelocity = velocity, isActive = true) => ({ distance, velocity, targetVelocity, wheelTurns: distance / WHEEL_DISTANCE, isActive });
+    const motion = (distance, velocity = 1000, targetVelocity = velocity, isActive = true) => ({ distance, velocity, targetVelocity, wheelTurns: distance / WHEEL_DISTANCE, isActive });
     audio.unlock();
     return { audio, state, motion, context: audio.context };
 }
-async function ready(scene, velocity = 825) {
+async function ready(scene, velocity = 1000) {
     scene.audio.update(1 / 60, scene.motion(0, velocity));
     assert.equal(scene.context.decoding.length, 2);
     scene.context.resolve(0); scene.context.resolve(1); await flush();
@@ -111,24 +111,24 @@ test('no running sound without motion, assets, active gameplay, or actual veloci
         const scene = setup(options); scene.audio.update();
         scene.audio.update(10, { speed: 4, place: 'farm' });
         scene.audio.update(1, scene.motion(0, 0));
-        scene.audio.update(1, scene.motion(100, 825, 825, false));
+        scene.audio.update(1, scene.motion(100, 1000, 1000, false));
         assert.equal(scene.context.decoding.length, 0);
         assert.equal(scene.audio.effect('chug'), false);
         assert.equal(scene.context.nodes.filter(n => n.kind === 'oscillator').length, 0);
-        if (options.noAssets) { scene.audio.update(.1, scene.motion(100, 825)); assert.equal(scene.context.decoding.length, 0); }
+        if (options.noAssets) { scene.audio.update(.1, scene.motion(100, 1000)); assert.equal(scene.context.decoding.length, 0); }
     }
 });
 
 test('one continuous rolling source follows actual velocity rather than selected gear', async () => {
-    const scene = setup(); await ready(scene, 206.25);
+    const scene = setup(); await ready(scene, 250);
     assert.equal(loops(scene.context).length, 1);
     const loop = loops(scene.context)[0], gain = loop.connections[0];
     const lowLevel = gain.gain.value, lowRate = loop.playbackRate.value;
-    scene.audio.update(.016, scene.motion(10, 206.25, 825));
+    scene.audio.update(.016, scene.motion(10, 250, 1000));
     assert.equal(gain.gain.value, lowLevel);
     assert.equal(loop.playbackRate.value, lowRate);
     assert.equal(shots(scene.context).length, 0, 'selecting a high gear does not invent wheel turns or exhaust beats');
-    scene.audio.update(.016, scene.motion(20, 825, 825));
+    scene.audio.update(.016, scene.motion(20, 1000, 1000));
     assert.ok(gain.gain.value > lowLevel * 2); assert.ok(loop.playbackRate.value > lowRate);
     for (let i = 1; i <= 100; i++) { scene.context.tick(.016); scene.audio.update(.016, scene.motion(20 + i * 13.2)); }
     assert.equal(loops(scene.context).length, 1);
@@ -137,7 +137,7 @@ test('one continuous rolling source follows actual velocity rather than selected
 });
 
 test('four exhaust beats follow each wheel revolution at both refresh rates and all gears', async () => {
-    for (const fps of [60, 120]) for (const velocity of [206.25, 412.5, 618.75, 825]) {
+    for (const fps of [60, 120]) for (const velocity of [250, 500, 750, 1000]) {
         const scene = setup(); await ready(scene, velocity);
         const duration = 10;
         for (let frame = 1; frame <= fps * duration; frame++) {
@@ -146,7 +146,7 @@ test('four exhaust beats follow each wheel revolution at both refresh rates and 
         }
         const expected = Math.floor(velocity * duration / WHEEL_DISTANCE * 4 + 1e-8);
         assert.equal(shots(scene.context).length, expected, `${fps} Hz at ${velocity}: wheel-exact beats`);
-        assert.ok(expected / duration >= 1.8 && expected / duration <= 7.4);
+        assert.ok(expected / duration >= 1.8 && expected / duration <= 9);
         assert.ok(shots(scene.context).every(n => n.duration <= .28 && n.duration < 1 / (velocity / WHEEL_DISTANCE * 4)));
         assert.ok(shots(scene.context).filter(n => !n.ended && !n.disconnected).length <= 2);
     }
@@ -167,9 +167,9 @@ test('slow frames and rewinds synchronize phase without a burst of missed chuffs
 
 test('short high-speed chuffs stay unpitched, strengthen with acceleration, and soften under braking', async () => {
     const levels = [];
-    for (const target of [0, 412.5, 825]) {
-        const scene = setup(); await ready(scene, 412.5);
-        scene.audio.update(.02, scene.motion(WHEEL_DISTANCE / 4 + 1, 412.5, target));
+    for (const target of [0, 500, 1000]) {
+        const scene = setup(); await ready(scene, 500);
+        scene.audio.update(.02, scene.motion(WHEEL_DISTANCE / 4 + 1, 500, target));
         const shot = shots(scene.context)[0]; assert.ok(shot);
         assert.equal(shot.playbackRate.value, 1, 'steam pitch is not raised at speed');
         levels.push(Math.max(...shot.connections[0].gain.operations.filter(op => op[0] !== 'hold').map(op => op[1])));
@@ -198,7 +198,7 @@ test('pause, mute, stopped train, inactive mode, and activity changes cancel loo
         if (reason === 'mute') scene.audio.setMuted(true);
         if (reason === 'stop') scene.audio.stop();
         if (reason === 'generation') scene.state.generation++;
-        if (!['mute', 'stop'].includes(reason)) scene.audio.update(.02, scene.motion(200, reason === 'stationary' ? 0 : 825, 825, reason !== 'inactive' && reason !== 'generation'));
+        if (!['mute', 'stop'].includes(reason)) scene.audio.update(.02, scene.motion(200, reason === 'stationary' ? 0 : 1000, 1000, reason !== 'inactive' && reason !== 'generation'));
         assert.ok(active.every(n => n.stopped > 0 && n.disconnected), reason);
         assert.equal(loops(scene.context).length, 0, reason);
     }
@@ -213,7 +213,7 @@ test('delayed running decodes cannot restart a cancelled, paused, muted, inactiv
         if (reason === 'stop') scene.audio.stop();
         if (reason === 'generation') scene.state.generation++;
         if (reason === 'stationary') scene.audio.update(.01, scene.motion(0, 0));
-        if (reason === 'inactive') scene.audio.update(.01, scene.motion(0, 825, 825, false));
+        if (reason === 'inactive') scene.audio.update(.01, scene.motion(0, 1000, 1000, false));
         scene.context.resolve(0); scene.context.resolve(1); await flush();
         assert.equal(loops(scene.context).length, 0, reason);
         assert.equal(shots(scene.context).length, 0, reason);
@@ -282,7 +282,7 @@ test('after a bus honk ends, driving leaves no continuous pitched oscillator tha
  const scene=setup(),motion=d=>({...scene.motion(d),vehiclePower:'diesel',vehicleType:'road'});
  scene.audio.update(.016,motion(0));const before=scene.context.nodes.length;
  scene.audio.effect('horn');const horn=scene.context.nodes.slice(before).filter(n=>n.kind==='oscillator');assert.equal(horn.length,4);
- for(let frame=1;frame<=120;frame++){scene.context.tick(1/60);scene.audio.update(1/60,motion(frame*825/60));}
+ for(let frame=1;frame<=120;frame++){scene.context.tick(1/60);scene.audio.update(1/60,motion(frame*1000/60));}
  assert.ok(horn.every(n=>n.ended&&n.disconnected),'both horn blasts stop automatically');
  const pitched=scene.context.nodes.filter(n=>n.kind==='oscillator'&&n.started&&!n.ended&&!n.disconnected);
  assert.equal(pitched.length,0,'driving should use a textured engine rumble, not a continuous beep');
@@ -301,19 +301,19 @@ test('diesel rumble is quiet, non-tonal, speed-linked, and stops on mute, pause 
    for(let i=0;i<samples.length;i++){cross+=samples[i]*samples[(i+lag)%samples.length];power+=samples[i]*samples[i];}
    assert.ok(Math.abs(cross/power)<.2,`engine must not repeat a pure ${frequency} Hz beep`);
   }
-  for(let i=0;i<60;i++)scene.audio.update(1/60,move(825));assert.equal(loops(scene.context).length,1);
+  for(let i=0;i<60;i++)scene.audio.update(1/60,move(1000));assert.equal(loops(scene.context).length,1);
   assert.ok(motor.playbackRate.value>lowRate);assert.ok(motor.connections[0].gain.value>lowGain);assert.ok(motor.connections[0].gain.value<=.06);
   scene.audio.effect('horn');
   if(stop==='mute')scene.state.isMuted=true;if(stop==='pause')scene.state.paused=true;
-  if(stop==='inactive')scene.audio.stop();else scene.audio.update(.016,move(825));
+  if(stop==='inactive')scene.audio.stop();else scene.audio.update(.016,move(1000));
   assert.equal(loops(scene.context).length,0);assert.ok(scene.context.nodes.filter(n=>n.kind==='oscillator').every(n=>n.disconnected));
-  scene.state.isMuted=scene.state.paused=false;scene.audio.update(.016,move(825));assert.equal(loops(scene.context).length,1);assert.notEqual(loops(scene.context)[0],motor);
+  scene.state.isMuted=scene.state.paused=false;scene.audio.update(.016,move(1000));assert.equal(loops(scene.context).length,1);assert.notEqual(loops(scene.context)[0],motor);
   assert.equal(loops(scene.context)[0].buffer,motor.buffer,'resume reuses the offline rumble');
  }
 });
 
 test('the short bus horn has a clear bounded level above the engine and always falls silent',()=>{
- const scene=setup(),motion={...scene.motion(12000,825),vehiclePower:'diesel',vehicleType:'road'};scene.audio.update(.016,motion);
+ const scene=setup(),motion={...scene.motion(12000,1000),vehiclePower:'diesel',vehicleType:'road'};scene.audio.update(.016,motion);
  const motor=loops(scene.context)[0],before=scene.context.nodes.length;assert.equal(scene.audio.effect('horn'),true);
  const tones=scene.context.nodes.slice(before).filter(n=>n.kind==='oscillator');assert.equal(tones.length,4);
  for(const tone of tones){

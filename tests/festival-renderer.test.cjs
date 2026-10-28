@@ -4,8 +4,8 @@ const T=require('../vendor/three-r170.js');global.THREE=T;require('../scripts/ra
 const R=global.ThomasRaceCore,V=require('../scripts/race-renderer.js');
 const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
 function fixture(playerId,opponentId,courseId='country',winner='tie'){
- const r=R.createRace({playerId,opponentId,courseId,deliveryTheme:'passengers'});r.phase='complete';r.elapsed=300;r.countdown=0;r.winner=winner;r.finishMotion={rivalVelocity:825,rivalTarget:825};
- for(const who of ['player','rival']){const v=r[who];v.distance=R.COURSES[courseId].length;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete';s.groups.fill(true)});v.finishTime=300;v.finishEvent={time:300,speed:825,wheelTurns:0};}
+ const r=R.createRace({playerId,opponentId,courseId,deliveryTheme:'passengers'});r.phase='complete';r.elapsed=300;r.countdown=0;r.winner=winner;r.finishMotion={rivalVelocity:R.CRUISE_SPEED,rivalTarget:R.CRUISE_SPEED};
+ for(const who of ['player','rival']){const v=r[who];v.distance=R.COURSES[courseId].length;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete';s.groups.fill(true)});v.finishTime=300;v.finishEvent={time:300,speed:R.CRUISE_SPEED,wheelTurns:0};}
  return R.createFinishPresentation(r);
 }
 function bounds(root){const b=new T.Box3();root.traverse(o=>{if(!o.geometry||!visible(o))return;const a=o.geometry.attributes.position;for(let i=0;i<a.count;i++)b.expandByPoint(new T.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld));});return b;}

@@ -11,6 +11,7 @@ function inline(id) {
     return match[1];
 }
 const box = vm.createContext({});
+vm.runInContext(inline('race-core'), box);
 vm.runInContext(inline('game-core'), box);
 const model = box.ThomasGameCore.NARRATION;
 const ui = JSON.parse(inline('ui-narration-data'));

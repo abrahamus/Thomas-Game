@@ -100,7 +100,7 @@ test('returning to the start screen cancels speech and stale callbacks cannot fi
     const ui = heldVoice(); racing(ui);
     speak(ui, 'race.boost');
     ui.evaluate('globalThis.oldRaceOnEnd=reviewUtterances.at(-1).onend');
-    ui.click('[data-action="home"]');
+    ui.click('#pauseButton');ui.evaluate("dispatchAction('home')");
     assert.equal(ui.state().race, null);
     assert.ok(!ui.evaluate('ui.pendingSpeech?.key?.startsWith("race.")'));
     ui.click('#startRaceButton');

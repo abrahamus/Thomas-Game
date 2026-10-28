@@ -53,7 +53,7 @@ test('all nine racers in both roles keep wheels on their surfaces and drawbars a
  for(const c of R.CHARACTERS.filter(c=>c.vehicleType!=='air'))for(const who of ['player','rival']){
   const args={playerId:who==='player'?c.id:c.id==='thomas'?'percy':'thomas',opponentId:who==='rival'?c.id:c.id==='thomas'?'percy':'thomas',seed:24};
   const race=R.createRace(args),scene=V.makeScene(R,race.courseId,race.opponentId,race.deliveryTheme,race),surface=all(scene.world,c.vehicleType==='road'?'bertie-road':'running-rail');
-  for(const distance of [3000,55000,82000,105000,126400,128600,131000,164000]){
+  for(const distance of [3000,55000,82000,105000,126400,128600,131000,164000].map(R.courseDistance)){
    race.player.distance=race.rival.distance=distance;V.updateScene(scene,race);
    const engine=scene[who],coach=scene[who+'Coach'],coupler=scene[who+'Coupler'];
    for(const vehicle of [engine,coach])for(const wheel of vehicle.userData.wheels){
@@ -107,7 +107,7 @@ test('both buses and either mixed corridor keep independent crossing traffic cle
   for(const a of [0,.15,.3,.45,.59,.6,.8,1])for(const b of [0,.15,.3,.45,.59,.6,.8,1]){
    for(const [who,progress]of [['player',a],['rival',b]]){const s=race[who].service;s.phase=progress===1?'complete':'working';s.duration=5;s.remaining=5*(1-progress);}
    V.updateScene(scene,race);
-   const traffic=slots.map(slot=>slot.crossingTrain||slot.car).filter(o=>o.visible);
+   const traffic=slots.map(slot=>slot.crossingAircraft||slot.car).filter(o=>o.visible);
    if(traffic.length===2)assert.equal(boundsIn(traffic[0],frame).intersectsBox(boundsIn(traffic[1],frame)),false,`${playerId}/${opponentId}/${a}/${b}: traffic collision`);
    for(const slot of slots){for(const vehicle of [scene[slot.who],scene[slot.who+'Coach']]){
     for(const arm of slot.barriers)assert.equal(boundsIn(arm,frame).intersectsBox(boundsIn(vehicle,frame)),false,`${playerId}/${opponentId}: barrier hits waiting vehicle`);

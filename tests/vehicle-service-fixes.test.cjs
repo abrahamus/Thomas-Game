@@ -16,7 +16,7 @@ test('buses refuel with a pump and fuel instructions, never a coal bin or coal s
 });
 test('Harold keeps moving sling cargo below the helicopter when approaching and leaving an intermediate stop',()=>{
  for(const who of ['player','rival']){
-  const{r,v,b}=fixture('harold',who),job=v.serviceStates.find(s=>s.type==='wash');v.carried.container='container-1';v.velocity=825;
+  const{r,v,b}=fixture('harold',who),job=v.serviceStates.find(s=>s.type==='wash');v.carried.container='container-1';v.velocity=R.CRUISE_SPEED;
   for(const gap of [-1800,-1200,-900,900,1200,1500]){
    v.distance=job.at+gap;V.updateScene(b,r);const payload=b[who+'Coach'],load=payload.userData.container,point=load.getWorldPosition(new T.Vector3()),belly=b[who].localToWorld(new T.Vector3(0,.65,0));
    if(point.y>R.sampleVehicleRoute(r,who,job.at).y+.05)assert.ok(Math.hypot(point.x-belly.x,point.z-belly.z)<.3,`${who}/${gap}: cargo flies sideways independently of helicopter`);
@@ -26,7 +26,7 @@ test('Harold keeps moving sling cargo below the helicopter when approaching and 
 
 test('intermediate winching stays vertical, detaches only on the ground and leaves grounded cargo still',()=>{
  for(const who of ['player','rival'])for(const seed of [1,2,3,4]){
-  const{r,v,b}=fixture('harold',who,seed);v.carried.container='container-1';v.velocity=825;
+  const{r,v,b}=fixture('harold',who,seed);v.carried.container='container-1';v.velocity=R.CRUISE_SPEED;
   for(const type of ['wash','coal','rocks','repairs','water','tree']){
    const job=v.serviceStates.find(s=>s.type===type);if(!job)continue;
    const pad=R.sampleRoute(r.courseId,job.at,who==='rival'?R.ROAD_LANE+3:-3);

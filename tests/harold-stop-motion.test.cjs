@@ -4,7 +4,7 @@ function fixture(who='player'){
  const r=R.createRace({playerId:who==='player'?'harold':'thomas',opponentId:who==='rival'?'harold':'thomas',seed:24,deliveryTheme:'cargo'});r.phase='racing';r.countdown=0;return {r,v:r[who]};
 }
 test('Harold’s forward motion at cargo stops follows ordinary race travel without a visual speed multiplier',()=>{
- for(const who of ['player','rival']){const{r,v}=fixture(who),job=v.serviceStates.find(s=>s.type==='wash');v.carried.container='container-1';v.velocity=825;
+ for(const who of ['player','rival']){const{r,v}=fixture(who),job=v.serviceStates.find(s=>s.type==='wash');v.carried.container='container-1';v.velocity=R.CRUISE_SPEED;
   for(const direction of [-1,1])for(let gap=200;gap<=2500;gap+=100){
    const d=job.at+direction*gap,a=R.getFlightPose(r,who,d),b=R.getFlightPose(r,who,d+10),route=R.sampleVehicleRoute(r,who,d);
    const forward=(b.x-a.x)*Math.sin(route.heading)+(b.z-a.z)*Math.cos(route.heading);

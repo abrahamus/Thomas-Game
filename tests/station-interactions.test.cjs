@@ -18,6 +18,21 @@ function atStop(playerId,type){
  return ui;
 }
 
+test('road and air clearance controls support keyboard, picture and direct activation with pause and repeat protection',()=>{
+ for(const player of ['bertie','bulgy','harold'])for(const method of ['keyboard','picture','direct']){
+  const ui=atStop(player,'level-crossing');
+  assert.equal(ui.document.getElementById('raceHelpLabel').textContent,player==='harold'?'Call':'Lights');
+  assert.equal(ui.document.getElementById('raceHelpPicture').getAttribute('href'),player==='harold'?'#race-flight-clearance':'#race-road-junction');
+  ui.evaluate(`globalThis.clearanceEffects=[];const clearanceEffect=audio.effect.bind(audio);audio.effect=(...args)=>{clearanceEffects.push(args[0]);return clearanceEffect(...args);};`);
+  if(method==='keyboard')ui.key('Enter');else if(method==='picture')ui.click('#action-race-help');else ui.evaluate("dispatchAction('race-help','crossing')");
+  assert.equal(ui.state().race.player.service.duration,5);
+  ui.key('Enter',{repeat:true});assert.equal(ui.evaluate("dispatchAction('race-help','crossing')"),false);
+  if(player==='harold')assert.deepEqual(JSON.parse(ui.evaluate('JSON.stringify(clearanceEffects)')),['radio']);
+  ui.click('#pauseButton');const remaining=ui.state().race.player.service.remaining;ui.frames(2,60);assert.equal(ui.state().race.player.service.remaining,remaining);
+  ui.click('[data-action="resume"]');ui.frames(5.1,60);const job=ui.state().race.player.serviceStates.find(s=>s.type==='level-crossing');assert.equal(job.completed,true);
+ }
+});
+
 test('sheep signals survive the stale instruction cleanup for keyboard and picture controls',()=>{
  for(const player of ['thomas','bertie','bulgy','diesel','harold'])for(const keyboard of [true,false]){
   const ui=atStop(player,'animals'),effect=player==='harold'?'radio':['bertie','bulgy','diesel'].includes(player)?'horn':'whistle';

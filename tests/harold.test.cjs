@@ -17,7 +17,7 @@ test('Harold flies clear of scenery, lands for passengers and flies longer marke
  r.player.distance=3000;assert.ok(R.getFlightPose(r,'player').altitude>=7);
  const first=r.player.serviceStates[0];r.player.distance=first.at;r.player.service=first;first.phase='ready';
  assert.ok(R.getFlightPose(r,'player').altitude<.1);assert.match(R.getView(r).taskKey,/flight/);
- r.player.service=null;first.completed=true;r.player.distance=first.at+2000;assert.ok(R.getFlightPose(r,'player').altitude>7);
+ r.player.service=null;first.completed=true;r.player.distance=first.at+R.courseDistance(2000);assert.ok(R.getFlightPose(r,'player').altitude>7);
  const section=R.COURSES[r.courseId].sections.find(s=>s.type==='tunnel');r.player.distance=(section.start+section.end)/2;
  assert.ok(R.getFlightPose(r,'player').altitude>9,'flight route clears the old tunnel envelope with a hanging load');
  const air=R.getTravelSections(r,'player').find(s=>s.id===section.id),ground=R.getTravelSections(r,'rival').find(s=>s.id===section.id);

@@ -1,0 +1,2309 @@
+{
+  "description": "Measured before the 1,000-unit cruise update, with 825-unit cruise and 175,500-unit courses. Every character appears in both roles across all courses and delivery themes.",
+  "modelSha256": "301b3da4598d9b9b4c4acdaa373306bf2f07024d54e78fb667993b27c7935946",
+  "cruiseSpeed": 825,
+  "courseLength": 175500,
+  "timing": "Countdown plus official race finish; excludes the nine-second festival.",
+  "samples": [
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "passengers",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 344.89166666652153,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "cargo",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.6916666665208,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "passengers",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.5916666665209,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "cargo",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 346.39166666652017,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "passengers",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 348.791666666518,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "cargo",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 349.59166666651726,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "passengers",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 344.99166666652144,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "cargo",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.7916666665207,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "passengers",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 342.69166666652353,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "cargo",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 343.4916666665228,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "passengers",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 347.39166666651926,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "cargo",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 348.19166666651853,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "passengers",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 348.9916666665178,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "cargo",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 349.7916666665171,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "passengers",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 342.3916666665238,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "cargo",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 343.1916666665231,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "passengers",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.7916666665207,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "cargo",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 386.5916666664836,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "passengers",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 342.4916666665237,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "cargo",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 383.2916666664866,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "passengers",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 344.89166666652153,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "cargo",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.6916666665208,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "passengers",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.5916666665209,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "cargo",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 346.39166666652017,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "passengers",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 348.791666666518,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "cargo",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 349.59166666651726,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "passengers",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 344.99166666652144,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "cargo",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.7916666665207,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "passengers",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 342.69166666652353,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "cargo",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 343.4916666665228,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "passengers",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 347.39166666651926,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "cargo",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 348.19166666651853,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "passengers",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 348.9916666665178,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "cargo",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 349.7916666665171,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "passengers",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 342.3916666665238,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "cargo",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 343.1916666665231,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "passengers",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 345.7916666665207,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "cargo",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 386.5916666664836,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "passengers",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 342.4916666665237,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "cargo",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 383.2916666664866,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "passengers",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 339.69166666652626,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "cargo",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 340.49166666652553,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "passengers",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 340.3916666665256,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "cargo",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 341.1916666665249,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "passengers",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 343.291666666523,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "cargo",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 344.09166666652226,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "passengers",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 339.79166666652617,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "cargo",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 340.59166666652544,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "passengers",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 337.49166666652826,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "cargo",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 338.29166666652753,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "passengers",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 341.79166666652435,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "cargo",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 342.5916666665236,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "passengers",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 343.3916666665229,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "cargo",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 344.19166666652217,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "passengers",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 337.19166666652853,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "cargo",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 337.9916666665278,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "passengers",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 340.69166666652535,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "cargo",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 381.49166666648824,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "passengers",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 337.29166666652844,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "cargo",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 14
+      },
+      "seconds": 378.09166666649134,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "passengers",
+        "seed": 41,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 331.5916666665336,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "passengers",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 356.09166666651134,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "cargo",
+        "seed": 41,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 334.491666666531,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "thomas",
+        "opponentId": "percy",
+        "deliveryTheme": "cargo",
+        "seed": 41,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 356.8916666665106,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "animals",
+        "repairs",
+        "tree",
+        "level-crossing",
+        "rocks",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "passengers",
+        "seed": 1038,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 332.291666666533,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "passengers",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 356.7916666665107,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "cargo",
+        "seed": 1038,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 335.19166666653035,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "percy",
+        "opponentId": "james",
+        "deliveryTheme": "cargo",
+        "seed": 1038,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 357.59166666651,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "tree",
+        "wash",
+        "rocks",
+        "animals",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "passengers",
+        "seed": 2035,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 329.9916666665351,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "passengers",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 354.4916666665128,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "cargo",
+        "seed": 2035,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 332.89166666653244,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "james",
+        "opponentId": "bertie",
+        "deliveryTheme": "cargo",
+        "seed": 2035,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 355.29166666651207,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "rocks",
+        "tree",
+        "wash",
+        "level-crossing",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "passengers",
+        "seed": 3032,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 330.9916666665342,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "passengers",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 356.19166666651125,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "cargo",
+        "seed": 3032,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 333.89166666653153,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "bertie",
+        "opponentId": "toby",
+        "deliveryTheme": "cargo",
+        "seed": 3032,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 356.9916666665105,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "repairs",
+        "animals",
+        "wash",
+        "level-crossing",
+        "tree",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "passengers",
+        "seed": 4029,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 327.9916666665369,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "passengers",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 353.89166666651334,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "cargo",
+        "seed": 4029,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 330.89166666653426,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "toby",
+        "opponentId": "spencer",
+        "deliveryTheme": "cargo",
+        "seed": 4029,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 354.6916666665126,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "tree",
+        "animals",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "passengers",
+        "seed": 5026,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 328.49166666653645,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "passengers",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 352.99166666651416,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "cargo",
+        "seed": 5026,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 331.3916666665338,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "spencer",
+        "opponentId": "emily",
+        "deliveryTheme": "cargo",
+        "seed": 5026,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 353.79166666651344,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "coal",
+        "animals",
+        "level-crossing",
+        "drawbridge",
+        "wash",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "passengers",
+        "seed": 6023,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 334.99166666653053,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "passengers",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 360.1916666665076,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "cargo",
+        "seed": 6023,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 337.8916666665279,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "emily",
+        "opponentId": "diesel",
+        "deliveryTheme": "cargo",
+        "seed": 6023,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 360.9916666665069,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "coal",
+        "animals",
+        "wash",
+        "tree",
+        "repairs",
+        "level-crossing",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "passengers",
+        "seed": 7020,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 329.0916666665359,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "passengers",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 353.5916666665136,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "cargo",
+        "seed": 7020,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 331.99166666653326,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "harbour",
+        "playerId": "diesel",
+        "opponentId": "bulgy",
+        "deliveryTheme": "cargo",
+        "seed": 7020,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 354.3916666665129,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "wash",
+        "water",
+        "rocks",
+        "level-crossing",
+        "coal",
+        "animals",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "passengers",
+        "seed": 8017,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 325.9916666665387,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "passengers",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 351.89166666651516,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "cargo",
+        "seed": 8017,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 368.8916666664997,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "mountain",
+        "playerId": "bulgy",
+        "opponentId": "harold",
+        "deliveryTheme": "cargo",
+        "seed": 8017,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 392.69166666647806,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "rocks",
+        "wash",
+        "repairs",
+        "animals",
+        "level-crossing",
+        "coal",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "passengers",
+        "seed": 9014,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 329.1916666665358,
+      "winner": "player",
+      "jobs": [
+        "passenger-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "passengers",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 353.6916666665135,
+      "winner": "rival",
+      "jobs": [
+        "passenger-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "passenger-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "cargo",
+        "seed": 9014,
+        "reaction": 0.35,
+        "washSeconds": 10
+      },
+      "seconds": 372.0916666664968,
+      "winner": "player",
+      "jobs": [
+        "cargo-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "cargo-unload"
+      ]
+    },
+    {
+      "options": {
+        "courseId": "country",
+        "playerId": "harold",
+        "opponentId": "thomas",
+        "deliveryTheme": "cargo",
+        "seed": 9014,
+        "reaction": 1.1,
+        "washSeconds": 25
+      },
+      "seconds": 394.4916666664764,
+      "winner": "rival",
+      "jobs": [
+        "cargo-load",
+        "water",
+        "rocks",
+        "repairs",
+        "wash",
+        "animals",
+        "drawbridge",
+        "cargo-unload"
+      ]
+    }
+  ]
+}

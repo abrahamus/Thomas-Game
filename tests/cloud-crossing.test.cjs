@@ -17,12 +17,12 @@ test('Harold has two cloud passages paired with the other racer’s two complete
  }
 });
 test('each crossing uses one continuous transport mode across both routes, including Harold’s',()=>{
- for(const [playerId,opponentId,mode]of [['bertie','harold','rail'],['harold','bulgy','rail'],['bertie','bulgy','rail'],['thomas','harold','road'],['harold','thomas','road'],['bertie','thomas','road'],['thomas','bulgy','road'],['thomas','percy','road']]){
+ for(const [playerId,opponentId,mode]of [['bertie','harold','road'],['harold','bulgy','road'],['bertie','bulgy','road'],['thomas','harold','road'],['harold','thomas','road'],['bertie','thomas','road'],['thomas','bulgy','road'],['thomas','percy','road']]){
   const{r,b}=fixture(playerId,opponentId);V.updateScene(b,r);const bundle=b.objects.services.find(o=>o.spec.type==='level-crossing'),corridors=all(bundle.group,'crossing-corridor');
   assert.equal(corridors.length,1,`${playerId}/${opponentId}: one connected crossing`);const corridor=corridors[0];assert.equal(corridor.userData.mode,mode);
   const geometry=all(corridor,mode==='rail'?'crossing-running-rail':'crossing-road');assert.ok(geometry.length>0);corridor.updateMatrixWorld(true);
   const bounds=new T.Box3().setFromObject(corridor);for(const slot of bundle.slots){const p=slot.group.getWorldPosition(new T.Vector3());assert.ok(p.x>bounds.min.x+40&&p.x<bounds.max.x-40,'surface continues well beyond both routes');}
-  for(const slot of bundle.slots){assert.equal(!!slot.crossingTrain,mode==='rail');assert.equal(!!slot.car,mode==='road');assert.equal(!!slot.groundCart,false);}
+  for(const slot of bundle.slots){assert.equal(!!slot.crossingTrain,false);assert.equal(!!slot.car,!slot.air);assert.equal(!!slot.crossingAircraft,!!slot.air);assert.equal(!!slot.groundCart,false);}
   r.player.distance=r.rival.distance=bundle.spec.at;
   geometry[0].geometry.computeBoundingBox();const ends=geometry[0].geometry.boundingBox;
   for(const [w,h]of [[320,420],[375,420],[1400,800],[1920,900]]){
@@ -47,9 +47,9 @@ test('actual cloud meshes hide Harold during passage and reveal him on approach 
 });
 test('crossing mode and instructions agree for every ordered character pairing',()=>{
  for(const player of R.CHARACTERS)for(const rival of R.CHARACTERS){if(player.id===rival.id)continue;
-  const r=R.createRace({playerId:player.id,opponentId:rival.id,seed:24});r.phase='racing';r.countdown=0;const expected=[player,rival].some(c=>c.vehicleType==='rail')?'road':'rail';assert.equal(R.getCrossingMode(r),expected);
+  const r=R.createRace({playerId:player.id,opponentId:rival.id,seed:24});r.phase='racing';r.countdown=0;const expected='road';assert.equal(R.getCrossingMode(r),expected);
   const s=r.player.serviceStates.find(s=>s.type==='level-crossing');r.player.distance=s.at;r.player.service=s;s.phase='ready';
-  const key=R.getView(r).taskKey;if(player.vehicleType==='road')assert.equal(key,expected==='rail'?'race.service.road-crossing':'race.service.road-junction');
-  if(player.vehicleType==='air')assert.match(R.NARRATION[key],/crossing traffic/);
+  const key=R.getView(r).taskKey;if(player.vehicleType==='road')assert.equal(key,'race.service.road-junction');
+  if(player.vehicleType==='air')assert.match(R.NARRATION[key],/control tower.*aircraft/);
  }
 });

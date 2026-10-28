@@ -6,7 +6,7 @@ const visibleChoices=ui=>ui.document.querySelectorAll('.racer-grid button').filt
 test('startup shows only the two selected portraits and opens one scrollable dropdown at a time',()=>{
  const ui=setup();assert.equal(visibleChoices(ui).length,0);assert.equal(node(ui,'playerChoiceName').textContent,'Thomas');assert.equal(node(ui,'opponentChoiceName').textContent,'Random');
  assert.equal(node(ui,'playerChoicePortrait').getAttribute('href'),'#portrait-thomas');assert.equal(node(ui,'opponentChoicePortrait').getAttribute('href'),'#portrait-random');
- assert.deepEqual(Array.from(ui.evaluate('menuButtons().map(b=>b.id)')),['playerPickerButton','opponentPickerButton','startRaceButton','optionsToggle']);
+ assert.deepEqual(Array.from(ui.evaluate('menuButtons().map(b=>b.id)')),['playerPickerButton','opponentPickerButton','startRaceButton']);
  ui.click('#playerPickerButton');assert.equal(visibleChoices(ui).length,11);assert.equal(node(ui,'playerPickerButton').getAttribute('aria-expanded'),'true');
  ui.click('#opponentPickerButton');assert.equal(node(ui,'playerPickerMenu').hidden,true);assert.equal(visibleChoices(ui).length,11);assert.equal(node(ui,'choose-opponent-thomas').disabled,true);
  ui.click('#choose-opponent-harold');assert.equal(visibleChoices(ui).length,0);assert.equal(node(ui,'opponentChoicePortrait').getAttribute('href'),'#portrait-harold');assert.equal(ui.document.activeElement,node(ui,'opponentPickerButton'));
@@ -28,6 +28,6 @@ test('hidden choices cannot activate and restored selections stay collapsed afte
  const ui=setup();const before=ui.state().selections;ui.document.emit('click',{target:node(ui,'choose-player-bulgy')});assert.deepEqual(ui.state().selections,before);
  ui.choose('player','bulgy');ui.choose('opponent','random');const saved=setup(ui.storage.getItem('thomas-first-adventure-progress-v1'));
  assert.equal(node(saved,'playerChoiceName').textContent,'Bulgy');assert.equal(visibleChoices(saved).length,0);
- saved.click('#playerPickerButton');saved.click('#startRaceButton');saved.click('[data-action="home"]');assert.equal(visibleChoices(saved).length,0);assert.equal(node(saved,'playerChoiceName').textContent,'Bulgy');
+ saved.click('#playerPickerButton');saved.click('#startRaceButton');saved.click('#pauseButton');saved.evaluate("dispatchAction('home')");assert.equal(visibleChoices(saved).length,0);assert.equal(node(saved,'playerChoiceName').textContent,'Bulgy');
  const failed=setup(ui.storage.getItem('thomas-first-adventure-progress-v1'),{raceUnavailable:true});failed.click('#opponentPickerButton');failed.click('#startRaceButton');assert.equal(visibleChoices(failed).length,0);assert.equal(node(failed,'playerChoiceName').textContent,'Bulgy');
 });

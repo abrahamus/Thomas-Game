@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 require('../scripts/race-model.js');const R=global.ThomasRaceCore;
 function nearFinish(settings={},outcome='player'){
  const r=R.createRace(settings),end=R.COURSES[r.courseId].length;r.phase='racing';r.countdown=0;r.elapsed=300;
- for(const who of ['player','rival']){const v=r[who];v.distance=end-(outcome==='tie'||outcome===who?1:1800);v.velocity=825;v.targetVelocity=825;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete';s.groups.fill(true);});v.terrainStates.forEach(s=>s.completed=true);}
+ for(const who of ['player','rival']){const v=r[who];v.distance=end-(outcome==='tie'||outcome===who?1:1800);v.velocity=R.CRUISE_SPEED;v.targetVelocity=R.CRUISE_SPEED;v.serviceStates.forEach(s=>{s.completed=true;s.phase='complete';s.groups.fill(true);});v.terrainStates.forEach(s=>s.completed=true);}
  return r;
 }
 function finish(r){for(let i=0;r.phase!=='complete';i++){assert.ok(i<1000);R.step(r,.05);}return r;}
@@ -11,7 +11,7 @@ for(const c of R.CHARACTERS)for(const role of ['player','rival'])test(`${c.id} a
  const settings={playerId:role==='player'?c.id:c.id==='thomas'?'percy':'thomas',opponentId:role==='rival'?c.id:c.id==='thomas'?'percy':'thomas'};
  for(const winner of ['player','rival','tie']){
   const r=finish(nearFinish(settings,winner)),saved=JSON.stringify(r),p=R.createFinishPresentation(r);
-  assert.equal(r.winner,winner);assert.equal(r.player.finishEvent.time,r.player.finishTime);assert.equal(r.player.finishEvent.speed,825);assert.equal(r.player.velocity,0);
+  assert.equal(r.winner,winner);assert.equal(r.player.finishEvent.time,r.player.finishTime);assert.equal(r.player.finishEvent.speed,R.CRUISE_SPEED);assert.equal(r.player.velocity,0);
   assert.equal(r.events.filter(e=>e.type==='finish'&&e.who==='player').length,1);
   let before=p.race.player.velocity,d=p.race.player.distance;
   for(let i=0;i<90;i++){R.stepFinishPresentation(p,.1);assert.ok(p.race.player.velocity<=before+1e-8);assert.ok(p.race.player.distance>=d);assert.ok(p.race.player.distance-d<=before*.1+.05);before=p.race.player.velocity;d=p.race.player.distance;}

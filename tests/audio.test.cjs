@@ -428,7 +428,9 @@ test('all embedded narration is valid mono PCM and covers adventure, gears, wash
         assert.ok(Math.abs(asset.duration - duration) < 0.001, key);
     }
     if (!process.env.THOMAS_AUDIO_SOURCE || process.env.THOMAS_CORE_SOURCE) {
-        const model = vm.createContext({}); vm.runInContext(process.env.THOMAS_CORE_SOURCE ? fs.readFileSync(process.env.THOMAS_CORE_SOURCE, 'utf8') : inline('game-core'), model);
+        const model = vm.createContext({});
+        vm.runInContext(inline('race-core'), model);
+        vm.runInContext(process.env.THOMAS_CORE_SOURCE ? fs.readFileSync(process.env.THOMAS_CORE_SOURCE, 'utf8') : inline('game-core'), model);
         for (const [key, text] of Object.entries(model.ThomasGameCore.NARRATION)) assert.equal(assets[key]?.text, text, key);
     }
     for (const key of ['ui.pause','ui.resume','ui.whistle','ui.album.empty']) assert.ok(assets[key],key);

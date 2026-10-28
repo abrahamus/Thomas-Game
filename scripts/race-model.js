@@ -1,18 +1,26 @@
 /* Deterministic Sodor Delivery Races: help, complete and deliver. */
 (() => {
     'use strict';
-    const SPEEDS = Object.freeze([0,206.25,412.5,618.75,825]);
-    const ACCELERATION=150,BRAKING=300,WORLD_SCALE=.008,WHEEL_RADIUS=24.975*WORLD_SCALE/.35;
-    const START_COUNTDOWN=4.6,LOOK_AHEAD=10500,STEP=1/120,EPS=1e-8;
+    const CRUISE_SPEED=1000,COURSE_LENGTH=214500,COURSE_SCALE=COURSE_LENGTH/175500;
+    // Stretch course landmarks with the faster cruise; vehicle dimensions stay
+    // in world units so both racers visibly travel faster without longer jobs.
+    // 214,500 units also compensate for quicker fixed-size coach/crossing
+    // clearance; calibration compares complete races with the 825-unit version.
+    const courseDistance=distance=>distance*COURSE_SCALE;
+    const SPEEDS=Object.freeze([0,.25,.5,.75,1].map(fraction=>fraction*CRUISE_SPEED));
+    const ACCELERATION=CRUISE_SPEED/5.5,BRAKING=CRUISE_SPEED/2.75,WORLD_SCALE=.008,WHEEL_RADIUS=24.975*WORLD_SCALE/.35;
+    const START_COUNTDOWN=4.6,LOOK_AHEAD=courseDistance(10500),STEP=1/120,EPS=1e-8;
     const LANE_OFFSETS=Object.freeze([0]),ROAD_LANE=-15,ROAD_LANE_SPACING=0;
     const BOOST_SECONDS=6,BOOST_MULTIPLIER=1.25,COACH_OFFSET=900;
     const NEW_JOBS=Object.freeze(['repairs','rocks','coal','level-crossing']);
     const UNIT_JOBS=Object.freeze({repairs:{prefix:'sleeper',count:3,seconds:1.5},rocks:{prefix:'rock',count:2,seconds:2},coal:{prefix:'coal',count:3,seconds:1}});
-    const JOB_DISTANCES=Object.freeze([12000,26000,52000,66600,94700,118600,143000,160600]);
+    const JOB_DISTANCES=Object.freeze([12000,26000,52000,66600,94700,118600,143000,160600].map(courseDistance));
+    const ELEVATION_RAMPS=Object.freeze([[72600,8,18000],[98600,-8,18000],[125400,-.62,1800],[130000,.62,1800]]
+        .map(([start,height,width])=>Object.freeze([courseDistance(start),height,courseDistance(width)])));
     const CARGO_HANDLING_JOBS=Object.freeze(['wash','coal','water','repairs','rocks','tree']);
     const CARGO_HANDLING_SECONDS=5,CARGO_WINCH_SECONDS=3;
     const BRANCH_LIFT_SECONDS=12;
-    const RIVAL_PARAMETERS=Object.freeze({version:7,startDelay:.12,paceMin:.75,paceMax:1.65,actionJitter:.15,washExtra:.4});
+    const RIVAL_PARAMETERS=Object.freeze({version:8,startDelay:.12,paceMin:.76,paceMax:1.66,actionJitter:.15,washExtra:.4});
     const CHARACTERS=Object.freeze([
         ['thomas','Thomas','#159de0','rail','steam',0],['percy','Percy','#3baf58','rail','steam',0],
         ['james','James','#db3d3b','rail','steam',5.08],['bertie','Bertie','#cc3a35','road','diesel',0],
@@ -25,7 +33,9 @@
     const OPPONENTS=CHARACTERS;
     const character=id=>CHARACTERS.find(c=>c.id===id);
     function getCharacter(race,who='player'){return character(racer(race,who)===race.player?race.playerId:race.opponentId);}
-    function getCrossingMode(race){return [race.playerId,race.opponentId].some(id=>character(id).vehicleType==='rail')?'road':'rail';}
+    // The shared ground corridor is a road: it crosses railways at barriers
+    // and meets bus routes at traffic lights. Aircraft use separate air traffic.
+    function getCrossingMode(){return 'road';}
     function getBranchLiftSeconds(race){return [race.playerId,race.opponentId].some(id=>character(id).vehicleType==='air')?BRANCH_LIFT_SECONDS:5;}
     const NARRATION=Object.freeze({
         'race.menu':'Choose your character and a friend to race.',
@@ -37,8 +47,7 @@
         'race.service.road-fuel':'Let’s fill our fuel tank.',
         'race.service.depot-water':'Fill the depot water store.',
         'race.service.depot-coal':'Help load coal into the depot bin.',
-        'race.service.road-crossing':'Wait for the train. Then open the road barriers.',
-        'race.service.road-junction':'Wait for the traffic. Then the lights turn green.',
+        'race.service.road-junction':'Ask for the green light. Wait for the traffic to clear.',
         'race.service.horn-animals':'Sound the horn so the animals can move along.',
         'race.service.horn-animals-wait':'Here they go. Let’s wait until the route is clear.',
         'race.flight.delivery.passengers':'Take our passengers to the next helipad.',
@@ -60,7 +69,7 @@
         'race.flight.coal':'We have landed. Let’s fill Harold’s fuel tank.',
         'race.flight.water':'Deliver water to the ground crew.',
         'race.flight.wash':'We have landed. Wash the mud off Harold.',
-        'race.flight.level-crossing':'Call the ground crew. Wait for the crossing traffic to pass.',
+        'race.flight.level-crossing':'Call the control tower. Wait for the aircraft to pass.',
         'race.flight.drawbridge':'Call the harbour crew to let the boat through.',
         'race.flight.terrain.tunnel':'Fly gently through the clouds.',
         'race.flight.terrain.hill':'Climb gently over the hill.',
@@ -88,7 +97,7 @@
         'race.terrain.wet':'Slow down through the shallow floodwater.',
         'race.service.done':'All done! Off we go!',
         'race.complete.win':'You win! What a splendid race!','race.complete.lose':'Our friend wins! Well done. Let’s race again!',
-        'race.complete.tie':'Together at the finish! What a splendid race!','race.next':'Let’s choose our racers again.',
+        'race.complete.tie':'Together at the finish! What a splendid race!','race.next':'Let’s choose our players again.',
         'race.festival.arrival':'Welcome to the finish festival!',
         'race.festival.win':'First place! A golden trophy for you!',
         'race.festival.lose':'Well done! A silver rosette for finishing your journey.',
@@ -97,7 +106,7 @@
         'race.festival.cargo':'Eight jobs complete. Thank you for delivering our cargo!',
         'race.festival.skip':'See your race results.',
         'race.rematch':'Race the same journey again.',
-        'race.choose':'Choose your racers.'
+        'race.choose':'Choose your players.'
     });
     const RULES=Object.freeze({bend:{name:'Bend',cap:1},'tight-bend':{name:'Bend',cap:1},hill:{name:'Climb',cap:.65},downhill:{name:'Downhill',cap:.60},tunnel:{name:'Tunnel',cap:.50},wet:{name:'Wet track',cap:.40},snow:{name:'Snow',cap:.55}});
     const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
@@ -107,8 +116,8 @@
     function randomIndex(length,random){return Math.min(length-1,Math.floor(clamp(Number(random()),0,.999999999)*length));}
     function shuffled(values,random){const out=values.slice();for(let i=out.length-1;i>0;i--){const j=randomIndex(i+1,random);[out[i],out[j]]=[out[j],out[i]];}return out;}
     function course(id,name,biome){
-        const sections=[['tunnel',35000,36800],['tunnel',42800,44600],['bend',54100,57600],['hill',72600,90600],['downhill',98600,116600],[biome==='mountain'?'snow':'wet',126600,130600],['tight-bend',162600,166600]].map(([type,start,end],index)=>Object.freeze({id:`terrain-${index+1}`,type,start,end,...RULES[type]}));
-        return Object.freeze({id,name,length:175500,biome,sections:Object.freeze(sections),switches:Object.freeze([]),junctions:Object.freeze([])});
+        const sections=[['tunnel',35000,36800],['tunnel',42800,44600],['bend',54100,57600],['hill',72600,90600],['downhill',98600,116600],[biome==='mountain'?'snow':'wet',126600,130600],['tight-bend',162600,166600]].map(([type,start,end],index)=>Object.freeze({id:`terrain-${index+1}`,type,start:courseDistance(start),end:courseDistance(end),...RULES[type]}));
+        return Object.freeze({id,name,length:COURSE_LENGTH,biome,sections:Object.freeze(sections),switches:Object.freeze([]),junctions:Object.freeze([])});
     }
     const COURSES=Object.freeze({country:course('country','Countryside Sprint','country'),harbour:course('harbour','Harbour Run','harbour'),mountain:course('mountain','Mountain Challenge','mountain')});
     function chooseRace({playerId='thomas',opponentId='random',lastRace=null,random=Math.random}={}){
@@ -116,17 +125,17 @@
         for(const id of [playerId,opponentId])if(id!=='random'&&!character(id))throw new RangeError('Unknown race character');
         let pairs=CHARACTERS.flatMap(p=>CHARACTERS.filter(o=>p.id!==o.id&&
             (playerId==='random'||p.id===playerId)&&(opponentId==='random'||o.id===opponentId)).map(o=>[p.id,o.id]));
-        if(!pairs.length)throw new RangeError('Racers must be different characters');
+        if(!pairs.length)throw new RangeError('Players must be different characters');
         const fresh=pairs.filter(([p,o])=>(playerId!=='random'||p!==lastRace?.playerId)&&(opponentId!=='random'||o!==lastRace?.opponentId));
         if(fresh.length)pairs=fresh;
         const [player,opponent]=pairs[randomIndex(pairs.length,random)];
         const courses=Object.keys(COURSES).filter(id=>id!==lastRace?.courseId),seed=Math.floor(clamp(Number(random()),0,.999999999)*4294967296)>>>0;
         return{playerId:player,opponentId:opponent,courseId:courses[randomIndex(courses.length,random)],seed,deliveryTheme:lastRace?.deliveryTheme==='passengers'?'cargo':lastRace?.deliveryTheme==='cargo'?'passengers':(seed&1?'cargo':'passengers')};
     }
-    function routeElevation(distance){return 8*(smoother((distance-72600)/18000)-smoother((distance-98600)/18000))-.62*(smoother((distance-125400)/1800)-smoother((distance-130000)/1800));}
+    function routeElevation(distance){return ELEVATION_RAMPS.reduce((y,[start,height,width])=>y+height*smoother((distance-start)/width),0);}
     function routeDirection(c,distance){
         let heading=0;for(const s of c.sections){if(s.type==='bend')heading+=.32*smooth((distance-s.start)/(s.end-s.start));if(s.type==='tight-bend')heading-=.42*smooth((distance-s.start)/(s.end-s.start));}
-        let derivative=0;for(const[start,height,width]of[[72600,8,18000],[98600,-8,18000],[125400,-.62,1800],[130000,.62,1800]]){const t=(distance-start)/width;if(t>0&&t<1)derivative+=height*30*t*t*(t-1)*(t-1)/(width*WORLD_SCALE);}
+        let derivative=0;for(const[start,height,width]of ELEVATION_RAMPS){const t=(distance-start)/width;if(t>0&&t<1)derivative+=height*30*t*t*(t-1)*(t-1)/(width*WORLD_SCALE);}
         return{heading,grade:Math.atan(derivative)};
     }
     const routeTables=new Map();
@@ -167,7 +176,7 @@
         }
         let proximity=0,job=null;
         for(const service of v.serviceStates){
-            const gap=d-service.at,near=1-smoother(Math.abs(gap)/(gap<0?2400:1800));
+            const gap=d-service.at,near=1-smoother(Math.abs(gap)/courseDistance(gap<0?2400:1800));
             if(near<=proximity)continue;
             proximity=near;job=service;
         }
@@ -175,11 +184,11 @@
         const parksLoad=job&&v.carried.container&&CARGO_HANDLING_JOBS.includes(job.type);
         const jobAltitude=ground&&!parksLoad ? .06 : 6;
         altitude=altitude*(1-proximity)+jobAltitude*proximity;side*=1-proximity;
-        const departure=smoother(d/1800);
+        const departure=smoother(d/courseDistance(1800));
         // Clear the entire finish banner before descending onto the festival pad.
         const landing=smoother((d-COURSES[race.courseId].length-950)/(finishRunout(race,who)-950));
         altitude=.06+(altitude-.06)*departure*(1-landing);
-        altitude+=Math.sin(race.elapsed*1.8)*.07*smooth((altitude-1)/4)*(parksLoad||job?.type==='tree'?1-proximity:1);
+        altitude+=Math.sin(race.elapsed*1.8)*.07*smooth((altitude-1)/4)*(parksLoad||['tree','level-crossing'].includes(job?.type)?1-proximity:1);
         const lane=v===race.rival?ROAD_LANE:0,cargoSide=v===race.rival?3:-3;
         const offset=lane+(lane<0?-side:side)+(parksLoad?cargoSide*proximity:0),p=sampleRoute(race.courseId,d,offset);
         let pitch=.085*clamp(v.velocity/SPEEDS[4],0,1.25)*smooth(altitude/3)*(1-proximity);
@@ -219,7 +228,7 @@
         const pool=['water','tree','drawbridge',...NEW_JOBS].filter(type=>!guaranteed.includes(type));
         const middle=shuffled(['animals','wash',...guaranteed,...shuffled(pool,random).slice(0,2)],random);
         const types=[theme==='passengers'?'passenger-load':'cargo-load',...middle,theme==='passengers'?'passenger-unload':'cargo-unload'];
-        return Object.freeze(types.map((type,index)=>Object.freeze({type,at:JOB_DISTANCES[index],id:`service-${index+1}`,index,mudAt:type==='wash'?JOB_DISTANCES[index]-4500:null})));
+        return Object.freeze(types.map((type,index)=>Object.freeze({type,at:JOB_DISTANCES[index],id:`service-${index+1}`,index,mudAt:type==='wash'?JOB_DISTANCES[index]-courseDistance(4500):null})));
     }
     function vehicle(services,sections){
         return {distance:0,velocity:0,targetVelocity:0,gear:4,wheelTurns:0,finishTime:null,
@@ -241,7 +250,7 @@
     }
     function createRace({courseId='country',playerId='thomas',opponentId='percy',seed=1,deliveryTheme=(seed&1?'cargo':'passengers')}={}){
         if(!COURSES[courseId]||!character(playerId)||!character(opponentId)||!['passengers','cargo'].includes(deliveryTheme))throw new RangeError('Unknown race course, opponent or delivery theme');
-        if(playerId===opponentId)throw new RangeError('Racers must be different characters');
+        if(playerId===opponentId)throw new RangeError('Players must be different characters');
         const random=seeded(seed),services=makeServices(deliveryTheme,courseId,random),sections=COURSES[courseId].sections;
         return {courseId,playerId,opponentId,seed:seed>>>0,deliveryTheme,phase:'countdown',countdown:START_COUNTDOWN,elapsed:0,
             player:vehicle(services,sections),rival:vehicle(services,sections),services,winner:null,rewarded:false,
@@ -257,7 +266,7 @@
         if(s.type==='animals')return c?.power==='diesel'?`race.service.horn-animals${s.phase==='working'?'-wait':''}`:`race.service.animals${s.phase==='working'?'-wait':''}`;
         if(road&&s.type==='coal')return'race.service.road-fuel';
         if(road&&s.type==='repairs')return'race.service.road-repairs';
-        if(road&&s.type==='level-crossing')return getCrossingMode(race)==='rail'?'race.service.road-crossing':'race.service.road-junction';
+        if(road&&s.type==='level-crossing')return 'race.service.road-junction';
         if(c?.power==='diesel'&&['water','coal'].includes(s.type))return`race.service.depot-${s.type}`;
         return`race.service.${s.type}`;
     }
@@ -460,7 +469,7 @@
             countdown:race.countdown,mph:v.velocity/SPEEDS[4]*100,winner:race.winner,elapsed:race.elapsed,
             guidancePhase:service?'service':'preview',safeMaxMph:terrain?terrain.cap*100:BOOST_MULTIPLIER*100};
     }
-    globalThis.ThomasRaceCore=Object.freeze({SPEEDS,ACCELERATION,BRAKING,WORLD_SCALE,WHEEL_RADIUS,START_COUNTDOWN,LOOK_AHEAD,
+    globalThis.ThomasRaceCore=Object.freeze({CRUISE_SPEED,COURSE_SCALE,courseDistance,SPEEDS,ACCELERATION,BRAKING,WORLD_SCALE,WHEEL_RADIUS,START_COUNTDOWN,LOOK_AHEAD,
         LANE_OFFSETS,ROAD_LANE,ROAD_LANE_SPACING,RIVAL_LANE:ROAD_LANE,BOOST_SECONDS,BOOST_MULTIPLIER,COACH_OFFSET,NEW_JOBS,JOB_DISTANCES,
         RIVAL_PARAMETERS,CARGO_HANDLING_SECONDS,BRANCH_LIFT_SECONDS,getBranchLiftSeconds,getBranchLiftPose,CHARACTERS,OPPONENTS,character,getCharacter,COURSES,RULES,NARRATION,chooseRace,createRace,serviceAction,cleanMud,whistle,step,getView,
         finishRunout,finishArrival,createFinishPresentation,stepFinishPresentation,skipFinishPresentation,getPresentationRace,

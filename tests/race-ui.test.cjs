@@ -38,11 +38,11 @@ function reachJob(ui,type){
 
 for(const [rival,seed] of [['percy',17],['james',1000],['bertie',1500]])test(`named selection assigns ${rival}`,()=>{
  const ui=setup(undefined,{seed});ui.choose('opponent',rival);start(ui);assert.equal(ui.state().race.opponentId,rival);
- ui.click('[data-action="home"]');assert.equal(ui.state().screen,'race-start');assert.equal(ui.state().race,null);
+ ui.click('#pauseButton');ui.evaluate("dispatchAction('home')");assert.equal(ui.state().screen,'race-start');assert.equal(ui.state().race,null);
 });
 
 for(const keyboard of [true,false])test(`complete muted ${keyboard?'keyboard-only':'click-only'} round from visible pictures and award once`,()=>{
- const ui=setup();ui.click('#optionsToggle');ui.click('[data-action="mute"]');start(ui,keyboard);
+ const ui=setup();ui.evaluate("dispatchAction('mute')");start(ui,keyboard);
  const result=complete(ui,keyboard);
  assert.equal(result.race.winner,'player');
  const duration=result.race.elapsed+ui.evaluate('ThomasRaceCore.START_COUNTDOWN');
@@ -87,9 +87,9 @@ test('a long frame stops at the next interactive job without completing it or re
  assert.equal(sounds.length,0,'Automatic arrivals do not replay a backlog');
  assert.ok(ui.spoken.slice(spoken).every(text=>!text.includes('More mail')));
 });
-test('Home removes the race view and shows one Race picture',()=>{
+test('Home in the pause menu removes the race view and shows one Race picture',()=>{
  const ui=setup();start(ui);go(ui);const generation=ui.state().generation;
- ui.click('[data-action="home"]');assert.equal(ui.state().race,null);assert.ok(ui.state().generation>generation);
+ ui.click('#pauseButton');ui.evaluate("dispatchAction('home')");assert.equal(ui.state().race,null);assert.ok(ui.state().generation>generation);
  assert.equal(node(ui,'action-race-help').hidden,true);
  for(const id of ['sceneHud','raceOrder','raceDashboard'])assert.equal(node(ui,id),null);
  assert.equal(node(ui,'raceStartOverlay').hidden,false);assert.equal(ui.evaluate('ui.raceView'),null);
@@ -98,7 +98,7 @@ test('WebGL unavailable stays on the start screen with an honest error and worki
  const ui=setup(undefined,{raceUnavailable:true});ui.click('#startRaceButton');
  assert.equal(ui.state().screen,'race-start');assert.equal(node(ui,'raceUnavailable').hidden,false);
  assert.match(html,/The race cannot start in this browser/);
- ui.click('#optionsToggle');ui.click('[data-action="mute"]');assert.equal(ui.state().isMuted,true);
+ ui.evaluate("dispatchAction('mute')");assert.equal(ui.state().isMuted,true);
 });
 
 for(const theme of ['passengers','cargo'])for(const keyboard of [true,false])test(`${theme} loading and delivery with ${keyboard?'keyboard':'picture clicks'}`,()=>{
@@ -149,7 +149,7 @@ test('trackpad pointer cleans actual renderer targets without holding a click, w
  ui.document.emit('pointermove',{target:canvas,clientX:40,clientY:40,buttons:0});ui.frames(4);assert.deepEqual(ui.state().race,race);
  ui.click('#pauseOverlay [data-action="resume"]');
  ui.document.emit('click',{target:canvas,clientX:40,clientY:40});assert.equal(ui.state().race.player.mudPatches[1],false);
- ui.click('[data-action="home"]');
+ ui.click('#pauseButton');ui.evaluate("dispatchAction('home')");
  ui.document.emit('pointermove',{target:canvas,clientX:40,clientY:40,buttons:0});assert.equal(ui.state().race,null);assert.equal(ui.state().stars,0);
 });
 test('direct objects and contextual controls share passenger/container actions',()=>{
@@ -184,7 +184,8 @@ test('jobs use the bottom action without a top dashboard or toolbar',()=>{
  const ui=setup();start(ui);go(ui);
  for(const id of ['sceneHud','raceDashboard','raceTaskPreview','raceOrder','raceBoostBadge'])assert.equal(node(ui,id),null);
  assert.equal(ui.document.querySelector('.topbar'),null);
- for(const id of ['pauseButton','homeButton','action-whistle'])assert.ok(node(ui,'footerDashboard').contains(node(ui,id)));
+ for(const id of ['pauseButton','action-whistle'])assert.ok(node(ui,'footerDashboard').contains(node(ui,id)));
+ assert.equal(node(ui,'homeButton'),null);
  const loading=ui.state().race.deliveryTheme==='passengers'?'passenger-load':'cargo-load';reachJob(ui,loading);
  assert.equal(node(ui,'action-race-help').hidden,false);
  assert.equal(node(ui,'raceHelpPicture').getAttribute('href'),loading==='passenger-load'?'#race-board':'#race-container');
@@ -192,7 +193,12 @@ test('jobs use the bottom action without a top dashboard or toolbar',()=>{
  node(ui,'pauseButton').focus();ui.key(' ');assert.equal(ui.state().paused,true);
  const frozen=ui.state().race;ui.frames(2);assert.deepEqual(ui.state().race,frozen);
  ui.click('#pauseOverlay [data-action="resume"]');assert.equal(ui.state().paused,false);
- node(ui,'homeButton').focus();ui.key(' ');assert.equal(ui.state().screen,'race-start');
+ node(ui,'pauseButton').focus();ui.key(' ');
+ assert.equal(ui.document.querySelector('#pauseOverlay [data-action="home"]'),null);
+ assert.deepEqual(Array.from(ui.evaluate('menuButtons().map(button=>button.dataset.action)')),['resume']);
+ assert.equal(node(ui,'gameOptions'),null);
+ assert.equal(node(ui,'optionsToggle'),null);
+ ui.document.querySelector('#pauseOverlay [data-action="resume"]').focus();ui.key(' ');assert.equal(ui.state().paused,false);
 });
 
 test('Race has no postal controls and arrows do not change speed or queue actions',()=>{
