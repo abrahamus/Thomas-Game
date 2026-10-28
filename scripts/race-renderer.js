@@ -1292,7 +1292,14 @@
     const side=narrow?55:60,forward=80,height=(hasAir?30:25)+widen*2,focusForward=(narrow?5:30)*(1-widen)+awardAhead*widen,focusLane=(narrow?(hasAir?-3:-.9):-5)*(1-widen)-7.5*widen;
     // A modest telephoto view keeps the familiar large face and proportions while
     // moving the fixed camera ahead enough for screen-left/right to stay truthful.
-    b.camera.fov=narrow?2*Math.atan(Math.tan(17*PI/360)*Math.max(1,(375/420)/b.camera.aspect))*180/PI:2*Math.atan(Math.tan(25*PI/360)*Math.max(1,1.75/b.camera.aspect))*180/PI;if(hasAir)b.camera.fov*=narrow?1.38:1.15;b.camera.fov*=1+widen*(narrow?(hasAir?.04:.22):.06);if(narrow&&!hasAir)b.camera.fov*=1+.17*approach;b.camera.updateProjectionMatrix();
+    b.camera.fov=narrow?2*Math.atan(Math.tan(17*PI/360)*Math.max(1,(375/420)/b.camera.aspect))*180/PI:2*Math.atan(Math.tan(25*PI/360)*Math.max(1,1.75/b.camera.aspect))*180/PI;
+    if(hasAir)b.camera.fov*=narrow?1.38:1.15;
+    b.camera.fov*=1+widen*(narrow?(hasAir?.04:.22):.06);
+    if(narrow&&!hasAir)b.camera.fov*=1+.17*approach;
+    // Short landscape canvases need larger vehicles as well as smaller controls.
+    // Ease into the closer framing; leave room for Harold's full rotor and tail.
+    b.camera.fov*=1-.34*Math.min(1,Math.max(0,(b.camera.aspect-2.4)/.8));
+    b.camera.updateProjectionMatrix();
     b.camera.position.set(frame.x+side*cs+forward*sn,frame.y+height,frame.z-side*sn+forward*cs);
     b.camera.lookAt(frame.x+focusLane*cs+focusForward*sn,frame.y+(hasAir?5.5:narrow?2.5:1.6),frame.z-focusLane*sn+focusForward*cs);
     b.camera.updateMatrixWorld();b.scene.updateMatrixWorld(true);

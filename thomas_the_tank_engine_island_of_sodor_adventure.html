@@ -256,7 +256,6 @@ body{height:100dvh;overflow:hidden}
 .challenge-rule{font-size:14px}
 .actions .action{font-size:17px;padding:10px;gap:6px}}
 @media(max-width:850px){
-body{height:auto;overflow:auto}
 .challenge-title{grid-column:2;font-size:21px}
 .challenge-rule{grid-column:2;font-size:14px;align-self:start}
 .scene-panel{position:absolute}
@@ -676,7 +675,7 @@ body{height:100dvh;overflow:hidden}
 .festival-results .action-label{display:block}
 @media(max-width:450px){.festival-caption{padding:6px 10px}.festival-caption p{font-size:12px}.festival-results .modal{gap:3px 8px;padding:8px 10px}.festival-results .reward-sticker{width:45px;height:45px}.festival-results .modal-actions .action{font-size:12px;padding:5px;min-height:50px}.festival-job-row svg{height:30px}}
 
-/* Phones reserve space for the reminder instead of covering the moving scene.
+/* Phones give the entire scene to the race; job actions stay in the footer.
    The scene and menus may shrink within the visible browser viewport. */
 @media(max-width:700px), (max-width:1000px) and (max-height:500px) and (orientation:landscape){
  .topbar{flex-wrap:nowrap;gap:0;padding:4px;border-bottom-width:2px}
@@ -689,19 +688,9 @@ body{height:100dvh;overflow:hidden}
  .header-controls{gap:2px;flex:none}
  .icon-button{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border-radius:12px;font-size:20px;box-shadow:0 2px 0 #074a83}
  #playWorld.is-race{padding:4px}
- .is-race .scene-surface{display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr);min-height:0;border-radius:12px}
- .is-race #raceCanvas{position:relative;inset:auto;grid-column:1;grid-row:2;width:100%;height:100%;min-width:0;min-height:0}
- .is-race .scene-hud{position:relative;inset:auto;grid-column:1;grid-row:1;padding:4px;min-width:0;gap:0}
- .is-race .scene-hud .challenge-panel{width:100%;padding:4px 6px;border-width:2px;border-radius:18px;box-shadow:0 2px 0 #172c4326}
- .race-dashboard{grid-template-columns:32% minmax(0,1fr) 28px;gap:8px}
- .race-task-preview{height:66px;grid-template-columns:minmax(0,1fr) 22px;gap:1px;padding:3px 4px 7px;border-width:2px;border-radius:13px}
- .race-task-illustration{height:50px}.race-job-status{width:22px;height:25px}
- #raceJobProgress{left:6px;bottom:4px;width:calc(100% - 12px);height:3px}
- .race-course-progress{height:64px}
- #raceCourseProgress{--racer-size:28px;--finish-size:19px;--rail-top:15px;--rail-bottom:48px}
- .race-course-rail{height:4px}.race-course-sleepers{top:calc(var(--rail-top) + 4px);height:calc(var(--rail-bottom) - var(--rail-top) - 4px)}
- .race-course-finish{height:28px;top:calc((var(--rail-top) + var(--rail-bottom))/2 - 14px);right:-2px}
- .race-boost-slot{width:28px;height:44px}
+ .is-race .scene-surface{display:grid;grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr);min-height:0;border-radius:12px}
+ .is-race #raceCanvas{position:relative;inset:auto;grid-column:1;grid-row:1;width:100%;height:100%;min-width:0;min-height:0}
+ .is-race .scene-hud{display:none}
  #footerDashboard.is-race{padding:6px 10px 8px;gap:0}
  .is-race .actions{min-height:64px;gap:10px;flex-wrap:nowrap}
  .is-race .actions .action-race-help{flex:1 1 180px;max-width:250px;min-width:0;min-height:64px;height:64px;padding:4px 8px;flex-direction:row;gap:0}
@@ -718,8 +707,8 @@ body{height:100dvh;overflow:hidden}
  .racer-picker-toggle{min-height:72px}
  .racer-picker-toggle svg{width:52px;height:52px;flex-basis:52px}
  .racer-panel h3{font-size:18px}
- #raceMatchup{top:88px}
- .race-start-lights{top:58%;gap:8px;padding:10px 14px;border-width:3px}
+ #raceMatchup{top:12px}
+ .race-start-lights{top:50%;gap:8px;padding:10px 14px;border-width:3px}
  .race-start-lights span{width:34px;height:34px;border-width:3px}
  .festival-hud{inset:5px 5px auto}
  .festival-caption{padding:4px 8px;border-radius:12px}
@@ -731,25 +720,16 @@ body{height:100dvh;overflow:hidden}
  .festival-results .race-result-picture{width:100%;height:100%}
 }
 
-/* Short landscape viewports use side controls, leaving the remaining height
-   for the railway. The two selectors stay side by side with a pinned Race button. */
+/* Short landscape viewports keep selectors side by side with a pinned Race button. */
 @media(max-width:1000px) and (max-height:500px) and (orientation:landscape){
  .topbar{gap:8px}
  .topbar .brand{display:flex;flex:none}.topbar .brand-icon{display:none}
  .brand-title{font-size:15px}.top-right{width:auto;flex:0 1 330px;margin-left:auto}
- #playSurface.has-race-controls{display:grid;grid-template-columns:minmax(0,1fr) 82px;grid-template-rows:minmax(0,1fr)}
- .has-race-controls #footerDashboard.is-race{min-width:0;min-height:0;padding:6px;border-top:0;border-left:2px solid #adbfc6}
- .has-race-controls #footerDashboard .actions{width:100%;height:100%;min-height:0;flex-direction:column;flex-wrap:nowrap;justify-content:flex-end;gap:8px}
- .has-race-controls #footerDashboard .actions .action-race-help,.has-race-controls #footerDashboard .actions .whistle{flex:0 0 64px;width:68px;min-width:0;min-height:64px;max-width:100%;height:64px;padding:4px}
- .has-race-controls #footerDashboard .actions .control-picture{width:52px;height:50px}
- .is-race .scene-hud{padding:3px}
- .is-race .scene-hud .challenge-panel{padding:3px 6px;border-radius:15px}
- .race-dashboard{grid-template-columns:28% minmax(0,1fr) 26px;gap:10px}
- .race-task-preview{height:48px;grid-template-columns:minmax(0,1fr) 22px;padding:1px 5px 4px;border-radius:10px}
- .race-task-illustration{height:39px}.race-course-progress{height:48px}
- #raceCourseProgress{--racer-size:24px;--finish-size:18px;--rail-top:11px;--rail-bottom:37px}
- .race-boost-slot{width:26px;height:39px}
- #raceJobProgress{bottom:2px;height:2px}
+
+
+
+
+
  #raceStartOverlay{padding:5px}
  #raceStartOverlay .modal{padding:6px 8px;gap:5px}
  #raceStartOverlay h2{font-size:19px}
@@ -760,8 +740,8 @@ body{height:100dvh;overflow:hidden}
  .picker-selected-label small{font-size:11px}.racer-unavailable{left:60px;font-size:9px;bottom:2px}
  .racer-grid{height:124px;min-height:0}.racer-dropdown{margin-top:6px;padding-top:4px}
  #startRaceButton{min-height:44px;font-size:18px;padding:5px 12px}
- #raceMatchup{top:66px;padding:3px 8px;gap:6px}#raceMatchup svg{width:26px;height:26px}#raceMatchup span{font-size:12px}
- .race-start-lights{top:66%;padding:6px 10px}.race-start-lights span{width:26px;height:26px}
+ #raceMatchup{top:8px;padding:3px 8px;gap:6px}#raceMatchup svg{width:26px;height:26px}#raceMatchup span{font-size:12px}
+ .race-start-lights{top:50%;padding:6px 10px}.race-start-lights span{width:26px;height:26px}
  .pause-engine{width:54px;height:54px}.pause-rest{font-size:28px}
  #pauseOverlay .modal{padding:10px;width:320px}#pauseOverlay .modal-picture{margin-bottom:3px}#pauseOverlay .modal-actions{margin-top:4px}#pauseOverlay .action{min-height:52px;padding:3px}#pauseOverlay .resume-picture{font-size:36px}
  #skipCelebration{width:100%;min-height:52px;padding:4px;font-size:12px}
@@ -774,62 +754,71 @@ body{height:100dvh;overflow:hidden}
  .festival-results #rewardStars{font-size:14px}
 }
 @media(max-width:700px) and (orientation:landscape){.topbar .brand{display:none}}
+
+/* Unobstructed race scene and one bottom control strip on every screen. */
+#playWorld.is-race{padding:0;background:#a9deee}
+.is-race .scene-surface{min-height:0;display:block;border:0;border-radius:0;box-shadow:none}
+.is-race #raceCanvas{position:absolute;inset:0;width:100%;height:100%}
+#footerDashboard.is-race{padding:9px 12px 13px;gap:0;border-top:3px solid #20394b;background:#fff8e1}
+#footerDashboard.is-race .actions{width:100%;max-width:none;min-height:68px;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:10px}
+#footerDashboard.is-race .actions .action{order:0;flex:0 0 76px;width:auto;max-width:none;min-width:0;height:68px;min-height:68px;flex-direction:column;gap:3px;padding:5px 10px;border:2px solid #fffdf5;border-radius:16px;box-shadow:0 3px 0 #20394b55}
+#footerDashboard.is-race .actions .action-race-help{flex:0 1 220px;min-width:140px;flex-direction:row;gap:12px;background:#f9d85e;color:#20394b}
+#footerDashboard.is-race .actions .action-race-help .control-picture{width:64px;height:50px}
+#footerDashboard.is-race .actions .whistle{flex-basis:80px;background:#c1b2e5;color:#20394b}
+#footerDashboard.is-race .actions .whistle .control-picture{width:42px;height:37px}
+#footerDashboard .control-label{font-size:14px;font-weight:900;line-height:1.15;text-align:center}
+#footerDashboard .control-spacer{flex:1}
+#footerDashboard .race-utility{background:#1677ae;color:#fffdf5}
+#footerDashboard .utility-picture{display:flex;align-items:center;justify-content:center;height:31px;font-size:36px;font-family:Arial,sans-serif;line-height:1}
+#footerDashboard .pause-bars{font-size:30px;font-weight:900}
+#footerDashboard.is-race .actions .hint{box-shadow:0 3px 0 #20394b55,0 0 0 3px #f8cd67}
+#footerDashboard.is-race .actions .action:active{transform:translateY(2px);box-shadow:0 1px 0 #20394b55}
+#footerDashboard.festival-footer .actions{min-height:68px!important;flex-wrap:nowrap!important}
+#footerDashboard #skipCelebration{flex:0 1 220px;max-width:220px;width:auto;min-width:88px;min-height:68px;padding:6px 12px;font-size:14px}
+.game-options{flex:none;text-align:center;margin-top:6px}
+.options-toggle{min-height:44px;padding:6px 12px;border:1px solid #b9ccd3;border-radius:12px;background:#edf3f4;font-size:14px;font-weight:800}
+.menu-utilities{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;padding:8px 0 0}
+.menu-utilities .collection{background:#e4edf0;color:#244b60;border:0;min-height:44px;font-size:15px}
+.menu-utilities .album-button{color:inherit;font-size:15px;min-height:44px}
+.menu-controls{display:flex;gap:6px}
+.menu-controls .icon-button{width:64px;min-width:64px;min-height:52px;height:auto;padding:4px;font-size:22px}
+.option-label{display:block;font-size:11px;font-weight:800}
+#raceStartOverlay #startOptionsHost{flex:none;max-height:32%;overflow:auto}
+#pauseOptionsHost{margin-top:12px}
+@media(max-width:540px){
+ #footerDashboard.is-race{padding:7px 7px 12px}
+ #footerDashboard.is-race .actions{gap:6px}
+ #footerDashboard.is-race .actions .action{flex-basis:54px;padding:5px;border-radius:13px}
+ #footerDashboard.is-race .actions .action-race-help{flex:1 1 90px;min-width:90px;flex-direction:column;gap:1px}
+ #footerDashboard.is-race .actions .action-race-help .control-picture{width:54px;height:41px}
+ #footerDashboard.is-race .actions .whistle{flex-basis:56px}
+ #footerDashboard.is-race .actions .whistle .control-picture{width:38px;height:35px}
+ #footerDashboard .control-label{font-size:12px}
+ #footerDashboard .utility-picture{font-size:32px}
+ #footerDashboard .pause-bars{font-size:28px}
+ #footerDashboard #skipCelebration{flex:1 1 90px;min-width:90px;padding:4px;font-size:12px}
+}
+@media(max-height:500px) and (orientation:landscape){
+ #footerDashboard.is-race{padding:5px 10px 9px}
+ #footerDashboard.is-race .actions,#footerDashboard.festival-footer .actions{min-height:60px!important}
+ #footerDashboard.is-race .actions .action,#footerDashboard #skipCelebration{height:60px;min-height:60px}
+ #footerDashboard.is-race .actions .action-race-help .control-picture{height:42px}
+ #footerDashboard .control-label{font-size:12px}
+ .menu-utilities{gap:6px;padding-top:4px}.menu-controls .icon-button{min-height:44px}
+ #pauseOptionsHost{margin-top:6px}
+}
 </style>
 </head>
 <body>
-<header class="topbar">
-    <div class="brand"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#portrait-thomas" width="100" height="100"/></svg></span><div><div class="brand-title">Thomas’s Sodor Races</div><span id="modeLabel" class="mode-label">Welcome to Sodor</span></div></div>
-    <div class="top-right">
-        <div class="collection" aria-label="Your collection"><span aria-label="Stars">⭐ <span id="starCountText">0</span></span><button class="album-button" data-action="album" data-narration="ui.album" aria-label="Open sticker album">🏅 <span id="stickerCountText">0</span></button></div>
-        <nav id="headerControls" class="header-controls" aria-label="Game controls"><button id="musicButton" hidden class="icon-button" data-action="music" data-narration="ui.music-off" aria-label="Turn background music off" aria-pressed="true"><span id="musicIcon" aria-hidden="true">♫</span><span class="button-label">Music</span></button>
-            <button class="icon-button" data-action="home" data-narration="ui.home" aria-label="Home menu">🏠<span class="button-label">Home</span></button>
-            <button class="icon-button" data-action="pause" data-narration="ui.pause" aria-label="Pause game">⏸<span class="button-label">Pause</span></button>
-            <button class="icon-button" data-action="repeat" data-narration="ui.repeat" aria-label="Repeat instructions">🗣️<span class="button-label">Repeat</span></button>
-            <button class="icon-button" data-action="mute" data-narration="ui.sound-off" aria-label="Mute sound" aria-pressed="false"><span id="muteIcon">🔊</span><span class="button-label">Sound</span></button>
-        </nav>
-    </div>
-</header>
+
 <main id="gameStage" tabindex="0" aria-label="Thomas railway race." aria-keyshortcuts="Enter Space">
     <div id="playSurface">
-        <div class="instruction-row"><button id="promptBanner" class="prompt" data-action="repeat" data-narration="ui.repeat" aria-label="Repeat the current instruction"><span id="promptEmoji" class="prompt-emoji" aria-hidden="true">🚂</span><span id="promptText" class="sr-only">Ready to race!</span><span class="prompt-speaker" aria-hidden="true">🔉</span></button></div>
+        <p id="promptText" class="sr-only" role="status">Ready to race!</p><span id="promptEmoji" hidden></span>
         <div id="playWorld" class="play-world">
         
         <div class="scene-surface">
 <canvas id="raceCanvas" aria-label="Racing through Sodor" hidden></canvas><div id="raceMatchup" hidden><svg viewBox="0 0 100 100" aria-hidden="true"><use id="matchupPlayerPortrait" width="100" height="100"/></svg><span id="matchupPlayerName"></span><span>vs</span><svg viewBox="0 0 100 100" aria-hidden="true"><use id="matchupRivalPortrait" width="100" height="100"/></svg><span id="matchupRivalName"></span></div><div id="raceStartLights" class="race-start-lights" role="status" aria-label="Race starting lights" hidden><span id="raceRedLight"></span><span id="raceAmberLight"></span><span id="raceGreenLight"></span></div>
-<div id="festivalHud" class="festival-hud" hidden><div class="festival-caption"><strong id="festivalTitle">Sodor Finish-Line Festival</strong><p id="festivalMessage" role="status" aria-live="polite">Welcome to the finish!</p><div id="festivalJobs" class="festival-job-row" role="img" aria-label="Eight completed delivery jobs" hidden></div></div></div><div id="sceneHud" class="scene-hud" aria-label="Driving dashboard">
-<section id="challengePanel" class="challenge-panel" aria-label="Next job and race progress" hidden>
- <div id="raceDashboard" class="race-dashboard" data-task-type="journey" hidden>
-  <div id="raceTaskPreview" class="race-task-preview" role="img" aria-label="Next job" hidden>
-   <svg class="race-task-illustration" viewBox="0 0 120 100" aria-hidden="true"><use id="raceTaskPicture" href="#race-passengers" width="120" height="100"/></svg>
-   <svg class="race-job-status" viewBox="0 0 120 100" aria-hidden="true"><use id="raceJobStatusPicture" href="#rule-go" width="120" height="100"/></svg>
-   <svg id="raceJobProgress" viewBox="0 0 176 8" aria-hidden="true" hidden><rect width="176" height="8" rx="4" fill="#d6ccb0"/><rect id="raceJobFill" width="0" height="8" rx="4" fill="#548f7f"/></svg>
-  </div>
-  <div id="raceOrder" class="race-course-progress" role="img" aria-label="Both racers on the way to the finish" hidden>
-   <div id="raceCourseProgress" aria-hidden="true">
-    <div class="race-course-rails">
-     <div class="race-course-sleepers"></div><div class="race-course-rail player"></div><div class="race-course-rail rival"></div>
-     <svg id="raceRivalOrder" class="race-racer-position" viewBox="0 0 100 100"><use id="raceRivalPortrait" href="#portrait-percy" width="100" height="100"/></svg>
-     <svg id="racePlayerOrder" class="race-racer-position" viewBox="0 0 100 100"><use id="racePlayerPortrait" href="#portrait-thomas" width="100" height="100"/></svg>
-    </div>
-    <svg class="race-course-finish" viewBox="0 0 100 100"><use href="#race-flag" width="100" height="100"/></svg>
-   </div>
-  </div>
-  <div class="race-boost-slot">
-   <svg id="raceBoostBadge" class="race-boost-badge" viewBox="0 0 100 120" role="img" aria-label="Speed boost" hidden>
-    <rect class="race-boost-well" x="8" y="8" width="80" height="104" rx="26"/>
-    <path class="race-boost-bolt" d="M59 22L26 65H49L40 99L74 53H51Z"/>
-    <g id="raceBoostArrows" hidden><rect x="65" y="88" width="36" height="28" rx="8" fill="#fff8e1"/><path d="M70 94L79 102L70 110M83 94L92 102L83 110" fill="none" stroke="#287ca6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
-    <use id="raceBoostQueue" href="#rule-wait" x="64" y="85" width="39" height="36" hidden/>
-   </svg>
-  </div>
- </div>
- <div id="raceJourneyProgress" class="sr-only" role="progressbar" aria-label="Your race progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
- <span id="challengeTitle" class="sr-only"></span><span id="challengeRule" class="sr-only"></span>
-</section>
-
-</div>
-
-<svg id="pictureLibrary" width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden"><defs>
+<div id="festivalHud" class="festival-hud" hidden><div class="festival-caption"><strong id="festivalTitle">Sodor Finish-Line Festival</strong><p id="festivalMessage" role="status" aria-live="polite">Welcome to the finish!</p><div id="festivalJobs" class="festival-job-row" role="img" aria-label="Eight completed delivery jobs" hidden></div></div></div><svg id="pictureLibrary" width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden"><defs>
 <symbol id="portrait-bertie" viewBox="0 0 100 100"><g stroke="#172c43" stroke-width="2.5" stroke-linejoin="round"><path d="M8 32Q8 19 23 19H73Q86 19 91 34V79H7Z" fill="#ce3d3c"/><path d="M13 33H49V53H13Z" fill="#a8dff1"/><path d="M55 33H80L85 53H55Z" fill="#bfeaf5"/><path d="M31 34V52M50 30V76" fill="none"/><path d="M11 57H48V70H11Z" fill="#e95b4d"/><rect x="54" y="56" width="31" height="22" rx="7" fill="#e6e9e6"/><circle cx="23" cy="80" r="10" fill="#273e50"/><circle cx="74" cy="80" r="10" fill="#273e50"/><circle cx="23" cy="80" r="4" fill="#b7c8ce"/><circle cx="74" cy="80" r="4" fill="#b7c8ce"/><path d="M7 76H90" stroke="#ffe9b6" stroke-width="4"/><path d="M11 27H77" stroke="#ff9b7e" stroke-width="3"/><path d="M61 64Q63 60 66 64M73 64Q75 60 78 64M64 70Q70 76 77 69" fill="none" stroke-width="1.8"/></g></symbol>
 
 
@@ -1339,8 +1328,11 @@ body{height:100dvh;overflow:hidden}
                 
                 
 
-<button id="action-race-help" class="action action-gold action-race-help" data-action="race-help" data-narration="race.service.wash" aria-label="Help at this stop" aria-keyshortcuts="Enter" hidden><svg class="control-picture" viewBox="0 0 120 100" aria-hidden="true"><use id="raceHelpPicture" href="#challenge-wash" width="120" height="100"/></svg><span class="keycap" aria-hidden="true">↵</span><span class="sr-only">Help</span></button>
-<button id="action-whistle" class="action action-purple whistle" data-action="whistle" data-narration="ui.whistle" aria-label="Blow the whistle." aria-keyshortcuts="Space" hidden><svg class="control-picture" viewBox="0 0 120 100" aria-hidden="true"><use href="#rule-whistle" width="120" height="100"/></svg><span class="keycap" aria-hidden="true">Space</span><span class="sr-only">Peep!</span></button>
+<button id="action-race-help" class="action action-gold action-race-help" data-action="race-help" data-narration="race.service.wash" aria-label="Help at this stop" aria-keyshortcuts="Enter" hidden><svg class="control-picture" viewBox="0 0 120 100" aria-hidden="true"><use id="raceHelpPicture" href="#challenge-wash" width="120" height="100"/></svg><span id="raceHelpLabel" class="control-label">Help</span></button>
+<button id="action-whistle" class="action action-purple whistle" data-action="whistle" data-narration="ui.whistle" aria-label="Blow the whistle." aria-keyshortcuts="Space" hidden><svg class="control-picture" viewBox="0 0 120 100" aria-hidden="true"><use href="#rule-whistle" width="120" height="100"/></svg><span id="signalLabel" class="control-label">Whistle</span></button>
+<span class="control-spacer" aria-hidden="true"></span>
+<button id="pauseButton" class="action race-utility" data-action="pause" data-narration="ui.pause" aria-label="Pause game" aria-keyshortcuts="Escape"><span class="utility-picture pause-bars" aria-hidden="true">Ⅱ</span><span class="control-label">Pause</span></button>
+<button id="homeButton" class="action race-utility" data-action="home" data-narration="ui.home" aria-label="Choose racers"><span class="utility-picture" aria-hidden="true">⌂</span><span class="control-label">Home</span></button>
                 
                 
 
@@ -1366,9 +1358,13 @@ body{height:100dvh;overflow:hidden}
  <div id="opponentPickerMenu" class="racer-dropdown" hidden><div id="opponentChoices" class="racer-grid" role="group" aria-label="Computer character choices" aria-describedby="opponentScrollHint"></div><p id="opponentScrollHint" class="picker-scroll-hint">Scroll for more friends ↕</p></div>
  </section></div>
  <div class="picker-footer"><button id="startRaceButton" class="action action-green" data-action="start-race" data-narration="race.menu" aria-label="Start a race" aria-keyshortcuts="Enter">▶ Race!</button></div>
+ <div id="startOptionsHost"><div id="gameOptions" class="game-options"><button id="optionsToggle" class="options-toggle" data-action="toggle-options" aria-expanded="false" aria-controls="menuUtilities">Sound &amp; stickers ▾</button><div id="menuUtilities" class="menu-utilities" hidden><div class="collection" aria-label="Your collection"><span aria-label="Stars">⭐ <span id="starCountText">0</span></span><button class="album-button" data-action="album" data-narration="ui.album" aria-label="Open sticker album">🏅 <span id="stickerCountText">0</span></button></div><nav class="menu-controls" aria-label="Sound settings"><button id="musicButton" hidden class="icon-button" data-action="music" data-narration="ui.music-off" aria-label="Turn background music off" aria-pressed="true"><span id="musicIcon" aria-hidden="true">♫</span><span class="option-label">Music</span></button>
+            <button class="icon-button" data-action="repeat" data-narration="ui.repeat" aria-label="Repeat instructions">🗣️<span class="option-label">Repeat</span></button>
+            <button class="icon-button" data-action="mute" data-narration="ui.sound-off" aria-label="Mute sound" aria-pressed="false"><span id="muteIcon">🔊</span><span class="option-label">Sound</span></button>
+        </nav></div></div></div>
  <div id="raceUnavailable" role="status" hidden>The race cannot start in this browser. Please try another browser with WebGL enabled.</div></div>
 </section>
-    <section id="pauseOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="pauseTitle" hidden><div class="modal"><div class="modal-picture" aria-hidden="true"><svg class="pause-engine" viewBox="0 0 100 100"><use id="pausePortrait" href="#portrait-thomas" width="100" height="100"/></svg><span class="pause-rest">💤</span></div><h2 id="pauseTitle">Taking a rest</h2><p class="modal-intro">Ready when you are!</p><div class="modal-actions"><button class="action action-green" data-action="resume" data-narration="ui.resume" aria-label="Keep playing"><span class="resume-picture" aria-hidden="true">▶</span><span class="sr-only">Keep playing</span></button><button class="action action-blue" data-action="home" data-narration="ui.home" aria-label="Home menu"><span class="action-icon" aria-hidden="true">🏠</span><span class="sr-only">Home</span></button></div></div></section>
+    <section id="pauseOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="pauseTitle" hidden><div class="modal"><div class="modal-picture" aria-hidden="true"><svg class="pause-engine" viewBox="0 0 100 100"><use id="pausePortrait" href="#portrait-thomas" width="100" height="100"/></svg><span class="pause-rest">💤</span></div><h2 id="pauseTitle">Taking a rest</h2><p class="modal-intro">Ready when you are!</p><div class="modal-actions"><button class="action action-green" data-action="resume" data-narration="ui.resume" aria-label="Keep playing"><span class="resume-picture" aria-hidden="true">▶</span><span class="sr-only">Keep playing</span></button><button class="action action-blue" data-action="home" data-narration="ui.home" aria-label="Home menu"><span class="action-icon" aria-hidden="true">🏠</span><span class="sr-only">Home</span></button></div><div id="pauseOptionsHost"></div></div></section>
     <section id="rewardOverlay" class="overlay festival-results" role="dialog" aria-modal="true" aria-labelledby="rewardTitle" hidden><div class="modal"><h2 id="rewardTitle">Well done!</h2><div class="reward-sticker" aria-hidden="true"><svg id="raceResultPicture" class="race-result-picture" viewBox="0 0 100 100"><use id="raceResultPortrait" href="#portrait-thomas" width="100" height="100"/></svg><svg id="festivalResultAward" viewBox="0 0 100 100"><use id="festivalResultAwardPicture" href="#festival-trophy" width="100" height="100"/></svg></div><p id="resultText" class="modal-intro">Thank you for your deliveries!</p><div id="rewardStars" class="reward-stars" aria-label="Three completion stars earned">⭐ ⭐ ⭐</div><div class="modal-actions"><button id="rewardReplay" class="action action-gold" data-action="rematch" data-narration="race.rematch" aria-label="Rematch"><span class="action-icon" aria-hidden="true">↻</span><span id="rewardReplayText" class="action-label">Rematch</span></button><button id="rewardAlternative" class="action action-blue" data-action="next-race" data-narration="race.choose" aria-label="Choose racers"><span class="action-icon" aria-hidden="true">👥</span><span class="action-label">Choose racers</span></button></div></div></section>
     <section id="albumOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="albumTitle" hidden><div class="modal"><p class="eyebrow">Your collection</p><h2 id="albumTitle">My sticker album</h2><div id="albumItems" class="album-items"><div class="album-empty-picture" aria-hidden="true">🏅</div><p class="album-empty sr-only">Finish a race to earn your first sticker!</p></div><div class="modal-actions"><button class="action action-blue" data-action="close-album" data-narration="ui.close-album" aria-label="Close sticker album"><span class="action-icon" aria-hidden="true">✓</span><span class="sr-only">All done</span></button></div></div></section>
 </main>
@@ -58978,7 +58974,14 @@ exports.createCanvasElement = createCanvasElement;
     const side=narrow?55:60,forward=80,height=(hasAir?30:25)+widen*2,focusForward=(narrow?5:30)*(1-widen)+awardAhead*widen,focusLane=(narrow?(hasAir?-3:-.9):-5)*(1-widen)-7.5*widen;
     // A modest telephoto view keeps the familiar large face and proportions while
     // moving the fixed camera ahead enough for screen-left/right to stay truthful.
-    b.camera.fov=narrow?2*Math.atan(Math.tan(17*PI/360)*Math.max(1,(375/420)/b.camera.aspect))*180/PI:2*Math.atan(Math.tan(25*PI/360)*Math.max(1,1.75/b.camera.aspect))*180/PI;if(hasAir)b.camera.fov*=narrow?1.38:1.15;b.camera.fov*=1+widen*(narrow?(hasAir?.04:.22):.06);if(narrow&&!hasAir)b.camera.fov*=1+.17*approach;b.camera.updateProjectionMatrix();
+    b.camera.fov=narrow?2*Math.atan(Math.tan(17*PI/360)*Math.max(1,(375/420)/b.camera.aspect))*180/PI:2*Math.atan(Math.tan(25*PI/360)*Math.max(1,1.75/b.camera.aspect))*180/PI;
+    if(hasAir)b.camera.fov*=narrow?1.38:1.15;
+    b.camera.fov*=1+widen*(narrow?(hasAir?.04:.22):.06);
+    if(narrow&&!hasAir)b.camera.fov*=1+.17*approach;
+    // Short landscape canvases need larger vehicles as well as smaller controls.
+    // Ease into the closer framing; leave room for Harold's full rotor and tail.
+    b.camera.fov*=1-.34*Math.min(1,Math.max(0,(b.camera.aspect-2.4)/.8));
+    b.camera.updateProjectionMatrix();
     b.camera.position.set(frame.x+side*cs+forward*sn,frame.y+height,frame.z-side*sn+forward*cs);
     b.camera.lookAt(frame.x+focusLane*cs+focusForward*sn,frame.y+(hasAir?5.5:narrow?2.5:1.6),frame.z-focusLane*sn+focusForward*cs);
     b.camera.updateMatrixWorld();b.scene.updateMatrixWorld(true);
@@ -59053,9 +59056,9 @@ const $ = id => document.getElementById(id);
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const ui = {
     audioUnlocked:false,windowActive:true,task:'',taskKey:'',emoji:'🚂',lastGeneration:-1,
-    festival:null,finishWelcomed:false,menuIndex:0,openPicker:null,albumOpen:false,speaking:false,time:0,whistle:0,lastTimestamp:null,
+    festival:null,finishWelcomed:false,menuIndex:0,openPicker:null,albumOpen:false,optionsOpen:false,speaking:false,time:0,whistle:0,lastTimestamp:null,
     pendingSpeech:null,hoverNode:null,hoverDeadline:null,suppressFocus:false,lastAnnouncement:'',
-    raceView:null,raceUnavailable:false,raceLayoutKey:'',racePosition:null,raceVoiceKey:null,racePraiseAt:-Infinity
+    raceView:null,raceUnavailable:false,raceLayoutKey:'',raceVoiceKey:null,racePraiseAt:-Infinity
 };
 if (!globalThis.ThomasNarration) {
     try { globalThis.ThomasNarration = JSON.parse(document.getElementById('narration-data').textContent); }
@@ -59276,50 +59279,17 @@ function advanceFestival(seconds){
 function renderRacePresentation() {
     const race=state.race;if(!race)return;
     const view=ThomasRaceCore.getView(race),service=view.currentService;
-    // The picture previews a required job even while terrain guidance is spoken.
-    const next=service || view.nextService,taskType=next?.type || 'finish';
-    const reminder=next?words(service?view.taskKey:view.nextServiceKey):'Finish line ahead';
-    show('raceDashboard',true);
-    $('challengePanel').setAttribute('data-race-phase',race.phase);
-    $('raceDashboard').setAttribute('data-task-type',taskType);
-    $('raceDashboard').setAttribute('data-service-phase',service?.phase || '');
-    $('challengeTitle').textContent='Help, complete, and deliver';
-    $('challengeRule').textContent=reminder;
-    show('raceTaskPreview',true);
-    $('raceTaskPicture').setAttribute('href',`#${raceTaskPicture(taskType)}`);
-    $('raceTaskPreview').setAttribute('aria-label',reminder);
-    $('raceTaskPreview').setAttribute('data-task-type',taskType);
     const working=service?.phase==='working',handling=service?.phase==='cargo-lowering'||service?.phase==='cargo-lifting';
-    $('raceJobStatusPicture').setAttribute('href',service?.type==='animals' && !working?(view.player.power==='rotor'?'#rule-radio':view.player.power==='steam'?'#rule-whistle':'#rule-horn'):working||handling?'#rule-wait':service?'#race-help-hand':'#rule-go');
-    let fraction=0;
-    if(service){fraction=['repairs','coal'].includes(service.type)||service.type.startsWith('passenger-')?(service.unitsDone+(working?service.progress:0))/3:
-        service.type==='rocks'?(service.unitsDone+(working?service.progress:0))/2:
-        service.type==='wash'?(7-view.mudPatches.filter(Boolean).length+(working?service.progress:0))/7:
-        working?service.progress:0;}
-    if(handling)fraction=service.handlingProgress;
-    $('raceJobFill').setAttribute('width',Math.max(0,Math.min(1,fraction))*176);
-    show('raceJobProgress',!!service);
-    const boosting=view.boostActive;
-    show('raceBoostBadge',view.boostRemaining>0);
-    $('raceBoostBadge').setAttribute('data-state',boosting?'active':'queued');
-    $('raceBoostBadge').setAttribute('aria-label',boosting?'Speed boost!':'Speed boost saved for a clear route');
-    show('raceBoostQueue',view.boostQueued);show('raceBoostArrows',boosting);
-    $('racePlayerPortrait').setAttribute('href',`#portrait-${race.playerId}`);
-    $('raceRivalPortrait').setAttribute('href',`#portrait-${race.opponentId}`);
-    $('racePlayerOrder').style.left=`${view.progress*100}%`;
-    $('raceRivalOrder').style.left=`${view.rivalProgress*100}%`;
-    $('raceJourneyProgress').setAttribute('aria-valuenow',Math.round(view.progress*100));
-    $('raceJourneyProgress').setAttribute('aria-valuetext',`${Math.round(view.progress*100)} percent of the route; ${view.completed} of ${view.total} jobs completed`);
     const help=$('action-race-help'),hasHelp=!!service && !['animals','drawbridge'].includes(service.type);
     show('action-race-help',hasHelp);
     help.disabled=state.paused || ui.albumOpen || !view.helpEnabled;
     help.setAttribute('data-narration',view.taskKey);help.setAttribute('aria-label',words(view.taskKey));
     const helpPicture=view.player.vehicleType==='air'?raceTaskPicture(service?.type):service?.type==='cargo-unload' || service?.type==='cargo-load' && service.selectedContainer?'race-crane':service?.type==='passenger-load'?'race-board':service?.type==='passenger-unload'?'race-alight':raceTaskPicture(service?.type);
-    $('raceHelpPicture').setAttribute('href',working?'#rule-wait':`#${helpPicture}`);
+    $('raceHelpPicture').setAttribute('href',working||handling?'#rule-wait':`#${helpPicture}`);
+    const labels={'cargo-load':'Load cargo','cargo-unload':'Unload cargo','passenger-load':'Board','passenger-unload':'All off',wash:'Wash',water:'Water',repairs:'Repair',rocks:'Clear rocks',coal:view.player.vehicleType==='rail'?'Coal':'Fuel',tree:'Clear branch','level-crossing':'Crossing'};
+    $('raceHelpLabel').textContent=working||handling?'Please wait':labels[service?.type]||'Help';
     help.classList.toggle('hint',!!view.helpEnabled);
     $('action-whistle').classList.toggle('hint',service?.type==='animals' && !working);
-    if(ui.racePosition!==view.position){ui.racePosition=view.position;
-        $('raceOrder').setAttribute('aria-label',view.position===1?`${view.player.name} is ahead`:`${view.opponent.name} is ahead`);}
     const counting=race.phase==='countdown',green=race.phase==='racing' && race.elapsed<1.2;
     show('raceStartLights',counting || green);show('raceMatchup',counting);
     for(const [role,c]of [['Player',view.player],['Rival',view.opponent]]){
@@ -59362,10 +59332,9 @@ function render() {
     const playing=state.screen==='play',completed=playing && state.phase==='complete',results=completed&&ui.festival.results;
     const overlay=!playing || state.paused || results || ui.albumOpen;
     $('playSurface').classList.toggle('has-race-controls',playing&&!results);
-    show('sceneHud',playing&&!completed);
     show('raceStartOverlay',!playing && !ui.albumOpen);show('raceUnavailable',!playing && ui.raceUnavailable);
     show('pauseOverlay',playing && state.paused && !ui.albumOpen);show('rewardOverlay',results && !state.paused && !ui.albumOpen);show('albumOverlay',ui.albumOpen);
-    for(const id of ['challengePanel','raceOrder','raceDashboard','raceCanvas'])show(id,playing);
+    show('raceCanvas',playing);
     if(!playing){renderCharacterChoices();show('raceMatchup',false);show('raceStartLights',false);show('action-race-help',false);$('action-whistle').classList.remove('hint');}
     $('playWorld').classList.add('is-race');$('footerDashboard').classList.add('is-race');
     if(playing && !ensureRaceView())return;
@@ -59373,10 +59342,12 @@ function render() {
     $('playSurface').inert=overlay;$('footerDashboard').inert=overlay;
     show('festivalHud',completed&&!state.paused&&!ui.albumOpen);show('skipCelebration',completed&&!results);
     $('footerDashboard').classList.toggle('festival-footer',completed);
-    show('challengePanel',playing&&!completed);
     show('footerDashboard',playing&&!results);show('action-whistle',playing&&!results);
     document.querySelector('[data-action="pause"]').hidden=!playing;
-    $('modeLabel').textContent=playing?'Sodor Delivery Race':'Ready to race';
+    const options=$('gameOptions'),host=$(state.paused?'pauseOptionsHost':'startOptionsHost');
+    if(options.parentNode!==host){options.remove();host.appendChild(options);}
+    show('menuUtilities',ui.optionsOpen);
+    $('optionsToggle').setAttribute('aria-expanded',ui.optionsOpen);
     $('statusText').textContent=playing?'Help with jobs and earn speed boosts.':'';
     if(playing){
         const character=ThomasRaceCore.getCharacter(state.race),signal=character.power==='rotor'?'radio':character.power==='diesel'?'horn':'whistle';
@@ -59385,6 +59356,7 @@ function render() {
         $('action-whistle').setAttribute('data-narration','ui.'+signal);
         $('action-whistle').setAttribute('aria-label',words('ui.'+signal));
         $('action-whistle').querySelector('use').setAttribute('href','#rule-'+signal);
+        $('signalLabel').textContent=signal==='radio'?'Radio':signal==='horn'?'Horn':'Whistle';
         $('raceResultPortrait').setAttribute('href',`#portrait-${state.race.playerId}`);
         const resultKey=`race.complete.${state.race.winner==='player'?'win':state.race.winner==='tie'?'tie':'lose'}`;
         $('rewardTitle').textContent=words(resultKey);$('resultText').textContent=words(resultKey);
@@ -59402,12 +59374,15 @@ function pause() {
 function dispatchAction(action,payload) {
     if(ui.albumOpen && !['close-album','hear-sticker','mute','music','home','repeat'].includes(action))return false;
     unlockAudio();
+    if(action==='toggle-options'){
+        ui.optionsOpen=!ui.optionsOpen;render();return true;
+    }
     if(action==='repeat'){
         // Repeat is an explicit request for the current task, even if older,
         // higher-priority guidance is still finishing.
         if(state.mode==='race'){ui.raceVoiceKey=null;ui.pendingSpeech=null;}
         const selected=menuButtons()[ui.menuIndex];
-        if(selected)announce(selected.dataset.narration,{force:true});else say(ui.task,ui.taskKey,{allowPaused:true});
+        if(state.screen!=='play'&&selected)announce(selected.dataset.narration,{force:true});else say(ui.task,ui.taskKey,{allowPaused:true});
         return true;
     }
     if(action==='hear-sticker'){announce(payload,{force:true});return true;}
@@ -59452,7 +59427,7 @@ function dispatchAction(action,payload) {
         const role=action==='select-player'?'player':'opponent';ui.openPicker=null;renderCharacterChoices();selectMenu(menuButtons().indexOf($(role+'PickerButton')),true,false);announce(`race.character.${payload}`,{force:true});return true;
     }
     if(['home','next-race','start-race','rematch'].includes(action)){
-        ui.albumOpen=false;ui.openPicker=null;ui.menuIndex=0;ui.racePosition=null;ui.raceUnavailable=false;
+        ui.albumOpen=false;ui.openPicker=null;ui.optionsOpen=false;ui.menuIndex=0;ui.raceUnavailable=false;
     }
     if(action==='resume'){ui.lastTimestamp=null;audio.unlock();say(ui.task,ui.taskKey);}
     if(action==='whistle'){playPeepPeepWhistle();ui.whistle=.8;}
@@ -59511,7 +59486,7 @@ document.addEventListener('keydown',event=>{
     if(driving && event.key==='Enter' && !event.target.closest('button,[role="button"]')){
         event.preventDefault();if(ThomasRaceCore.getView(state.race).helpEnabled)dispatchAction('race-help');return;
     }
-    if(driving && event.key===' '){event.preventDefault();dispatchAction('whistle');return;}
+    if(driving && event.key===' ' && !event.target.closest('button')){event.preventDefault();dispatchAction('whistle');return;}
     if(driving && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();return;}
     const button=event.target.closest('button,[role="button"]');
     if(button){

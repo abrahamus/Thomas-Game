@@ -18,22 +18,25 @@ test('one Race picture starts a random rival and retired choices cannot be used'
 
 test('music, mute, and whistle remain independent and music preference survives a new race',()=>{
  const ui=setup();ui.key('Enter');ui.frames(5,50);
+ ui.click('#pauseButton');ui.click('#optionsToggle');
  const music=ui.document.getElementById('musicButton');assert.equal(music.hidden,false);music.focus();
  ui.key('Enter');assert.equal(ui.state().musicEnabled,false);ui.key('Enter',{repeat:true});assert.equal(ui.state().musicEnabled,false);
+ ui.click('#pauseOverlay [data-action="resume"]');
  ui.key(' ',{target:ui.document.getElementById('gameStage')});assert.ok(ui.evaluate('ui.whistle')>0);
+ ui.click('#pauseButton');
  ui.click('[data-action="repeat"]');assert.ok(ui.spoken.length>0);
  ui.click('[data-action="mute"]');ui.click('[data-action="music"]');assert.equal(ui.state().isMuted,true);assert.equal(ui.state().musicEnabled,true);
- ui.click('[data-action="music"]');ui.key('Escape');ui.click('#pauseOverlay [data-action="home"]');ui.key('Enter');
+ ui.click('[data-action="music"]');ui.click('#pauseOverlay [data-action="home"]');ui.key('Enter');
  assert.equal(ui.state().musicEnabled,false);assert.equal(ui.state().isMuted,true);
 });
 
 test('legacy sticker albums and stars survive saving while retired games remain unavailable',()=>{
  const saved=JSON.stringify({version:1,stars:12,stickers:['apple-delivery','driving-challenges','race-finisher'],completedMissions:['meet-friends','find-toby']});
- const ui=setup(saved);ui.click('[data-action="album"]');
+ const ui=setup(saved);ui.click('#optionsToggle');ui.click('[data-action="album"]');
  assert.equal(ui.document.getElementById('albumItems').children.length,5);
  assert.match(ui.document.getElementById('albumItems').textContent,/Find Toby/);
  ui.click('[data-action="close-album"]');ui.key('Enter');ui.frames(5,50);
- ui.click('[data-action="album"]');const frozen=ui.state().race;ui.frames(10);assert.deepEqual(ui.state().race,frozen);
+ ui.click('#pauseButton');ui.click('#optionsToggle');ui.click('[data-action="album"]');const frozen=ui.state().race;ui.frames(10);assert.deepEqual(ui.state().race,frozen);
  ui.click('[data-action="close-album"]');assert.equal(ui.state().paused,true);
  ui.evaluate('game.save()');const next=setup(ui.storage.getItem('thomas-first-adventure-progress-v1'));
  assert.equal(next.state().stars,12);assert.deepEqual(next.state().completedMissions,['meet-friends','find-toby']);assert.deepEqual(next.state().stickers,['apple-delivery','driving-challenges','race-finisher']);

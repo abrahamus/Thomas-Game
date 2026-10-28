@@ -11,9 +11,9 @@ function start(ui,keyboard=false){
 }
 function go(ui){ui.frames(4.7,47);assert.equal(ui.state().phase,'racing');}
 function performVisibleJob(ui,keyboard){
- const help=node(ui,'action-race-help'),dashboard=node(ui,'raceDashboard');
+ const help=node(ui,'action-race-help'),service=ui.state().race.player.service;
  if(!help.hidden && !help.disabled){keyboard?ui.key('Enter'):ui.click('#action-race-help');return true;}
- if(dashboard.dataset.taskType==='animals' && dashboard.dataset.servicePhase==='ready'){
+ if(service?.type==='animals' && service.phase==='ready'){
   keyboard?ui.key(' '):ui.click('#action-whistle');return true;
  }
  return false;
@@ -28,8 +28,8 @@ function complete(ui,keyboard=false){
 }
 function reachJob(ui,type){
  for(let i=0;i<3000;i++){
-  const dash=node(ui,'raceDashboard');
-  if(dash.dataset.taskType===type && dash.dataset.servicePhase==='ready')return;
+  const service=ui.state().race.player.service;
+  if(service?.type===type && service.phase==='ready')return;
   performVisibleJob(ui,true);
   ui.frames(.25,4);
  }
@@ -42,7 +42,7 @@ for(const [rival,seed] of [['percy',17],['james',1000],['bertie',1500]])test(`na
 });
 
 for(const keyboard of [true,false])test(`complete muted ${keyboard?'keyboard-only':'click-only'} round from visible pictures and award once`,()=>{
- const ui=setup();start(ui,keyboard);ui.click('[data-action="mute"]');
+ const ui=setup();ui.click('#optionsToggle');ui.click('[data-action="mute"]');start(ui,keyboard);
  const result=complete(ui,keyboard);
  assert.equal(result.race.winner,'player');
  const duration=result.race.elapsed+ui.evaluate('ThomasRaceCore.START_COUNTDOWN');
@@ -90,21 +90,22 @@ test('a long frame stops at the next interactive job without completing it or re
 test('Home removes the race view and shows one Race picture',()=>{
  const ui=setup();start(ui);go(ui);const generation=ui.state().generation;
  ui.click('[data-action="home"]');assert.equal(ui.state().race,null);assert.ok(ui.state().generation>generation);
- for(const id of ['action-race-help','raceOrder','raceDashboard'])assert.equal(node(ui,id).hidden,true);
+ assert.equal(node(ui,'action-race-help').hidden,true);
+ for(const id of ['sceneHud','raceOrder','raceDashboard'])assert.equal(node(ui,id),null);
  assert.equal(node(ui,'raceStartOverlay').hidden,false);assert.equal(ui.evaluate('ui.raceView'),null);
 });
 test('WebGL unavailable stays on the start screen with an honest error and working controls',()=>{
  const ui=setup(undefined,{raceUnavailable:true});ui.click('#startRaceButton');
  assert.equal(ui.state().screen,'race-start');assert.equal(node(ui,'raceUnavailable').hidden,false);
  assert.match(html,/The race cannot start in this browser/);
- ui.click('[data-action="mute"]');assert.equal(ui.state().isMuted,true);
+ ui.click('#optionsToggle');ui.click('[data-action="mute"]');assert.equal(ui.state().isMuted,true);
 });
 
 for(const theme of ['passengers','cargo'])for(const keyboard of [true,false])test(`${theme} loading and delivery with ${keyboard?'keyboard':'picture clicks'}`,()=>{
  const saved=JSON.stringify({version:1,stars:9,stickers:['apple-delivery'],lastRace:{courseId:'country',opponentId:'percy',deliveryTheme:theme==='passengers'?'cargo':'passengers'}});
  const ui=setup(saved);start(ui,keyboard);assert.equal(ui.state().race.deliveryTheme,theme);
  const type=theme==='passengers'?'passenger-load':'cargo-load';reachJob(ui,type);
- assert.equal(node(ui,'raceTaskPreview').hidden,false);
+ assert.equal(node(ui,'action-race-help').hidden,false);
  assert.equal(node(ui,'action-race-help').getAttribute('aria-keyshortcuts'),'Enter');
  const before=ui.state().race.player.service;performVisibleJob(ui,keyboard);
  if(theme==='passengers'){
@@ -179,47 +180,25 @@ test('invalid optional delivery history preserves existing stars and stickers',(
  const saved=JSON.parse(ui.storage.getItem(KEY));assert.equal(saved.lastRace.deliveryTheme,ui.state().race.deliveryTheme);assert.equal(saved.stars,21);
 });
 
-test('the reminder shows the next required job through terrain, then the finish flag',()=>{
+test('jobs use the bottom action without a top dashboard or toolbar',()=>{
  const ui=setup();start(ui);go(ui);
- const view=ui.evaluate('ThomasRaceCore.getView(state.race)');
- assert.equal(node(ui,'raceDashboard').dataset.taskType,view.nextService.type);
- assert.equal(node(ui,'raceTaskPreview').hidden,false);
+ for(const id of ['sceneHud','raceDashboard','raceTaskPreview','raceOrder','raceBoostBadge'])assert.equal(node(ui,id),null);
+ assert.equal(ui.document.querySelector('.topbar'),null);
+ for(const id of ['pauseButton','homeButton','action-whistle'])assert.ok(node(ui,'footerDashboard').contains(node(ui,id)));
  const loading=ui.state().race.deliveryTheme==='passengers'?'passenger-load':'cargo-load';reachJob(ui,loading);
- assert.equal(node(ui,'raceTaskPreview').hidden,false);
- assert.equal(node(ui,'raceJobProgress').hidden,false);
+ assert.equal(node(ui,'action-race-help').hidden,false);
  assert.equal(node(ui,'raceHelpPicture').getAttribute('href'),loading==='passenger-load'?'#race-board':'#race-container');
- for(const courseId of ['country','harbour','mountain']){
-  const sections=ui.evaluate(`ThomasRaceCore.COURSES['${courseId}'].sections.filter(s=>s.cap<1)`);
-  for(const section of sections){
-   ui.evaluate(`{
-    const r=state.race=ThomasRaceCore.createRace({courseId:'${courseId}',seed:17});r.phase='racing';r.countdown=0;
-    const v=r.player;v.distance=${section.start}+1000;v.velocity=ThomasRaceCore.SPEEDS[4]*${section.cap};
-    for(const job of v.serviceStates)if(job.at<v.distance)job.completed=true;
-    for(const item of v.terrainStates)if(ThomasRaceCore.COURSES[r.courseId].sections.find(s=>s.id===item.id).end<v.distance)item.completed=true;
-    render();
-   }`);
-   const terrain=ui.evaluate('ThomasRaceCore.getView(state.race)');
-   assert.equal(terrain.nextTask.kind,'terrain');
-   assert.equal(node(ui,'raceTaskPreview').dataset.taskType,terrain.nextService.type);
-   assert.equal(node(ui,'raceTaskPicture').getAttribute('href'),ui.evaluate(`'#'+raceTaskPicture('${terrain.nextService.type}')`));
-   assert.equal(node(ui,'raceTaskPreview').getAttribute('aria-label'),ui.evaluate(`words('${terrain.nextServiceKey}')`));
-   assert.equal(node(ui,'action-race-help').hidden,true);
-  }
- }
- ui.evaluate('state.race.player.serviceStates.forEach(job=>job.completed=true);render()');
- assert.equal(node(ui,'raceTaskPicture').getAttribute('href'),'#race-flag');
- assert.equal(node(ui,'raceJobStatusPicture').getAttribute('href'),'#rule-go');
- assert.equal(node(ui,'raceJobProgress').hidden,true);
+ assert.equal(node(ui,'action-race-help').getAttribute('aria-label'),ui.evaluate('words(ThomasRaceCore.getView(state.race).taskKey)'));
+ node(ui,'pauseButton').focus();ui.key(' ');assert.equal(ui.state().paused,true);
+ const frozen=ui.state().race;ui.frames(2);assert.deepEqual(ui.state().race,frozen);
+ ui.click('#pauseOverlay [data-action="resume"]');assert.equal(ui.state().paused,false);
+ node(ui,'homeButton').focus();ui.key(' ');assert.equal(ui.state().screen,'race-start');
 });
 
 test('Race has no postal controls and arrows do not change speed or queue actions',()=>{
  const ui=setup();start(ui);go(ui);
  for(const id of ['action-race-left','action-race-right','raceUpcomingPreview','raceMailCollected','raceJobsCompleted','raceCarriedLoad'])assert.equal(node(ui,id),null);
  const before=ui.state().race.player;ui.key('ArrowLeft');ui.key('ArrowRight');assert.deepEqual(ui.state().race.player,before);
- assert.equal(node(ui,'raceJourneyProgress').getAttribute('aria-valuemax'),'100');
- ui.evaluate('state.race.player.distance=ThomasRaceCore.COURSES[state.race.courseId].length*.5;render()');
- assert.equal(node(ui,'raceJourneyProgress').getAttribute('aria-valuenow'),'50');
- assert.equal(node(ui,'racePlayerOrder').style.left,'50%');
  assert.equal(node(ui,'action-accelerate'),null);
  assert.match(script('race-core'),/boost-earned/);
 });
@@ -238,16 +217,8 @@ test('each new job is usable through the canvas and its contextual keyboard cont
   for(let i=0;i<100&&ui.state().race.player.service;i++){ui.frames(.2,20);if(!node(ui,'action-race-help').disabled)ui.key('Enter');}
   assert.equal(ui.state().race.player.service,null,type);
   assert.ok(ui.state().race.player.boostRemaining>0);
-  assert.equal(node(ui,'raceBoostBadge').hidden,false);
-  assert.equal(node(ui,'raceBoostBadge').getAttribute('data-state'),'queued');
-  assert.equal(node(ui,'raceBoostQueue').hidden,false);
-  assert.equal(node(ui,'raceBoostArrows').hidden,true);
-  ui.evaluate('state.race.player.boostActive=true;render()');
-  assert.equal(node(ui,'raceBoostBadge').getAttribute('data-state'),'active');
-  assert.equal(node(ui,'raceBoostQueue').hidden,true);
-  assert.equal(node(ui,'raceBoostArrows').hidden,false);
-  ui.evaluate('state.race.player.boostActive=false;state.race.player.boostRemaining=0;render()');
-  assert.equal(node(ui,'raceBoostBadge').hidden,true);
+  assert.equal(ui.evaluate('ThomasRaceCore.getView(state.race).boostQueued'),true);
+
  }
 });
 

@@ -42,6 +42,10 @@ Each crossing has one continuous double-track railway or two-lane road extending
 
 The original train models, wheel/rod motion, independent coach sampling, couplings, and stable three-quarter camera remain. Sustained hills rise eight world units with a separate plateau/descent. The passenger coach and container wagon have no postal emblems or catcher hardware.
 
+Very wide, short canvases ease into closer camera framing so vehicles remain readable in phone landscape. The camera position stays stable. Full-body, rotor, load, target and award checks cover the closer view, including Harold's tail while flying over terrain.
+
+`full-scene-browser-portrait.jpg`, `full-scene-browser-landscape.jpg` and `full-scene-browser-desktop.jpg` show the current bottom-control layout in live WebGL. The published game was temporarily patched with the source CSS, markup and relevant UI functions for inspection; no deployment was made. The blue toolbar and cream dashboard are removed at every size. The entire scene area belongs to the canvas; the contextual job, vehicle signal, Pause and Home are below it. Layout checks covered 320×560, 393×640, 696×294, 844×320 and 1366×768 with no page overflow, and confirmed reachable controls and working menu transitions. The older `mobile-browser-*.jpg` files are historical captures from the phone-only dashboard removal. These browser captures are distinct from the CPU geometry previews below. Local-file browser navigation and physical iPhone browser-chrome checks remain outstanding.
+
 Running rails now use a solid swept steel profile, from a foot resting on the sleepers to a raised web and bright head at 0.30 world units. The same profile is used on the drawbridge and crossing. Vehicle wheel contact follows that height, and Each tender samples the route independently. Sheep gates open only after the sheep have cleared: a smooth quarter-turn away from the waiting vehicle puts the leaf parallel to the verge before driving resumes. The open gate stays clear for the entire train and for either road racer.
 
 ## Finish festival

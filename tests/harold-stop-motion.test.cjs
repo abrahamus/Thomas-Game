@@ -82,7 +82,7 @@ test('pausing either cargo-handling stage freezes both racers and shows the corr
   const r=enterJob({who});for(const role of ['player','rival']){r[role].service.phase=phase;r[role].service.handlingProgress=.2;r[role].service.remaining=4;}
   ui.evaluate(`state.phase='racing';state.race=${JSON.stringify(r)};render()`);
   const prefix=who==='player'?'flight':'service';assert.equal(ui.evaluate('ui.taskKey'),`race.${prefix}.${phase}`);
-  assert.equal(ui.document.getElementById('raceJobStatusPicture').getAttribute('href'),'#rule-wait');
+  assert.equal(ui.document.getElementById('raceHelpPicture').getAttribute('href'),'#rule-wait');
   assert.equal(ui.document.getElementById('action-race-help').disabled,true);
   const before=ui.state().race;ui.key('Enter');assert.deepEqual(ui.state().race,before);
   ui.key('Escape');assert.equal(ui.state().paused,true);const paused=ui.state().race;ui.frames(10);assert.deepEqual(ui.state().race,paused);

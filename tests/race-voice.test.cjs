@@ -75,7 +75,7 @@ test('both racers continue moving without repeated task narration or a stopped q
 test('Repeat describes the current racing task rather than reviving older encouragement', () => {
     const ui = heldVoice(); racing(ui);
     speak(ui, 'race.boost');
-    ui.click('[data-action="repeat"]');
+    ui.evaluate("dispatchAction('repeat')");
     assert.equal(lastWords(ui), ui.evaluate('words(ui.taskKey)'));
     assert.equal(lastWords(ui),ui.evaluate('words(ui.taskKey)'));
     assert.equal(ui.evaluate('ui.pendingSpeech'), null);
@@ -112,14 +112,14 @@ test('returning to the start screen cancels speech and stale callbacks cannot fi
 test('mute cancels race speech and unmute repeats the current railway job', () => {
     const ui = heldVoice(); racing(ui);
     speak(ui, 'race.boost');
-    ui.click('[data-action="mute"]');
+    ui.evaluate("dispatchAction('mute')");
     assert.equal(ui.state().isMuted, true);
     assert.equal(ui.evaluate('audio.busy'), false);
     const silentCount = count(ui);
     ui.frames(.1);
     assert.equal(ui.evaluate('ui.pendingSpeech'), null);
     assert.equal(count(ui), silentCount);
-    ui.click('[data-action="mute"]');
+    ui.evaluate("dispatchAction('mute')");
     assert.equal(ui.state().isMuted, false);
     assert.equal(lastWords(ui),ui.evaluate('words(ui.taskKey)'));
     assert.equal(ui.evaluate('audio.busy'), true);
@@ -172,7 +172,7 @@ test('Repeat follows container selection into loading rather than repeating the 
     ui.evaluate('ThomasRaceCore.serviceAction(state.race);render()');
     assert.equal(lastWords(ui), 'Let’s use the crane to load our container.');
     assert.equal(ui.evaluate('ui.taskKey'), 'race.service.cargo-load');
-    ui.click('[data-action="repeat"]');
+    ui.evaluate("dispatchAction('repeat')");
     assert.equal(lastWords(ui), 'Let’s use the crane to load our container.');
     assert.equal(ui.evaluate('ui.pendingSpeech'), null);
 });
@@ -206,9 +206,9 @@ test('pause and mute cancel delivery speech, then repeat the current job when re
     assert.equal(ui.evaluate('ui.pendingSpeech'), null);
     ui.click('#pauseOverlay [data-action="resume"]');
     assert.equal(lastWords(ui), 'Choose a container for our journey.');
-    ui.click('[data-action="mute"]');
+    ui.evaluate("dispatchAction('mute')");
     assert.equal(ui.evaluate('audio.busy'), false);
-    ui.click('[data-action="mute"]');
+    ui.evaluate("dispatchAction('mute')");
     assert.equal(lastWords(ui), 'Choose a container for our journey.');
 });
 

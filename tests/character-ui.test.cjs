@@ -21,7 +21,7 @@ test('portrait panels expose eleven choices each, prevent duplicates and preserv
  ui.click('#playerPickerButton');node(ui,'choose-player-percy').focus();ui.key('ArrowLeft');assert.notEqual(ui.document.activeElement,node(ui,'choose-player-thomas'));
  ui.click('#startRaceButton');assert.equal(ui.state().race.playerId,'bulgy');assert.equal(ui.state().race.opponentId,'thomas');
  assert.equal(node(ui,'matchupPlayerName').textContent,'Bulgy');assert.equal(node(ui,'matchupRivalName').textContent,'Thomas');
- assert.equal(node(ui,'racePlayerPortrait').getAttribute('href'),'#portrait-bulgy');assert.equal(node(ui,'action-whistle').dataset.narration,'ui.horn');
+ assert.equal(node(ui,'matchupPlayerPortrait').getAttribute('href'),'#portrait-bulgy');assert.equal(node(ui,'action-whistle').dataset.narration,'ui.horn');
 });
 for(const id of ids)for(const theme of ['passengers','cargo'])test(`${id}: complete ${theme} race through ${theme==='passengers'?'keyboard':'pictures'} and preserve racers`,()=>{
  const saved=JSON.stringify({version:1,stars:0,stickers:[],lastRace:{courseId:'country',playerId:'thomas',opponentId:'percy',deliveryTheme:theme==='cargo'?'passengers':'cargo'}});
