@@ -9,10 +9,13 @@ function arrive(ui,winner='player'){
 function start(){const ui=setup();ui.click('#startRaceButton');return ui;}
 function elapsed(ui){return ui.evaluate('ui.festival.elapsed');}
 test('nine-second welcome exposes Skip immediately, lights eight jobs, then reveals results',()=>{
- const ui=start();arrive(ui);assert.equal(node(ui,'rewardOverlay').hidden,true);assert.equal(node(ui,'skipCelebration').hidden,false);assert.equal(ui.document.activeElement.id,'gameStage');
+ const ui=start();assert.equal(node(ui,'sceneHud').hidden,false);arrive(ui);assert.equal(node(ui,'rewardOverlay').hidden,true);assert.equal(node(ui,'skipCelebration').hidden,false);assert.equal(ui.document.activeElement.id,'gameStage');
+ assert.equal(node(ui,'sceneHud').hidden,true,'The race reminder releases its mobile layout space during celebration');
+ assert.equal(node(ui,'playSurface').classList.contains('has-race-controls'),true,'Skip and the signal retain their control space');
  const saved=ui.state().race;ui.evaluate('(function freeze(o){Object.values(o).forEach(v=>{if(v&&typeof v==="object"&&!Object.isFrozen(v))freeze(v)});Object.freeze(o)})(state.race)');ui.frames(4.6-elapsed(ui),46);assert.equal(ui.evaluate('ui.festival.stage'),'award');assert.equal(node(ui,'rewardOverlay').hidden,true);
  ui.frames(3,30);assert.equal(node(ui,'festivalJobs').hidden,false);assert.equal(node(ui,'festivalJobs').children.length,8);
  ui.frames(1.5,15);assert.equal(node(ui,'rewardOverlay').hidden,false);assert.equal(node(ui,'skipCelebration').hidden,true);assert.equal(ui.document.activeElement.id,'rewardReplay');assert.equal(ui.state().stars,3);
+ assert.equal(node(ui,'playSurface').classList.contains('has-race-controls'),false,'The hidden side controls do not reserve an empty column behind results');
  assert.deepEqual(ui.state().race,saved);ui.frames(20,20);assert.deepEqual(ui.state().race,saved);assert.equal(ui.state().stars,3);
 });
 test('immediate and late Skip, held Enter, and repeated dispatch cannot duplicate rewards',()=>{

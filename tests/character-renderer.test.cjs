@@ -19,7 +19,7 @@ test('new player models expose all wash patches and every service target at narr
  for(const c of R.CHARACTERS)for(const seed of [1,24,40]){
   const {race,scene}=fixture(c.id,seed);
   for(const spec of race.services){atJob(race,spec.type);if(spec.type==='wash')race.player.mudPatches.fill(true);
-   for(const [w,h]of [[320,420],[375,420],[1400,800],[1920,900]]){
+   for(const [w,h]of [[310,330],[516,145],[320,420],[375,420],[1400,800],[1920,900]]){
     scene.camera.aspect=w/h;V.updateScene(scene,race);
     const slot=scene.objects.services.find(b=>b.spec.id===spec.id).slots[0];
     const targets=spec.type==='wash'?scene.player.userData.mudPatches.map((object,id)=>({object,id,kind:'mud'})):
@@ -66,7 +66,7 @@ test('all nine racers in both roles keep wheels on their surfaces and drawbars a
    const front=coach.localToWorld(new T.Vector3(0,.82,2.61)),rear=engine.userData.tender?engine.userData.tender.localToWorld(new T.Vector3(0,.82,-1.52)):engine.localToWorld(new T.Vector3(0,.82,c.rearCoupler));
    assert.ok(rear.distanceTo(front)>.1&&rear.distanceTo(front)<3.5,`${c.id}/${who}/${distance}: coupling gap ${rear.distanceTo(front)}`);
    assert.ok(coupler.position.distanceTo(rear.clone().add(front).multiplyScalar(.5))<1e-8);
-   for(const aspect of [320/420,375/420,1400/800,1920/900]){
+   for(const aspect of [310/330,516/145,320/420,375/420,1400/800,1920/900]){
     scene.camera.aspect=aspect;V.updateScene(scene,race);
     for(const object of [engine,coach]){const box=boundsIn(object,new T.Object3D());for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
      const p=new T.Vector3(x,y,z).project(scene.camera);assert.ok(Math.abs(p.x)<=1&&Math.abs(p.y)<=1,`${c.id}/${who}/${aspect}: cropped vehicle`);
@@ -91,7 +91,7 @@ test('all character bodies, tenders and loads fit the tunnels and pass open shee
     assert.ok(side<2.8&&body.max.y<3+Math.sqrt(9-side*side)-.15,`${c.id}/${theme}: tunnel clearance`);
    }
    const solids=[];tunnel.traverse(o=>{if(o.isMesh)solids.push(o);});
-   for(const aspect of [320/420,375/420,1400/800,1920/900])for(const stage of ['approach','inside','exit']){
+   for(const aspect of [310/330,516/145,320/420,375/420,1400/800,1920/900])for(const stage of ['approach','inside','exit']){
     race.player.distance=stage==='approach'?section.start-2500:stage==='exit'?section.end+2500:(section.start+section.end)/2;scene.camera.aspect=aspect;V.updateScene(scene,race);
     const point=scene.player.localToWorld(new T.Vector3(0,c.id==='bulgy'?3.7:2.5,0)),direction=point.clone().sub(scene.camera.position),length=direction.length();
     const hits=new T.Raycaster(scene.camera.position.clone(),direction.normalize(),0,length-.1).intersectObjects(solids,false);assert.equal(hits.length>0,stage==='inside',`${c.id}/${aspect}/${stage}`);

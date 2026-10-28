@@ -10,11 +10,11 @@ function fixture(playerId,opponentId,courseId='country',winner='tie'){
 }
 function bounds(root){const b=new T.Box3();root.traverse(o=>{if(!o.geometry||!visible(o))return;const a=o.geometry.attributes.position;for(let i=0;i<a.count;i++)b.expandByPoint(new T.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld));});return b;}
 function inView(b,object,w,h,label){const box=bounds(object);assert.ok(!box.isEmpty(),label);for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){const p=new T.Vector3(x,y,z).project(b.camera);assert.ok(Math.abs(p.x)<1&&Math.abs(p.y)<1,`${label}: outside view ${p.x},${p.y}`);}}
-for(const c of R.CHARACTERS)for(const role of ['player','rival'])test(`${c.id}/${role}: visible face, coach, award and finish clearance at four viewport sizes`,()=>{
+for(const c of R.CHARACTERS)for(const role of ['player','rival'])test(`${c.id}/${role}: visible face, coach, award and finish clearance at desktop and portrait/landscape phone sizes`,()=>{
  const p=fixture(role==='player'?c.id:c.id==='thomas'?'harold':'thomas',role==='rival'?c.id:c.id==='thomas'?'harold':'thomas'),r=p.race,b=V.makeScene(R,r.courseId,r.opponentId,r.deliveryTheme,r);
  let last=0;for(const age of [0,.5,2,4.5,6.5,9,12]){
   R.stepFinishPresentation(p,age-last);last=age;
-  for(const [w,h] of [[320,420],[375,420],[1366,768],[1920,900]]){
+  for(const [w,h] of [[310,330],[516,145],[320,420],[375,420],[1366,768],[1920,900]]){
    b.camera.aspect=w/h;V.updateScene(b,r,{festival:p});
    for(const who of ['player','rival']){
     inView(b,b[who],w,h,`${c.id}/${role}/${who}/${age}/${w}`);

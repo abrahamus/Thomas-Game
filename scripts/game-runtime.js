@@ -316,6 +316,8 @@ function render() {
     ensureFestival();
     const playing=state.screen==='play',completed=playing && state.phase==='complete',results=completed&&ui.festival.results;
     const overlay=!playing || state.paused || results || ui.albumOpen;
+    $('playSurface').classList.toggle('has-race-controls',playing&&!results);
+    show('sceneHud',playing&&!completed);
     show('raceStartOverlay',!playing && !ui.albumOpen);show('raceUnavailable',!playing && ui.raceUnavailable);
     show('pauseOverlay',playing && state.paused && !ui.albumOpen);show('rewardOverlay',results && !state.paused && !ui.albumOpen);show('albumOverlay',ui.albumOpen);
     for(const id of ['challengePanel','raceOrder','raceDashboard','raceCanvas'])show(id,playing);

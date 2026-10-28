@@ -31,7 +31,7 @@ test('Harold carries passengers inside, cargo under his belly, and sets the slin
 });
 test('flight bodies, rotors and cargo remain framed at phone, laptop and wide sizes',()=>{
  for(const who of ['player','rival']){const{r,b}=fixture(who);r[who].carried.container='container-1';
-  for(const distance of [0,3000,12000,18000,26000,35500,36300,44000,52000,82000,104000,128000,160600,175500])for(const[w,h]of [[320,420],[375,420],[1400,800],[1920,900]]){
+  for(const distance of [0,3000,12000,18000,26000,35500,36300,44000,52000,82000,104000,128000,160600,175500])for(const[w,h]of [[310,330],[516,145],[320,420],[375,420],[1400,800],[1920,900]]){
    r.player.distance=r.rival.distance=distance;b.camera.aspect=w/h;V.updateScene(b,r);
    for(const obj of [b[who],b[who+'Coach']])obj.traverse(o=>{if(!o.isMesh)return;for(let p=o;p;p=p.parent)if(!p.visible)return;o.geometry.computeBoundingBox();const box=o.geometry.boundingBox;
     for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
